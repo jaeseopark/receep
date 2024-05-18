@@ -1,0 +1,13 @@
+plugins:
+  - "@trivago/prettier-plugin-sort-imports"
+printWidth: 120
+singleQuote: false
+importOrder:
+  - "\/.*types$"
+  - "\/.*state$"
+  - "\/.*apiclient$"
+  - ".*\/utilities\/.*"
+  - "^[.].*(?<!css)$" # local dependencies (except css)
+  - "^[.].*css$" # local CSS files
+importOrderSeparation: true
+importOrderSortSpecifiers: true
