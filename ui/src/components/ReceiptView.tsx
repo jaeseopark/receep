@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "preact/hooks";
 import { useDropzone } from "react-dropzone";
-import { getStuff, uploadReceipt } from "../apiclient";
+import { getStuff, uploadReceipt } from "@/api";
 
 const ReceiptView = () => {
   const onDrop = useCallback((acceptedFiles: File[]) => {

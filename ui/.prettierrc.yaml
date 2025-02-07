@@ -5,9 +5,9 @@ singleQuote: false
 importOrder:
   - "\/.*types$"
   - "\/.*state$"
-  - "\/.*apiclient$"
   - ".*\/utilities\/.*"
-  - "^[.].*(?<!css)$" # local dependencies (except css)
-  - "^[.].*css$" # local CSS files
+  - "^@.*(?<!css)$" # local dependencies with the @ prefix shortcut
+  - "^[.].*(?<!css)$" # relative dependencies (except css)
+  - ".*css$" # CSS files
 importOrderSeparation: true
 importOrderSortSpecifiers: true
