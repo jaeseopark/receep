@@ -48,6 +48,14 @@ class InvalidCredsException(Exception):
     pass
 
 
+class NoInvitationFound(Exception):
+    pass
+
+
+class DuplicateUsernameException(Exception):
+    pass
+
+
 class AuthModule:
     def __init__(self, db: Database):
         self.db = db
@@ -80,8 +88,9 @@ class AuthModule:
         return _create_jwt_token(payload.username, expiration_delta)
 
     def create_user(self, username: str) -> None:
-        self.db.create_user(username)
-        # TODO eror handling -- unique username?
+        create_success = self.db.create_user(username)
+        if not create_success:
+            raise DuplicateUsernameException
 
     def setup_password(self, username: str, password: str):
         user = self.db.get_user_by_username(username)
@@ -94,12 +103,12 @@ class AuthModule:
 
         if not self.totp_enabled or user.totp_private_key:
             logger.info(f"The password has been saved; Skipping TOTP...")
-            self.db.update_user(user)
+            self.db.update_user_creds(user)
             return dict(result="success")
 
         totp = pyotp.TOTP(pyotp.random_base32())
         user.totp_private_key = totp.secret
-        self.db.update_user(user)
+        self.db.update_user_creds(user)
 
         uri = totp.provisioning_uri(username, issuer_name="divvy")
 
@@ -141,6 +150,19 @@ class AuthModule:
                 - "token_type"
         """
         self.create_user(username)
+        result = self.setup_password(username, password)
+        result.update(_create_jwt_token(username, timedelta(days=7)))
+
+        return result
+
+    def accept_invite(self, username: str, password: str):
+        """
+        This method has the same return type signature as .signup()
+        """
+        user = self.db.get_user_by_username(username)
+        if not user or user.hashed_password or user.totp_private_key:
+            raise NoInvitationFound
+
         result = self.setup_password(username, password)
         result.update(_create_jwt_token(username, timedelta(days=7)))
 

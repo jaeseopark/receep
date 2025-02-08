@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from types import SimpleNamespace
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import jwt
 
@@ -16,7 +16,7 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 
 from pydantic import BaseModel
 
-from auth import JWT_KEY, AuthModule, InvalidCredsException
+from auth import JWT_KEY, AuthModule, DuplicateUsernameException, InvalidCredsException, NoInvitationFound
 from db import Database
 
 SIGNUP = os.getenv("SIGNUP")
@@ -41,6 +41,12 @@ db = Database()
 auth = AuthModule(db)
 
 
+class AuthMetadata:
+    authenticated: bool = False
+    username: Optional[str]
+    roles: List[str] = []
+
+
 def get_app_info():
     return SimpleNamespace(
         signup=SIGNUP,
@@ -50,16 +56,16 @@ def get_app_info():
 
 
 class Token(BaseModel):
-    token: str
     token_type: str
+    token: str
     message: str
 
 
 class SignupResponse(BaseModel):
-    token: str
     token_type: str
-    message: str
-    qrcode_b64: str
+    token: str
+    qrcode_b64: Optional[str] = None
+    message: Optional[str] = None
 
 
 class SignupRequest(BaseModel):
@@ -74,7 +80,7 @@ class InviteRequest(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
-    totp: str
+    totp: Optional[str] = None
 
 
 @AuthJWT.load_config
@@ -97,33 +103,33 @@ def get_broadcast_function(topic: str) -> Callable[[dict], None]:
     return broadcast
 
 
-def _verify_jwt_token(token: str):
-    try:
-        payload = auth.decode_jwt(token)
-        if "sub" not in payload:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        return payload
-    except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid JWT token")
+def get_auth_metadata(*, assert_roles: List[str] = None, assert_jwt: bool = False) -> Callable[[], AuthMetadata]:
+    logger.info("returning a wrapper function to get auth metadata")
 
+    def wrapper(token: str = Depends(oauth2_scheme)) -> AuthMetadata:
+        logger.info("executing wrapper...")
 
-def verify_jwt_token(token: str = Depends(oauth2_scheme)):
-    return _verify_jwt_token(token)
+        metadata = AuthMetadata()
+        if token:
+            try:
+                metadata.username = auth.decode_jwt(token).get("sub")
+                metadata.authenticated = True
+                metadata.roles = db.get_user_roles(metadata.username)
+            except jwt.PyJWTError:
+                pass
 
+        if assert_jwt and not metadata.authenticated:
+            raise HTTPException(401)
 
-def verify_signup_auth():
-    app_info = get_app_info()
-    if app_info.user_count == 0:
-        logger.info("Allowing signup of the first user")
-        return dict()
-    if app_info.signup == "OPEN":
-        logger.info("Allowing open signup")
-        return dict()
+        if assert_roles:
+            intersection = list(set(assert_roles) & set(metadata.roles))
 
-    logger.info("Regular signup auth")
-    return _verify_jwt_token()
+            if not intersection:
+                msg = f"User does not have the right role(s). expected={assert_roles} actual={metadata.roles}"
+                raise HTTPException(403, detail=msg)
+
+        return metadata
+    return wrapper
 
 # TODO: fix auth issues
 # @fastapi_app.websocket("/ws")
@@ -158,6 +164,14 @@ def unicorn_exception_handler(_, e: AssertionError):
     )
 
 
+@fastapi_app.exception_handler(DuplicateUsernameException)
+def unicorn_exception_handler(*args, **kwargs):
+    return JSONResponse(
+        status_code=400,
+        content=dict(message="The username is already in use.")
+    )
+
+
 @fastapi_app.exception_handler(NotImplementedError)
 def unicorn_exception_handler(*args, **kwargs):
     return JSONResponse(
@@ -167,20 +181,20 @@ def unicorn_exception_handler(*args, **kwargs):
 
 
 @fastapi_app.get("/stuff")
-def get_stuff(_: dict = Depends(verify_jwt_token)):
+def get_stuff(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     return dict(stuff=[
         1, 2, 3
     ])
 
 
 @fastapi_app.get("/file", response_class=FileResponse)
-def get_file(_: dict = Depends(verify_jwt_token)):
+def get_file(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     local_path = "/data/some_file.pdf"
     return local_path
 
 
 @fastapi_app.post("/file")
-def upload_file(file: UploadFile, _: dict = Depends(verify_jwt_token)):
+def upload_file(file: UploadFile, _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     local_path = "/data/some_file"
     try:
         contents = file.file.read()
@@ -195,7 +209,7 @@ def upload_file(file: UploadFile, _: dict = Depends(verify_jwt_token)):
 
 
 @fastapi_app.post("/login", response_model=Token)
-async def login(payload: LoginRequest):
+async def login(payload: LoginRequest, _: AuthMetadata = Depends(get_auth_metadata())):
     try:
         result = auth.create_jwt(payload)
         if not result:
@@ -216,19 +230,36 @@ async def login(payload: LoginRequest):
 
 
 @fastapi_app.post("/signup", response_model=SignupResponse)
-async def signup(payload: SignupRequest, _: dict = Depends(verify_signup_auth)):
-    app_info = get_app_info()
-    if app_info.signup == "CLOSED":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Signup is closed",
-        )
+async def signup(signup_req: SignupRequest, app_info=Depends(get_app_info)):
+    if app_info.user_count == 0 or app_info.signup == "OPEN":
+        return auth.signup(signup_req.username, signup_req.password)
 
-    return auth.signup(payload.username, payload.password)
+    raise HTTPException(
+        status_code=400,
+        detail=f"Signup is {app_info.signup}.",
+    )
 
 
 @fastapi_app.post("/invite")
-async def invite(payload: InviteRequest, _: dict = Depends(verify_jwt_token)):
+async def invite(payload: InviteRequest, metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True)), app_info=Depends(get_app_info)):
+    if app_info.signup == "CLOSED":
+        raise HTTPException(
+            status_code=403,
+            detail="Invite is closed.",
+        )
+    
+    if app_info.signup == "INVITE_ONLY" and "admin" not in metadata.roles:
+        raise HTTPException(
+            status_code=403,
+            detail="Only the admins can send invites.",
+        )
+
+    auth.create_user(payload.username)
+    return dict(message="success")
+
+
+@fastapi_app.post("/invite/accept")
+async def accept_invite(payload: SignupRequest, _: AuthMetadata = Depends(get_auth_metadata())):
     app_info = get_app_info()
     if app_info.signup == "CLOSED":
         raise HTTPException(
@@ -236,17 +267,28 @@ async def invite(payload: InviteRequest, _: dict = Depends(verify_jwt_token)):
             detail="Invite is closed",
         )
 
-    auth.create_user(payload.username)
-    # TODO eror handling -- unique username?
-    
-    return dict(message="success")
+    try:
+        return auth.accept_invite(payload.username, payload.password)
+    except NoInvitationFound:
+        raise HTTPException(
+            status_code=404,
+            detail="No invitation found",
+        )
 
 
 @fastapi_app.get("/jwt/check")
-def check_jwt(_: dict = Depends(verify_jwt_token)):
+async def check_jwt(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     return dict(message="success")
 
 
 @fastapi_app.get("/app/info")
-def get_app_info_endpoint():
+async def get_app_info_endpoint():
     return get_app_info().__dict__
+
+
+@fastapi_app.get("/me")
+async def get_my_info(metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    return dict(
+        username=metadata.username,
+        roles=metadata.roles
+    )

@@ -21,7 +21,7 @@ services:
       context: api
     working_dir: /app/api
     stop_signal: SIGINT # https://github.com/docker/compose/issues/4199#issuecomment-426109482
-    command: uvicorn main:fastapi_app --reload --host 0.0.0.0 --port 80
+    command: ./start.sh
     volumes:
       - ./api:/app/api
       - ./mnt/data:/data
@@ -37,7 +37,11 @@ services:
     env_file:
       - .env
     volumes:
-      # - ./db/initdb.d:/docker-entrypoint-initdb.d/:ro # TODO: still need this, when SQLAlchemy is there?
       - ./mnt/data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "postgres"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
 
   # TODO: backup cron job

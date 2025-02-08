@@ -1,7 +1,8 @@
+import { useEffect, useMemo, useState } from "preact/hooks";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
 import { axios, setJwt } from "@/api";
-import { Box, Button, Center, Input, Text, VStack } from "@chakra-ui/react";
-import { useEffect, useState } from "preact/hooks";
-import { Link, useNavigate } from "react-router-dom";
+import { Box, Button, Center, Heading, Input, Text, VStack } from "@chakra-ui/react";
 
 const CredentialForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [formData, setFormData] = useState({
@@ -61,6 +62,9 @@ const CredentialForm = ({ onSuccess }: { onSuccess: () => void }) => {
   return (
     <Box maxW="400px" mx="auto" mt="100px" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
       <form onSubmit={handleSubmit}>
+        <Center marginBottom="2em">
+          <Heading>Login</Heading>
+        </Center>
         <VStack spacing="4">
           {mode === "INITIAL_LOGIN" && (
             <>
@@ -103,7 +107,7 @@ const CredentialForm = ({ onSuccess }: { onSuccess: () => void }) => {
 
           {error && <Text color="red.500">{error}</Text>}
 
-          <Button colorScheme="blue" type="submit" width="full" disabled={shouldDisableButton}>
+          <Button colorScheme="blue" type="submit" width="full" disabled={shouldDisableButton} marginTop="2em">
             Login
           </Button>
         </VStack>
@@ -113,22 +117,22 @@ const CredentialForm = ({ onSuccess }: { onSuccess: () => void }) => {
 };
 
 // TODO: app info type
-export const Login = ({ appInfo }: any) => {
-  const [isAuthenticated, setAuthenticated] = useState(false);
+export const Login = ({ appInfo, isAuthenticated }: any) => {
+  const [nowAuthenticated, setAuthenticated] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated || nowAuthenticated) {
       // not using navigte() here because we want the browser to refresh
       window.location.href = "/";
     }
-  }, [isAuthenticated]);
+  }, [nowAuthenticated]);
 
   if (!appInfo) {
     return <div>Loading...</div>;
   }
 
-  if (isAuthenticated) {
+  if (nowAuthenticated) {
     return (
       <Center>
         <VStack>
@@ -158,7 +162,7 @@ export const Login = ({ appInfo }: any) => {
   );
 };
 
-export const Signup = () => {
+export const Signup = ({ appInfo }: any) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -167,11 +171,24 @@ export const Signup = () => {
   const [qrBase64, setQrBase64] = useState<string>();
   const [qrMessage, setQrMessage] = useState<string>();
   const [error, setError] = useState<string>();
+  const [params] = useSearchParams();
+  const invitedUsername = useMemo(() => {
+    const invitation = params.get("invitation");
+    return invitation && atob(invitation);
+  }, [params]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    let path = "/api/signup";
+    const payload = { ...formData };
+    if (invitedUsername) {
+      path = "/api/invite/accept";
+      payload.username = invitedUsername;
+    }
+
     axios
-      .post("/api/signup", formData, {
+      .post(path, payload, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -181,6 +198,19 @@ export const Signup = () => {
         setJwt(token);
         setQrBase64(qrcode_b64);
         setQrMessage(message);
+      })
+      .catch((e) => {
+        if (e.response.status === 401) {
+          if (appInfo.signup === "INVITE_ONLY") {
+            setError("You must be invited by an existing member.");
+            return;
+          }
+
+          setError("Signup is currently closed.");
+          return;
+        }
+
+        setError(JSON.stringify(e.response.data));
       });
   };
 
@@ -189,7 +219,11 @@ export const Signup = () => {
   };
 
   const shouldDisableButton = (() => {
-    if (!formData.username || !formData.password || formData.password !== formData.confirmPassword) {
+    if (
+      !(invitedUsername || formData.username) ||
+      !formData.password ||
+      formData.password !== formData.confirmPassword
+    ) {
       return true;
     }
 
@@ -200,6 +234,9 @@ export const Signup = () => {
     <Box maxW="400px" mx="auto" mt="100px" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
       {!qrBase64 && (
         <form onSubmit={handleSubmit}>
+          <Center marginBottom="2em">
+            <Heading>Signup</Heading>
+          </Center>
           <VStack spacing="4">
             <>
               <div>
@@ -208,8 +245,9 @@ export const Signup = () => {
                   type="text"
                   name="username"
                   placeholder="Enter username"
-                  value={formData.username}
+                  value={invitedUsername || formData.username}
                   onChange={handleChange}
+                  disabled={!!invitedUsername}
                 />
               </div>
 
@@ -238,7 +276,7 @@ export const Signup = () => {
 
             {error && <Text color="red.500">{error}</Text>}
 
-            <Button colorScheme="blue" type="submit" width="full" disabled={shouldDisableButton}>
+            <Button colorScheme="blue" type="submit" width="full" disabled={shouldDisableButton} marginTop="2em">
               OK
             </Button>
           </VStack>
@@ -255,6 +293,73 @@ export const Signup = () => {
           <a href="/">
             <Button style={{ width: "100%" }}>I have scanned the code</Button>
           </a>
+        </div>
+      )}
+    </Box>
+  );
+};
+
+export const Invite = () => {
+  const [formData, setFormData] = useState({
+    username: "",
+  });
+  const [isInviteSuccess, setInviteSuccess] = useState(false);
+  const [error, setError] = useState<string>();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    axios
+      .post("/api/invite", formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then((r) => r.data)
+      .then(() => setInviteSuccess(true))
+      .catch((e) => {
+        // TODO better err handling
+        setError(JSON.stringify(e.response.data));
+      });
+  };
+
+  const handleChange = (event) => {
+    setFormData({ ...formData, [event.target.name]: event.target.value });
+  };
+
+  return (
+    <Box maxW="400px" mx="auto" mt="100px" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
+      {!isInviteSuccess && (
+        <form onSubmit={handleSubmit}>
+          <Center marginBottom="2em">
+            <Heading>Invite</Heading>
+          </Center>
+          <VStack spacing="4">
+            <div>
+              <Text>Username</Text>
+              <Input
+                type="text"
+                name="username"
+                placeholder="Enter username"
+                value={formData.username}
+                onChange={handleChange}
+              />
+            </div>
+
+            {error && <Text color="red.500">{error}</Text>}
+
+            <Button colorScheme="blue" type="submit" width="full" marginTop="2em">
+              OK
+            </Button>
+          </VStack>
+        </form>
+      )}
+      {isInviteSuccess && (
+        <div>
+          Share the following link:
+          <pre
+            style={{ width: "100%" }}
+          >{`${window.location.origin}/signup?invitation=${btoa(formData.username)}`}</pre>
         </div>
       )}
     </Box>
