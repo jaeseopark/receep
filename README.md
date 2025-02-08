@@ -19,6 +19,10 @@ sudo chown $(whoami):$(whoami) -R *
 TODO
 ```
 
+## Ongoing SQL Schema Migration
+
+TODO: add `alembic`
+
 ## Packaging for Production
 
 ```shell
