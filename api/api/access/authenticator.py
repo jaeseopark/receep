@@ -172,10 +172,11 @@ class Authenticator:
 
         metadata.username = jwt.decode(
             token, JWT_KEY, algorithms=[JWT_ALG]).get("sub")
-        metadata.authenticated = True
         user = self.db.get_user_by_username(metadata.username)
-        metadata.user_id = user.id
-        metadata.roles = [r.name for r in user.roles]
+        if user:
+            metadata.authenticated = True
+            metadata.user_id = user.id
+            metadata.roles = [r.name for r in user.roles]
 
         return metadata
 
