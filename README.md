@@ -15,7 +15,7 @@ docker-compose exec ui npx -y shadcn@latest add COMP_NAME
 docker-compose exec ui npx prettier --write .
 
 # Invoke yarn
-docker-compose exec ui yarn add ...
+docker-compose exec ui yarn add # ...
 ```
 
 ### Fix Filesystem Permissions
