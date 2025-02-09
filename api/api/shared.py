@@ -1,27 +1,32 @@
 import logging
+import os
+from types import SimpleNamespace
 from typing import Callable, List
 
 import jwt
 from fastapi import Depends, HTTPException, Request
+from fastapi_jwt_auth import AuthJWT
+from persistence.database import instance as db_instance
+from pydantic import BaseModel
 
 from api.access import authenticator
-from api.access.authenticator import AuthMetadata
+from api.access.authenticator import JWT_KEY, AuthMetadata
 
 logger = logging.getLogger("divvy")
 auth = authenticator.instance
 
 
+SIGNUP = os.getenv("SIGNUP")
+assert SIGNUP in ("OPEN", "CLOSED",
+                  "INVITE_ONLY"), f"SIGNUP must be one of: OPEN, CLOSED, INVITE_ONLY. {SIGNUP=}"
 
 
-import logging
-from typing import Callable, List
-
-from fastapi import Depends, HTTPException
-from fastapi_jwt_auth import AuthJWT
-from pydantic import BaseModel
-
-from api.access import authenticator
-from api.access.authenticator import JWT_KEY
+def get_app_info():
+    return SimpleNamespace(
+        signup=SIGNUP,
+        totp_enabled=auth.totp_enabled,
+        user_count=db_instance.get_user_count()
+    )
 
 
 def get_jwt_cookie(request: Request):
@@ -53,7 +58,6 @@ def get_auth_metadata(*, assert_roles: List[str] = None, assert_jwt: bool = Fals
 
         return metadata
     return wrapper
-
 
 
 @AuthJWT.load_config

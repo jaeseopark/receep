@@ -1,12 +1,9 @@
 import asyncio
 import json
 import logging
-import os
-from types import SimpleNamespace
 from typing import Callable, List, Optional
 
-from fastapi import (Depends, FastAPI, HTTPException, Query, UploadFile,
-                     WebSocket, status)
+from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, status
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
@@ -18,12 +15,11 @@ from starlette.websockets import WebSocketDisconnect
 
 from api.access import authenticator
 from api.access.authenticator import AuthMetadata
-from api.access.exceptions import InvalidCredsException, NoInvitationFound
-from api.shared import get_auth_metadata
-
-SIGNUP = os.getenv("SIGNUP")
-assert SIGNUP in ("OPEN", "CLOSED",
-                  "INVITE_ONLY"), f"SIGNUP must be one of: OPEN, CLOSED, INVITE_ONLY. {SIGNUP=}"
+from api.access.exceptions import InvalidCredsException
+from api.routers.receipts import router as receipt_router
+from api.routers.transactions import router as transaction_router
+from api.routers.users import router as user_router
+from api.shared import get_app_info, get_auth_metadata
 
 logger = logging.getLogger("divvy")
 logger.setLevel(logging.INFO)
@@ -35,7 +31,7 @@ uvicorn_logger.addHandler(logging.StreamHandler())
 uvicorn_logger.addHandler(logging.FileHandler(
     "/var/log/divvy/api/uvicorn.log"))
 
-fastapi_app = FastAPI()
+fastapi_app = FastAPI(redirect_slashes=False)
 sockets: List[WebSocket] = []
 
 
@@ -43,35 +39,15 @@ db = database.instance
 auth = authenticator.instance
 app = divvy.instance
 
-
-def get_app_info():
-    return SimpleNamespace(
-        signup=SIGNUP,
-        totp_enabled=auth.totp_enabled,
-        user_count=db.get_user_count()
-    )
+fastapi_app.include_router(transaction_router)
+fastapi_app.include_router(receipt_router)
+fastapi_app.include_router(user_router)
 
 
 class Token(BaseModel):
     token_type: str
     token: str
     message: str
-
-
-class SignupResponse(BaseModel):
-    token_type: str
-    token: str
-    qrcode_b64: Optional[str] = None
-    message: Optional[str] = None
-
-
-class SignupRequest(BaseModel):
-    username: str
-    password: str
-
-
-class InviteRequest(BaseModel):
-    username: str
 
 
 class LoginRequest(BaseModel):
@@ -141,27 +117,6 @@ def unicorn_exception_handler(*args, **kwargs):
     )
 
 
-@fastapi_app.get("/receipts/paginated")
-def get_stuff(
-    offset: int = Query(0, ge=0),
-    limit: int = Query(100, le=500),
-    _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
-):
-    receipts = db.get_receipts(offset=offset, limit=limit)
-    return dict(
-        next_offset=offset+len(receipts),
-        items=receipts
-    )
-
-
-@fastapi_app.post("/receipts")
-async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
-    try:
-        return divvy.upload(metadata.user_id, file.content_type, file.file)
-    finally:
-        file.file.close()
-
-
 @fastapi_app.get("/file", response_class=FileResponse)
 def get_file(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     local_path = "/data/some_file.pdf"
@@ -187,53 +142,6 @@ async def login(payload: LoginRequest, _: AuthMetadata = Depends(get_auth_metada
         message="success"
     ))
     return result
-
-
-@fastapi_app.post("/signup", response_model=SignupResponse)
-async def signup(signup_req: SignupRequest, app_info=Depends(get_app_info)):
-    if app_info.user_count == 0 or app_info.signup == "OPEN":
-        return auth.signup(signup_req.username, signup_req.password)
-
-    raise HTTPException(
-        status_code=400,
-        detail=f"Signup is {app_info.signup}.",
-    )
-
-
-@fastapi_app.post("/invite")
-async def invite(payload: InviteRequest, metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True)), app_info=Depends(get_app_info)):
-    if app_info.signup == "CLOSED":
-        raise HTTPException(
-            status_code=403,
-            detail="Invite is closed.",
-        )
-
-    if app_info.signup == "INVITE_ONLY" and "admin" not in metadata.roles:
-        raise HTTPException(
-            status_code=403,
-            detail="Only the admins can send invites.",
-        )
-
-    auth.create_user(payload.username)
-    return dict(message="success")
-
-
-@fastapi_app.post("/invite/accept")
-async def accept_invite(payload: SignupRequest, _: AuthMetadata = Depends(get_auth_metadata())):
-    app_info = get_app_info()
-    if app_info.signup == "CLOSED":
-        raise HTTPException(
-            status_code=403,
-            detail="Invite is closed",
-        )
-
-    try:
-        return auth.accept_invite(payload.username, payload.password)
-    except NoInvitationFound:
-        raise HTTPException(
-            status_code=404,
-            detail="No invitation found",
-        )
 
 
 @fastapi_app.get("/jwt/check")

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Query
+from persistence.database import instance as db_instance
 
 from api.access.authenticator import AuthMetadata
 from api.shared import get_auth_metadata
@@ -12,7 +13,7 @@ def get_stuff(
     limit: int = Query(100, le=500),
     auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    txns = db.get_transactions(
+    txns = db_instance.get_transactions(
         user_id=auth_metadata.user_id, offset=offset, limit=limit)
     return dict(
         next_offset=offset+len(txns),
