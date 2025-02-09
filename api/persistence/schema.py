@@ -42,7 +42,7 @@ class Receipt(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     content_type = Column(String(32), nullable=False)
     content_length = Column(Integer, nullable=False)
-    content_hash = Column(String(64), nullable=False)
+    content_hash = Column(String(64), nullable=False, unique=True)
 
 
 class Transaction(Base):
