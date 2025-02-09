@@ -4,8 +4,9 @@ import types
 from functools import wraps
 from typing import List, Optional
 
+from persistence.exceptions import DuplicateReceipt
 from persistence.schema import Base, Receipt, Role, Transaction, User
-from sqlalchemy import create_engine, func, select
+from sqlalchemy import create_engine, desc, func, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import joinedload, sessionmaker
 
@@ -130,10 +131,15 @@ class Database:
                 content_length=content_length,
                 content_hash=content_hash
             )
-            session.add(receipt)
-            session.commit()
+            try:
+                session.add(receipt)
+                session.commit()
 
-            receipt.id  # trigger lazy-loading of the id field.
+                receipt.id  # trigger lazy-loading of the id field.
+            except IntegrityError:
+                # Most likely caused by the unique constraint on the hash field.
+                # TODO: make sure this is indeed the cause of IntegrityError.
+                raise DuplicateReceipt
 
         return receipt
 
@@ -148,8 +154,9 @@ class Database:
             session.commit()
 
     def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
+        # In descending order of id -- i.e. latest first.
         with get_session() as session:
-            return session.query(Receipt).offset(offset).limit(limit).all()
+            return session.query(Receipt).order_by(desc(Receipt.id)).offset(offset).limit(limit).all()
 
     def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
         with get_session() as session:

@@ -4,18 +4,18 @@ import logging
 from typing import Callable, List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, status
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from logic import divvy
 from persistence import database
-from persistence.exceptions import DuplicateUsernameException
 from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect
 
 from api.access import authenticator
 from api.access.authenticator import AuthMetadata
 from api.access.exceptions import InvalidCredsException
+from api.exceptions import register_exception_handlers
 from api.routers.receipts import router as receipt_router
 from api.routers.transactions import router as transaction_router
 from api.routers.users import router as user_router
@@ -42,6 +42,8 @@ app = divvy.instance
 fastapi_app.include_router(transaction_router)
 fastapi_app.include_router(receipt_router)
 fastapi_app.include_router(user_router)
+
+register_exception_handlers(fastapi_app)
 
 
 class Token(BaseModel):
@@ -91,30 +93,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...), Auth
     except WebSocketDisconnect:
         sockets.remove(websocket)
         logger.info("Socket closed")
-
-
-@fastapi_app.exception_handler(AssertionError)
-def unicorn_exception_handler(_, e: AssertionError):
-    return JSONResponse(
-        status_code=400,
-        content=dict(message=str(e))
-    )
-
-
-@fastapi_app.exception_handler(DuplicateUsernameException)
-def unicorn_exception_handler(*args, **kwargs):
-    return JSONResponse(
-        status_code=400,
-        content=dict(message="The username is already in use.")
-    )
-
-
-@fastapi_app.exception_handler(NotImplementedError)
-def unicorn_exception_handler(*args, **kwargs):
-    return JSONResponse(
-        status_code=500,
-        content=dict(message="Not implemented")
-    )
 
 
 @fastapi_app.get("/file", response_class=FileResponse)
