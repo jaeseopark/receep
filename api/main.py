@@ -8,16 +8,17 @@ from typing import Callable, List, Optional
 import jwt
 
 from starlette.websockets import WebSocketDisconnect
-from fastapi import FastAPI, UploadFile, WebSocket, status, Depends, HTTPException, Query
+from fastapi import FastAPI, UploadFile, WebSocket, status, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.security import OAuth2PasswordBearer
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 
 from pydantic import BaseModel
 
-from auth import JWT_KEY, AuthModule, DuplicateUsernameException, InvalidCredsException, NoInvitationFound
+from auth import JWT_KEY, Auth, AuthMetadata, DuplicateUsernameException, InvalidCredsException, NoInvitationFound
 from db import Database
+from divvy import Divvy
+
 
 SIGNUP = os.getenv("SIGNUP")
 assert SIGNUP in ("OPEN", "CLOSED",
@@ -34,17 +35,16 @@ uvicorn_logger.addHandler(logging.FileHandler(
     "/var/log/divvy/api/uvicorn.log"))
 
 fastapi_app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 sockets: List[WebSocket] = []
 
+
+def get_jwt_cookie(request: Request):
+    return request.cookies.get("jwt")
+
+
 db = Database()
-auth = AuthModule(db)
-
-
-class AuthMetadata:
-    authenticated: bool = False
-    username: Optional[str]
-    roles: List[str] = []
+auth = Auth(db)
+divvy = Divvy(db)
 
 
 def get_app_info():
@@ -106,15 +106,13 @@ def get_broadcast_function(topic: str) -> Callable[[dict], None]:
 def get_auth_metadata(*, assert_roles: List[str] = None, assert_jwt: bool = False) -> Callable[[], AuthMetadata]:
     logger.info("returning a wrapper function to get auth metadata")
 
-    def wrapper(token: str = Depends(oauth2_scheme)) -> AuthMetadata:
+    def wrapper(token: str = Depends(get_jwt_cookie)) -> AuthMetadata:
         logger.info("executing wrapper...")
 
         metadata = AuthMetadata()
         if token:
             try:
-                metadata.username = auth.decode_jwt(token).get("sub")
-                metadata.authenticated = True
-                metadata.roles = db.get_user_roles(metadata.username)
+                metadata = auth.get_auth_metadata(token)
             except jwt.PyJWTError:
                 pass
 
@@ -180,32 +178,31 @@ def unicorn_exception_handler(*args, **kwargs):
     )
 
 
-@fastapi_app.get("/stuff")
-def get_stuff(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
-    return dict(stuff=[
-        1, 2, 3
-    ])
+@fastapi_app.get("/receipts/paginated")
+def get_stuff(
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, le=500),
+    _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    receipts = db.get_receipts(offset=offset, limit=limit)
+    return dict(
+        next_offest=offset+len(receipts),
+        items=receipts
+    )
+
+
+@fastapi_app.post("/receipts")
+async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    try:
+        return divvy.upload(metadata.user_id, file.content_type, file.file)
+    finally:
+        file.file.close()
 
 
 @fastapi_app.get("/file", response_class=FileResponse)
 def get_file(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     local_path = "/data/some_file.pdf"
     return local_path
-
-
-@fastapi_app.post("/file")
-def upload_file(file: UploadFile, _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
-    local_path = "/data/some_file"
-    try:
-        contents = file.file.read()
-        with open(local_path, 'wb+') as f:
-            f.write(contents)
-    except Exception as e:
-        print(e)
-    finally:
-        file.file.close()
-
-    return dict(path=local_path)
 
 
 @fastapi_app.post("/login", response_model=Token)
@@ -247,7 +244,7 @@ async def invite(payload: InviteRequest, metadata: AuthMetadata = Depends(get_au
             status_code=403,
             detail="Invite is closed.",
         )
-    
+
     if app_info.signup == "INVITE_ONLY" and "admin" not in metadata.roles:
         raise HTTPException(
             status_code=403,

@@ -7,13 +7,9 @@ const WS_ENABLED = false;
 // Create an Axios instance
 export const axios = axiosss.create();
 
-// Add an interceptor to include the Bearer token from cookies
 axios.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("jwt");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // TODO populate custom code here
     return config;
   },
   (error) => {

@@ -9,8 +9,15 @@ upstream api {
 server {
     listen 80;
 
+    # Some pics and PDFs can be big.
+    client_max_body_size 100M;
+
     location / {
         proxy_pass http://ui;
+    }
+
+    location ~* \.dr$ {
+        root /receipts;
     }
 
     location /api/ {

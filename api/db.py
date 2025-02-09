@@ -4,10 +4,11 @@ import os
 import types
 from typing import List, Optional
 
-from sqlalchemy import create_engine, Column, Integer, String, func, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, joinedload
+from sqlalchemy import create_engine, func
+from sqlalchemy.orm import sessionmaker, joinedload
 from sqlalchemy.exc import NoResultFound, IntegrityError
+
+from db_schema import Base, Receipt, Role, User
 
 
 password = os.getenv("POSTGRES_PASSWORD")
@@ -15,43 +16,7 @@ logger = logging.getLogger("divvy")
 
 SESSION_DECORATORS = dict()
 
-Base = declarative_base()
-
-
-class User(Base):
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String, nullable=False, unique=True)
-    hashed_password = Column(String)
-    totp_private_key = Column(String)
-
-    # Many-to-many relationship with Role
-    roles = relationship('Role', secondary='user_roles',
-                         back_populates='users')
-
-
-class Role(Base):
-    __tablename__ = 'roles'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False, unique=True)
-
-    # The many-to-many relationship is through this table
-    users = relationship('User', secondary='user_roles',
-                         back_populates='roles')
-
-
-class UserRoles(Base):
-    __tablename__ = 'user_roles'
-
-    user_id = Column(Integer, ForeignKey(
-        'users.id', ondelete='CASCADE'), primary_key=True)
-    role_id = Column(Integer, ForeignKey(
-        'roles.id', ondelete='CASCADE'), primary_key=True)
-
-
-# Note the following commands should be placed after the class definitions
+# Note the following commands should be placed after the ORM class definitions
 engine = create_engine(f"postgresql://postgres:{password}@db/postgres")
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
@@ -159,9 +124,31 @@ class Database:
         with get_session() as session:
             return session.get_user_count()
 
-    def get_user_roles(self, username: str) -> List[str]:
+    def create_receipt(self, user_id: int, content_type: str, content_length: int, content_hash: str) -> Receipt:
         with get_session() as session:
-            user = session.get_user_by_username(username)
-            role_names = [r.name for r in user.roles]
-            logger.info(f"{user.roles=} {role_names=}")
-            return role_names
+            receipt = Receipt(
+                user_id=user_id,
+                content_type=content_type,
+                content_length=content_length,
+                content_hash=content_hash
+            )
+            session.add(receipt)
+            session.commit()
+
+            receipt.id # trigger lazy-loading of the id field.
+
+        return receipt
+
+    def delete_receipt(self, receipt_id: str):
+        with get_session() as session:
+            receipt = session.get(Receipt, receipt_id)
+            if not receipt:
+                msg = f"Receipt cannot be deleted because it does not exist. {receipt_id=}"
+                logger.warning(msg)
+
+            session.delete(receipt)
+            session.commit()
+
+    def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
+        with get_session() as session:
+            return session.query(Receipt).offset(offset).limit(limit).all()

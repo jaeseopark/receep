@@ -5,7 +5,7 @@ import os
 from types import SimpleNamespace
 import uuid
 from datetime import datetime, timedelta
-from typing import Union
+from typing import List, Optional, Union
 from io import BytesIO
 
 # 3rd party deps
@@ -22,6 +22,13 @@ JWT_KEY = str(uuid.uuid4())
 JWT_ALG = "HS256"
 
 logger = logging.getLogger("divvy")
+
+
+class AuthMetadata:
+    authenticated: bool = False
+    user_id: Optional[int]
+    username: Optional[str]
+    roles: List[str] = []
 
 
 def _create_jwt_token(username, expiration_delta: timedelta) -> dict:
@@ -56,7 +63,7 @@ class DuplicateUsernameException(Exception):
     pass
 
 
-class AuthModule:
+class Auth:
     def __init__(self, db: Database):
         self.db = db
 
@@ -168,5 +175,13 @@ class AuthModule:
 
         return result
 
-    def decode_jwt(self, token):
-        return jwt.decode(token, JWT_KEY, algorithms=[JWT_ALG])
+    def get_auth_metadata(self, token: Optional[str]):
+        metadata = AuthMetadata()
+        
+        metadata.username = jwt.decode(token, JWT_KEY, algorithms=[JWT_ALG]).get("sub")
+        metadata.authenticated = True
+        user = self.db.get_user_by_username(metadata.username)
+        metadata.user_id = user.id
+        metadata.roles = [r.name for r in user.roles]
+        
+        return metadata

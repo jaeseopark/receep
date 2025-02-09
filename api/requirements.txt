@@ -11,3 +11,5 @@ qrcode[pil]
 pyotp
 pyjwt
 bcrypt
+pdf2image
+pillow

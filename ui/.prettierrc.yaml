@@ -6,7 +6,7 @@ importOrder:
   - "\/.*types$"
   - "\/.*state$"
   - ".*\/utilities\/.*"
-  - "^@.*(?<!css)$" # local dependencies with the @ prefix shortcut
+  - "^@\/.*(?<!css)$" # local dependencies with the @ prefix shortcut
   - "^[.].*(?<!css)$" # relative dependencies (except css)
   - ".*css$" # CSS files
 importOrderSeparation: true

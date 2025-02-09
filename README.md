@@ -4,7 +4,15 @@
 
 ```shell
 docker-compose -f docker-compose-dev.yml up --build -d
+
+# See API logs
 docker-compose logs --tail=100 -f api
+
+# Run Prettier against the UI code
+docker-compose exec ui npx prettier --write .
+
+# Invoke yarn
+docker-compose exec ui yarn add ...
 ```
 
 ### Fix Filesystem Permissions
