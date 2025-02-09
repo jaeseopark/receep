@@ -1,7 +1,8 @@
 import os
 from typing import Callable, Tuple
-from PIL import Image
+
 from pdf2image import convert_from_path
+from PIL import Image
 
 DEFAULT_THUMBNAIL_SIZE = (200, 200)  # Set the thumbnail size (width, height)
 
@@ -44,5 +45,6 @@ def generate_thumbnail(content_type: str, source_path: str, thumb_size: Tuple[in
         if match(content_type):
             func(source_path, output_path, thumb_size)
             return
-    
-    raise RuntimeError(f"Thumbnial processor for the given content type not found. {content_type=}")
+
+    raise RuntimeError(
+        f"Thumbnial processor for the given content type not found. {content_type=}")

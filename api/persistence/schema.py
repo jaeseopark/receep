@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, Text, String, ForeignKey, UniqueConstraint, Table
+from sqlalchemy import (Column, ForeignKey, Integer, String, Table, Text,
+                        UniqueConstraint)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-
 
 Base = declarative_base()
 

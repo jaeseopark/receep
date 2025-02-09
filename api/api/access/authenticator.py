@@ -1,21 +1,25 @@
-# built in deps
+# Built-in deps
 import base64
 import logging
 import os
-from types import SimpleNamespace
-import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
 from io import BytesIO
+from types import SimpleNamespace
+from typing import List, Optional, Union
 
 # 3rd party deps
+import bcrypt
 import jwt
 import pyotp
-import bcrypt
 import qrcode
 
 # Local deps
-from db import Database, User
+from persistence.database import Database
+from persistence.database import instance as db_instance
+from persistence.exceptions import DuplicateUsernameException
+from persistence.schema import User
+
+from api.access.exceptions import InvalidCredsException, NoInvitationFound
 
 JWT_KEY = os.getenv("JWT_KEY")
 JWT_ALG = "HS256"
@@ -50,19 +54,7 @@ def _verify_totp(key: str, token: str):
     return False
 
 
-class InvalidCredsException(Exception):
-    pass
-
-
-class NoInvitationFound(Exception):
-    pass
-
-
-class DuplicateUsernameException(Exception):
-    pass
-
-
-class Auth:
+class Authenticator:
     def __init__(self, db: Database):
         self.db = db
 
@@ -131,7 +123,8 @@ class Auth:
         # Generate the image of the QR code
         img = qr.make_image(fill='black', back_color='white')
         buffered = BytesIO()
-        img.save(buffered, format="PNG")  # Save the image as PNG in the buffer
+        # Save the image as PNG in the buffer
+        img.save(buffered, format="PNG")
         img_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
         return dict(
@@ -176,11 +169,15 @@ class Auth:
 
     def get_auth_metadata(self, token: Optional[str]):
         metadata = AuthMetadata()
-        
-        metadata.username = jwt.decode(token, JWT_KEY, algorithms=[JWT_ALG]).get("sub")
+
+        metadata.username = jwt.decode(
+            token, JWT_KEY, algorithms=[JWT_ALG]).get("sub")
         metadata.authenticated = True
         user = self.db.get_user_by_username(metadata.username)
         metadata.user_id = user.id
         metadata.roles = [r.name for r in user.roles]
-        
+
         return metadata
+
+
+instance = Authenticator(db_instance)

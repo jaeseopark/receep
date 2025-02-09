@@ -5,20 +5,21 @@ import os
 from types import SimpleNamespace
 from typing import Callable, List, Optional
 
-import jwt
-
-from starlette.websockets import WebSocketDisconnect
-from fastapi import FastAPI, UploadFile, WebSocket, status, Depends, HTTPException, Query, Request
+from fastapi import (Depends, FastAPI, HTTPException, Query, UploadFile,
+                     WebSocket, status)
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-
+from logic import divvy
+from persistence import database
+from persistence.exceptions import DuplicateUsernameException
 from pydantic import BaseModel
+from starlette.websockets import WebSocketDisconnect
 
-from auth import JWT_KEY, Auth, AuthMetadata, DuplicateUsernameException, InvalidCredsException, NoInvitationFound
-from db import Database
-from divvy import Divvy
-
+from api.access import authenticator
+from api.access.authenticator import AuthMetadata
+from api.access.exceptions import InvalidCredsException, NoInvitationFound
+from api.shared import get_auth_metadata
 
 SIGNUP = os.getenv("SIGNUP")
 assert SIGNUP in ("OPEN", "CLOSED",
@@ -38,13 +39,9 @@ fastapi_app = FastAPI()
 sockets: List[WebSocket] = []
 
 
-def get_jwt_cookie(request: Request):
-    return request.cookies.get("jwt")
-
-
-db = Database()
-auth = Auth(db)
-divvy = Divvy(db)
+db = database.instance
+auth = authenticator.instance
+app = divvy.instance
 
 
 def get_app_info():
@@ -83,14 +80,6 @@ class LoginRequest(BaseModel):
     totp: Optional[str] = None
 
 
-@AuthJWT.load_config
-def get_ws_auth_config():
-    class Settings(BaseModel):
-        authjwt_secret_key: str = JWT_KEY
-
-    return Settings()
-
-
 def get_broadcast_function(topic: str) -> Callable[[dict], None]:
     def broadcast(payload: dict) -> None:
         async def broadcast_async():
@@ -102,32 +91,6 @@ def get_broadcast_function(topic: str) -> Callable[[dict], None]:
         asyncio.run(broadcast_async())
     return broadcast
 
-
-def get_auth_metadata(*, assert_roles: List[str] = None, assert_jwt: bool = False) -> Callable[[], AuthMetadata]:
-    logger.info("returning a wrapper function to get auth metadata")
-
-    def wrapper(token: str = Depends(get_jwt_cookie)) -> AuthMetadata:
-        logger.info("executing wrapper...")
-
-        metadata = AuthMetadata()
-        if token:
-            try:
-                metadata = auth.get_auth_metadata(token)
-            except jwt.PyJWTError:
-                pass
-
-        if assert_jwt and not metadata.authenticated:
-            raise HTTPException(401)
-
-        if assert_roles:
-            intersection = list(set(assert_roles) & set(metadata.roles))
-
-            if not intersection:
-                msg = f"User does not have the right role(s). expected={assert_roles} actual={metadata.roles}"
-                raise HTTPException(403, detail=msg)
-
-        return metadata
-    return wrapper
 
 # TODO: fix auth issues
 # @fastapi_app.websocket("/ws")
@@ -186,7 +149,7 @@ def get_stuff(
 ):
     receipts = db.get_receipts(offset=offset, limit=limit)
     return dict(
-        next_offest=offset+len(receipts),
+        next_offset=offset+len(receipts),
         items=receipts
     )
 

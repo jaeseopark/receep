@@ -1,12 +1,14 @@
-from io import BufferedReader
+import hashlib
 import logging
 import os
-from typing import List
 import shutil
-import hashlib
+from io import BufferedReader
+from typing import List
 
-from img import generate_thumbnail
-from db import Database, Receipt
+from logic.img import generate_thumbnail
+from persistence.database import instance as db_instance
+from persistence.database import Database
+from persistence.schema import Receipt
 
 RECEIPT_DIR = "/data/receipts"
 
@@ -62,3 +64,5 @@ class Divvy:
         TODO: ensure the resolutions of all pages are similar.
         """
         raise NotImplementedError
+
+instance = Divvy(db_instance)

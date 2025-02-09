@@ -1,15 +1,13 @@
-from functools import wraps
 import logging
 import os
 import types
+from functools import wraps
 from typing import List, Optional
 
-from sqlalchemy import create_engine, func
-from sqlalchemy.orm import sessionmaker, joinedload
-from sqlalchemy.exc import NoResultFound, IntegrityError
-
-from db_schema import Base, Receipt, Role, User
-
+from persistence.schema import Base, Receipt, Role, Transaction, User
+from sqlalchemy import create_engine, func, select
+from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.orm import joinedload, sessionmaker
 
 password = os.getenv("POSTGRES_PASSWORD")
 logger = logging.getLogger("divvy")
@@ -135,7 +133,7 @@ class Database:
             session.add(receipt)
             session.commit()
 
-            receipt.id # trigger lazy-loading of the id field.
+            receipt.id  # trigger lazy-loading of the id field.
 
         return receipt
 
@@ -152,3 +150,12 @@ class Database:
     def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
         with get_session() as session:
             return session.query(Receipt).offset(offset).limit(limit).all()
+
+    def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
+        with get_session() as session:
+            stmt = select(Transaction).where(
+                Transaction.user_id == user_id).offset(offset).limit(limit)
+            return session.scalars(stmt).all()
+
+
+instance = Database()
