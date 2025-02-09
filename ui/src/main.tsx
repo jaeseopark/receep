@@ -1,15 +1,7 @@
 import { render } from "preact";
-import { StrictMode } from "preact/compat";
 
-import { Provider } from "@/components/ui/provider";
+import App from "./app.tsx";
 
-import App from "./app";
+import "./index.css";
 
-render(
-  <StrictMode>
-    <Provider>
-      <App />
-    </Provider>
-  </StrictMode>,
-  document.getElementById("app")!,
-);
+render(<App />, document.getElementById("app")!);

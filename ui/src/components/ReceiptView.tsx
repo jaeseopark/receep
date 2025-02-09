@@ -1,5 +1,4 @@
-import { Card, Image, SimpleGrid, Text } from "@chakra-ui/react";
-import { AxiosInstance } from "axios";
+import { Camera } from "lucide-preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { useDropzone } from "react-dropzone";
 
@@ -33,7 +32,7 @@ const ReceiptView = () => {
   });
 
   useEffect(() => {
-    (axios as AxiosInstance)
+    axios
       .get("/api/receipts/paginated", {
         params: { ...pagination },
       })
@@ -104,32 +103,40 @@ const ReceiptView = () => {
     return <div>Loading...</div>;
   }
 
+  const renderDndZone = () => {
+    return (
+      <div className="space-y-2 p-4 bg-gray-100 rounded-lg border border-gray-300">
+        <div {...getRootProps()}>
+          <input {...getInputProps()} />
+          {isDragActive ? <p>Drop the files here ...</p> : <Camera className="w-6 h-6" />}
+        </div>
+      </div>
+    );
+  };
+
   const renderReceipts = () => {
     if (!receipts.length) {
       return <div>No Receipts</div>;
     }
 
     return (
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={6}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
         {receipts.map(({ id, contentHash }) => (
-          <Card.Root>
-            <Card.Body textAlign="center">
-              <Image src={getThumbnailPath(id)} alt={id} objectFit="cover" width="100%" height="150px" bg="gray.100" />
-              <Text fontWeight="bold">{contentHash}</Text>
-            </Card.Body>
-          </Card.Root>
+          <div className="card" key={id}>
+            <div className="card-body">
+              <img src={getThumbnailPath(id)} className="w-full h-auto rounded-md object-cover" />
+              <div>{contentHash}</div>
+            </div>
+          </div>
         ))}
-      </SimpleGrid>
+      </div>
     );
   };
 
   return (
-    <div>
-      <div {...getRootProps()}>
-        <input {...getInputProps()} />
-        {isDragActive ? <p>Drop the files here ...</p> : <p>Drag 'n' drop some files here, or click to select files</p>}
-      </div>
-      <div>{renderReceipts()}</div>
+    <div className="receipt-view">
+      {renderDndZone()}
+      {renderReceipts()}
     </div>
   );
 };

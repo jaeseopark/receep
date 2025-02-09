@@ -3,7 +3,6 @@ import { useEffect, useState } from "preact/hooks";
 import { UserInfo } from "@/types";
 
 import { axios } from "@/api";
-import { Center, VStack } from "@chakra-ui/react";
 
 const Home = () => {
   const [userInfo, setUserInfo] = useState<UserInfo>();
@@ -50,11 +49,7 @@ const Home = () => {
     );
   };
 
-  return (
-    <Center>
-      <VStack>{render()}</VStack>
-    </Center>
-  );
+  return render();
 };
 
 export default Home;

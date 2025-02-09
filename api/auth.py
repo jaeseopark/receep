@@ -17,8 +17,7 @@ import qrcode
 # Local deps
 from db import Database, User
 
-# JWT_KEY resets after a service restart, which is fine. Users with active JWT's just need to re-login.
-JWT_KEY = str(uuid.uuid4())
+JWT_KEY = os.getenv("JWT_KEY")
 JWT_ALG = "HS256"
 
 logger = logging.getLogger("divvy")

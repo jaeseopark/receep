@@ -1,4 +1,3 @@
-import { ReactNode } from "preact/compat";
 import { useEffect, useState } from "preact/hooks";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
@@ -6,18 +5,12 @@ import { AppInfo } from "@/types";
 
 import { axios } from "@/api";
 import AppFrame from "@/components/AppFrame";
-import ReceiptView from "@/components/ReceiptView";
-import Home from "@/components/home";
-import { Login, Signup } from "@/components/login";
-import { Invite } from "@/components/login";
+import Login from "@/components/Login";
+import Signup from "@/components/Signup";
+
+import { AUTHENTICATED_ROUTES } from "./routes";
 
 import "./app.scss";
-
-const AUTHENTICATED_ROUTES: { [key: string]: () => ReactNode } = {
-  "/": () => <Home />,
-  "/invite": () => <Invite />,
-  "/receipts": () => <ReceiptView />,
-};
 
 const App = () => {
   const [appInfo, setAppInfo] = useState<AppInfo>();
@@ -53,7 +46,7 @@ const App = () => {
         <Route path="/signup" element={<Signup appInfo={appInfo} />} />
         {isAuthenticated && (
           <>
-            {Object.entries(AUTHENTICATED_ROUTES).map(([path, Component]) => (
+            {AUTHENTICATED_ROUTES.map(({ path, component: Component }) => (
               <Route
                 key={path}
                 path={path}

@@ -1,5 +1,14 @@
 import { ReactNode } from "preact/compat";
 
-const AppFrame = ({ children }: { children: ReactNode }) => ({ children });
+import Navbar from "@/components/Navbar";
+
+const AppFrame = ({ children }: { children: ReactNode }) => {
+  return (
+    <div>
+      <Navbar />
+      {children}
+    </div>
+  );
+};
 
 export default AppFrame;
