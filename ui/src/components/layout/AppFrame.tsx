@@ -1,6 +1,6 @@
 import { ReactNode } from "preact/compat";
 
-import Dock from "@/components/Dock";
+import Dock from "@/components/layout/Dock";
 
 const AppFrame = ({ children }: { children: ReactNode }) => {
   return (

@@ -5,9 +5,9 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppInfo } from "@/types";
 
 import { axios } from "@/api";
-import AppFrame from "@/components/AppFrame";
 import Login from "@/components/Login";
 import Signup from "@/components/Signup";
+import AppFrame from "@/components/layout/AppFrame";
 
 import { AUTHENTICATED_ROUTES } from "./routes";
 
