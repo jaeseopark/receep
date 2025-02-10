@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import { formatDistanceToNow } from "date-fns";
-import { Circle, CircleCheck, Plus } from "lucide-preact";
+import { CircleCheck } from "lucide-preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
@@ -8,6 +8,8 @@ import { toast } from "react-hot-toast";
 import { Receipt } from "@/types";
 
 import { axios } from "@/api";
+import { AddReceiptButton, FilterButton } from "@/components/receipts/ActionButtons";
+import ReceiptFilterModal, { applySelectedFilters } from "@/components/receipts/ReceiptFilterModal";
 import { removeReceipt, replaceReceipt, sigReceipts, upsertReceipts } from "@/store";
 import { hash } from "@/utils/primitive";
 
@@ -20,6 +22,7 @@ const Receipts = () => {
     limit: 50,
   });
 
+  // TODO move the pagination/fetching out of this file.
   const getReceipts = useCallback(() => {
     axios
       .get("/api/receipts/paginated", {
@@ -106,7 +109,7 @@ const Receipts = () => {
 
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4 overflow-hidden">
-        {sigReceipts.value.map(({ id, created_at, transactions }) => (
+        {sigReceipts.value.filter(applySelectedFilters).map(({ id, created_at, transactions }) => (
           <div key={id} className="card bg-base-100 w-48 h-48 shadow-sm">
             <figure>
               <img src={getThumbnailPath(id)} alt={id} />
@@ -130,27 +133,9 @@ const Receipts = () => {
     >
       <input {...getInputProps()} />
       {renderReceipts()}
-      <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-        <input
-          id="receipt-input"
-          type="file"
-          accept="image/*"
-          className="hidden"
-          multiple
-          onChange={(e) => {
-            const files: File[] = e?.target?.files || [];
-            if (files.length > 0) {
-              uploadReceipts([...files]);
-            }
-          }}
-        />
-        <button
-          className="btn btn-circle btn-primary"
-          onClick={() => document.getElementById("receipt-input")?.click()}
-        >
-          <Plus />
-        </button>
-      </div>
+      <AddReceiptButton uploadReceipts={uploadReceipts} />
+      <FilterButton />
+      <ReceiptFilterModal />
     </div>
   );
 };

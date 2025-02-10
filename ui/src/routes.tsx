@@ -1,10 +1,10 @@
 import { ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
-import Receipts from "@/components/Receipts";
 import Reports from "@/components/Reports";
 import Settings from "@/components/Settings";
 import TransactionsTable from "@/components/Transactions";
+import ReceiptsView from "@/components/receipts/ReceiptsView";
 
 import TransactionEditView from "./components/TransactionEditView";
 
@@ -21,7 +21,7 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     path: "/receipts",
     name: "Receipts",
     description: "Upload and manage receipts",
-    component: Receipts,
+    component: ReceiptsView,
     icon: <Receipt />,
   },
   {

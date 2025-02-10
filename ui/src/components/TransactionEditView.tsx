@@ -246,7 +246,7 @@ const TransactionEditView = () => {
           </button>
         </div>
       </form>
-      <div className="bottom-24 fixed right-24 shadow-lg rounded-full">
+      <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
         <button
           className="btn btn-circle btn-primary"
           onClick={() => {
