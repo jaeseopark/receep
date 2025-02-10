@@ -136,6 +136,7 @@ const Receipts = () => {
           type="file"
           accept="image/*"
           className="hidden"
+          multiple
           onChange={(e) => {
             const files: File[] = e?.target?.files || [];
             if (files.length > 0) {
