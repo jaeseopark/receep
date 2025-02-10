@@ -1,13 +1,13 @@
 import { ReactNode } from "preact/compat";
 
-import Navbar from "@/components/Navbar";
+import Dock from "@/components/Dock";
 
 const AppFrame = ({ children }: { children: ReactNode }) => {
   return (
-    <div>
-      <Navbar />
-      {children}
-    </div>
+    <>
+      <div className="app-content mb-[4.5rem]">{children}</div>
+      <Dock />
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AppInfo } from "@/types";
@@ -39,28 +40,32 @@ const App = () => {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="*" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login appInfo={appInfo} isAuthenticated={isAuthenticated} />} />
-        <Route path="/signup" element={<Signup appInfo={appInfo} />} />
-        {isAuthenticated && (
-          <>
-            {AUTHENTICATED_ROUTES.map(({ path, component: Component }) => (
-              <Route
-                key={path}
-                path={path}
-                element={
-                  <AppFrame>
-                    <Component />
-                  </AppFrame>
-                }
-              />
-            ))}
-          </>
-        )}
-      </Routes>
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login appInfo={appInfo} isAuthenticated={isAuthenticated} />} />
+          <Route path="/signup" element={<Signup appInfo={appInfo} />} />
+          {isAuthenticated && (
+            <>
+              <Route path="/" element={<Navigate to="/receipts" replace />} />
+              {AUTHENTICATED_ROUTES.map(({ path, component: Component }) => (
+                <Route
+                  key={path}
+                  path={path}
+                  element={
+                    <AppFrame>
+                      <Component />
+                    </AppFrame>
+                  }
+                />
+              ))}
+            </>
+          )}
+        </Routes>
+      </BrowserRouter>
+      <Toaster />
+    </>
   );
 };
 

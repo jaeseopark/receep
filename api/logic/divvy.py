@@ -53,8 +53,9 @@ class Divvy:
                 shutil.copyfileobj(buffered_reader, fp)
             generate_thumbnail(source_path=save_path,
                                content_type=content_type)
-        except IOError:
+        except Exception as e:
             self.db.delete_receipt(receipt.id)
+            raise
 
         return receipt
 
@@ -64,5 +65,6 @@ class Divvy:
         TODO: ensure the resolutions of all pages are similar.
         """
         raise NotImplementedError
+
 
 instance = Divvy(db_instance)

@@ -4,7 +4,7 @@ import types
 from functools import wraps
 from typing import List, Optional
 
-from persistence.exceptions import DuplicateReceipt
+from persistence.exceptions import DuplicateReceipt, NotFound
 from persistence.schema import Base, Receipt, Role, Transaction, User
 from sqlalchemy import create_engine, desc, func, select
 from sqlalchemy.exc import IntegrityError, NoResultFound
@@ -54,6 +54,11 @@ def get_user_by_username(self, username: str):
     return self.query(User).options(joinedload(User.roles)).filter(User.username == username).first()
 
 
+@session_decorator
+def get_user_by_id(self, user_id: int) -> Optional[User]:
+    return self.query(User).options(joinedload(User.roles)).filter(User.id == user_id).first()
+
+
 def get_session():
     logger.info("Initializing custom session...")
     session = Session()
@@ -70,7 +75,7 @@ class Database:
         """
         Returns a boolean indicating whether the user creation was successful
         """
-        user = User(username=username)
+        user = User(username=username, config=dict())
         with get_session() as session:
             # First user in the db is always the admin.
             should_be_admin = session.get_user_count() == 0
@@ -89,11 +94,19 @@ class Database:
 
     def get_user_by_username(self, username) -> Optional[User]:
         with get_session() as session:
-            try:
-                return session.get_user_by_username(username)
-            except NoResultFound:
+            user = session.get_user_by_username(username)
+            if not user:
                 logger.info(f"User not found {username=}")
                 return None
+            return user
+
+    def update_user_config(self, user_id: int, config: dict):
+        with get_session() as session:
+            user = session.get_user_by_id(user_id)
+            if not user:
+                raise NotFound
+            user.config = config
+            session.commit()
 
     def update_user_creds(self, user: User) -> None:
         with get_session() as session:
@@ -129,13 +142,14 @@ class Database:
                 user_id=user_id,
                 content_type=content_type,
                 content_length=content_length,
-                content_hash=content_hash
+                content_hash=content_hash,
             )
             try:
                 session.add(receipt)
                 session.commit()
 
                 receipt.id  # trigger lazy-loading of the id field.
+                receipt.transactions = [] # initialize a blank list before the session ends.
             except IntegrityError:
                 # Most likely caused by the unique constraint on the hash field.
                 # TODO: make sure this is indeed the cause of IntegrityError.
@@ -156,7 +170,10 @@ class Database:
     def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
         # In descending order of id -- i.e. latest first.
         with get_session() as session:
-            return session.query(Receipt).order_by(desc(Receipt.id)).offset(offset).limit(limit).all()
+            receipts = session.query(Receipt).options(joinedload(Receipt.transactions)).order_by(
+                desc(Receipt.id)).offset(offset).limit(limit).all()
+            # [r.transactions for r in receipts] # trigger lazy loading
+            return receipts
 
     def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
         with get_session() as session:

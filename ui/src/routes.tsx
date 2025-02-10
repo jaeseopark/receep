@@ -1,19 +1,60 @@
+import { ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
-import Invite from "@/components/Invite";
-import ReceiptView from "@/components/ReceiptView";
+import Receipts from "@/components/Receipts";
+import Reports from "@/components/Reports";
+import Settings from "@/components/Settings";
+import TransactionsTable from "@/components/Transactions";
 
-import "./app.scss";
+import TransactionEditView from "./components/TransactionEditView";
 
 type RouteEntry = {
   path: string;
   name: string;
   description: string;
   component: () => ReactNode;
+  icon?: ReactNode;
 };
 
 export const AUTHENTICATED_ROUTES: RouteEntry[] = [
-  { path: "/", name: "Receipts", description: "Upload and manage receipts", component: ReceiptView },
-  // TODO: change this to manager users
-  { path: "/invite", name: "Invite Users", description: "Invite friends to use divvy", component: Invite },
+  {
+    path: "/receipts",
+    name: "Receipts",
+    description: "Upload and manage receipts",
+    component: Receipts,
+    icon: <Receipt />,
+  },
+  {
+    path: "/transactions",
+    name: "Transactions",
+    description: "Manage transactions",
+    component: TransactionsTable,
+    icon: <NotebookPen />,
+  },
+  {
+    path: "/transactions/edit/:id",
+    name: "Edit Transaction",
+    description: "Edit transaction",
+    component: TransactionEditView,
+  },
+  {
+    path: "/transactions/new",
+    name: "New Transaction",
+    description: "Create transaction",
+    component: TransactionEditView,
+  },
+  {
+    path: "/reports",
+    name: "Reports",
+    description: "Data visualization and drilldown reporting",
+    component: Reports,
+    icon: <ChartLine />,
+  },
+  {
+    path: "/settings",
+    name: "Settings",
+    description: "Manage application settings",
+    component: Settings,
+    icon: <SettingsIcon />,
+  },
 ];

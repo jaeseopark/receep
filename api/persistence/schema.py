@@ -1,5 +1,6 @@
-from sqlalchemy import (Column, ForeignKey, Integer, String, Table, Text,
-                        UniqueConstraint)
+from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, Table,
+                        Text, UniqueConstraint, func)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -23,6 +24,7 @@ class User(Base):
     username = Column(String(32), nullable=False, unique=True)
     hashed_password = Column(String(255))
     totp_private_key = Column(String(64))
+    config = Column(JSONB, nullable=False)
 
     # Many-to-many relationship with Role
     roles = relationship('Role', secondary='user_roles')
@@ -40,19 +42,26 @@ class Receipt(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime, default=func.now())
     content_type = Column(String(32), nullable=False)
     content_length = Column(Integer, nullable=False)
     content_hash = Column(String(64), nullable=False, unique=True)
+
+    transactions = relationship("Transaction", back_populates="receipt")
 
 
 class Transaction(Base):
     __tablename__ = 'transactions'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    time = Column(Integer, nullable=False)
-    notes = Column(Text)
+    created_at = Column(DateTime, default=func.now())
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    receipt_id = Column(Integer, ForeignKey('receipts.id'), nullable=False)
+    vendor = Column(String(32))
+    notes = Column(Text)
+    receipt_id = Column(Integer, ForeignKey('receipts.id'))
+
+    receipt = relationship("Receipt", back_populates="transactions")
+    line_items = relationship("LineItem")
 
 
 class Category(Base):

@@ -2,6 +2,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from persistence.database import instance as db_instance
 from pydantic import BaseModel
 
 from api.access.authenticator import AuthMetadata
@@ -11,6 +12,7 @@ from api.shared import get_app_info, get_auth_metadata
 
 router = APIRouter()
 auth = auth_instance
+db = db_instance
 
 
 class SignupResponse(BaseModel):
@@ -27,6 +29,10 @@ class SignupRequest(BaseModel):
 
 class InviteRequest(BaseModel):
     username: str
+
+
+class ConfigRequest(BaseModel):
+    tax_rate: float
 
 
 @router.post("/signup", response_model=SignupResponse)
@@ -74,3 +80,22 @@ async def accept_invite(payload: SignupRequest, _: AuthMetadata = Depends(get_au
             status_code=404,
             detail="No invitation found",
         )
+
+
+@router.get("/me")
+async def get_my_info(metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    return dict(
+        user_id=metadata.user_id,
+        username=metadata.username,
+        roles=metadata.roles,
+        config=metadata.config
+    )
+
+
+@router.post("/me/config")
+async def update_user_config(
+    payload: ConfigRequest,
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    db.update_user_config(auth_metadata.user_id, payload.__dict__)
+    return dict(message="success")

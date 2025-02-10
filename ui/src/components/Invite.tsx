@@ -31,7 +31,7 @@ const Invite = () => {
   };
 
   return (
-    <div maxW="400px" mx="auto" mt="100px" p="6" borderWidth="1px" borderRadius="lg" boxShadow="md">
+    <div>
       {!isInviteSuccess && (
         <form onSubmit={handleSubmit}>
           <div marginBottom="2em">

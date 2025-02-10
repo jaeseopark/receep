@@ -130,11 +130,3 @@ async def check_jwt(_: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True)
 @fastapi_app.get("/app/info")
 async def get_app_info_endpoint():
     return get_app_info().__dict__
-
-
-@fastapi_app.get("/me")
-async def get_my_info(metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
-    return dict(
-        username=metadata.username,
-        roles=metadata.roles
-    )

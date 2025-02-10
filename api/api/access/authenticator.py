@@ -32,6 +32,7 @@ class AuthMetadata:
     user_id: Optional[int]
     username: Optional[str]
     roles: List[str] = []
+    config: Optional[dict]
 
 
 def _create_jwt_token(username, expiration_delta: timedelta) -> dict:
@@ -93,8 +94,7 @@ class Authenticator:
     def setup_password(self, username: str, password: str):
         user = self.db.get_user_by_username(username)
         if not user:
-            # TODO do something
-            return
+            logger.info(f"User not found. {username=}")
 
         user.hashed_password = bcrypt.hashpw(
             password.encode('utf-8'), bcrypt.gensalt()).decode("utf-8")
@@ -177,6 +177,7 @@ class Authenticator:
             metadata.authenticated = True
             metadata.user_id = user.id
             metadata.roles = [r.name for r in user.roles]
+            metadata.config = user.config
 
         return metadata
 
