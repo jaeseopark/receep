@@ -11,19 +11,6 @@ export type AppInfo = {
   user_count: number;
 };
 
-export type Receipt = {
-  id: number;
-  user_id: number;
-  created_at: number;
-  content_type: string;
-  content_length: number;
-  content_hash: string;
-  transactions: object[];
-  is_uploading: boolean;
-  rotation: number;
-  ocr_metadata: Record<string, number>
-};
-
 export type LineItem = {
   id: number;
   name: string;
@@ -43,4 +30,17 @@ export type Transaction = {
   vendor?: string;
   receipt_id?: number;
   notes?: string;
+};
+
+export type Receipt = {
+  id: number;
+  user_id: number;
+  created_at: number;
+  content_type: string;
+  content_length: number;
+  content_hash: string;
+  transactions: Transaction[];
+  is_uploading: boolean;
+  rotation: number;
+  ocr_metadata: Record<string, number>;
 };
