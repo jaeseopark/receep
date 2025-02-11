@@ -60,7 +60,6 @@ def get_user_by_id(self, user_id: int) -> Optional[User]:
 
 
 def get_session():
-    logger.info("Initializing custom session...")
     session = Session()
 
     for func_name, func in SESSION_DECORATORS.items():

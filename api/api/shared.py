@@ -34,11 +34,7 @@ def get_jwt_cookie(request: Request):
 
 
 def get_auth_metadata(*, assert_roles: List[str] = None, assert_jwt: bool = False) -> Callable[[], AuthMetadata]:
-    logger.info("returning a wrapper function to get auth metadata")
-
     def wrapper(token: str = Depends(get_jwt_cookie)) -> AuthMetadata:
-        logger.info("executing wrapper...")
-
         metadata = AuthMetadata()
         if token:
             try:
