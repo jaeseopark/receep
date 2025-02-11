@@ -3,10 +3,10 @@ import { ReactNode } from "preact/compat";
 
 import Reports from "@/components/Reports";
 import Settings from "@/components/Settings";
+import TransactionEditView from "@/components/TransactionEditView";
 import TransactionsTable from "@/components/Transactions";
+import ReceiptEditView from "@/components/receipts/ReceiptEditView";
 import ReceiptsView from "@/components/receipts/ReceiptsView";
-
-import TransactionEditView from "./components/TransactionEditView";
 
 type RouteEntry = {
   path: string;
@@ -23,6 +23,12 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     description: "Upload and manage receipts",
     component: ReceiptsView,
     icon: <Receipt />,
+  },
+  {
+    path: "/receipts/edit/:id",
+    name: "Edit Receipt",
+    description: "View and edit a receipt",
+    component: ReceiptEditView,
   },
   {
     path: "/transactions",

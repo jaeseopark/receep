@@ -1,6 +1,4 @@
 import classNames from "classnames";
-import { formatDistanceToNow } from "date-fns";
-import { CircleCheck } from "lucide-preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-hot-toast";
@@ -9,40 +7,13 @@ import { Receipt } from "@/types";
 
 import { axios } from "@/api";
 import { AddReceiptButton, FilterButton } from "@/components/receipts/ActionButtons";
+import ReceiptCard from "@/components/receipts/ReceiptCard";
 import ReceiptFilterModal, { applySelectedFilters } from "@/components/receipts/ReceiptFilterModal";
+import { sigInitialLoadResult } from "@/gvars";
 import { removeReceipt, replaceReceipt, sigReceipts, upsertReceipts } from "@/store";
 import { hash } from "@/utils/primitive";
 
-const getThumbnailPath = (receiptId: number) => `/${receiptId}-thumb.dr`;
-
 const Receipts = () => {
-  const [isReady, setReady] = useState(false);
-  const [pagination, setPagination] = useState({
-    offset: 0,
-    limit: 50,
-  });
-
-  // TODO move the pagination/fetching out of this file.
-  const getReceipts = useCallback(() => {
-    axios
-      .get("/api/receipts/paginated", {
-        params: { ...pagination },
-      })
-      .then((r) => r.data)
-      .then(({ next_offset, items }: { next_offset: number; items: Receipt[] }) => {
-        setPagination((prev) => ({
-          ...prev,
-          offset: next_offset,
-        }));
-        upsertReceipts(items);
-      })
-      .finally(() => {
-        setReady(true);
-      });
-  }, [pagination]);
-
-  useEffect(getReceipts, []);
-
   const uploadReceipts = (files: File[]): Promise<void>[] => {
     // Add blank receipts to display spinners while uploading
     upsertReceipts(
@@ -93,7 +64,7 @@ const Receipts = () => {
    * End of hooks
    * --------------------------------------- */
 
-  if (!isReady) {
+  if (sigInitialLoadResult.value !== "SUCCEEDED") {
     return <div>Loading...</div>;
   }
 
@@ -109,17 +80,7 @@ const Receipts = () => {
 
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4 overflow-hidden">
-        {sigReceipts.value.filter(applySelectedFilters).map(({ id, created_at, transactions }) => (
-          <div key={id} className="card bg-base-100 w-48 h-48 shadow-sm">
-            <figure>
-              <img src={getThumbnailPath(id)} alt={id} />
-            </figure>
-            <div className="card-body m-0 p-0">
-              <h2 className="card-title">{formatDistanceToNow(new Date(created_at * 1000), { addSuffix: true })}</h2>
-              {(transactions || []).length > 0 && <CircleCheck />}
-            </div>
-          </div>
-        ))}
+        {sigReceipts.value.filter(applySelectedFilters).map(ReceiptCard)}
       </div>
     );
   };

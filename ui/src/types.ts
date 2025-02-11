@@ -20,6 +20,8 @@ export type Receipt = {
   content_hash: string;
   transactions: object[];
   is_uploading: boolean;
+  rotation: number;
+  ocr_metadata: Record<string, number>
 };
 
 export type LineItem = {

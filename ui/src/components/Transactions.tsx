@@ -1,22 +1,21 @@
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { formatDistanceToNow } from "date-fns";
 import { Plus } from "lucide-preact";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
+import { useMemo } from "preact/hooks";
 import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
-import { axios } from "@/api";
-import { sigTransactions, upsertTransactions } from "@/store";
+import { sigTransactions } from "@/store";
+import { toRelativeTime } from "@/utils/dates";
 
 const columnHelper = createColumnHelper<Transaction>();
 
 const columns = [
-  columnHelper.accessor("time", {
+  columnHelper.accessor("created_at", {
     header: () => "Time",
     cell: (info) => {
       // TODO: abs time on hover?
-      return <span>{formatDistanceToNow(new Date(info.getValue()), { addSuffix: true })}</span>;
+      return <span>{toRelativeTime(info.getValue())}</span>;
     },
     footer: (info) => info.column.id,
   }),
@@ -47,29 +46,8 @@ const columns = [
 ];
 
 const TransactionsTable = () => {
-  const [pagination, setPagination] = useState({
-    offset: 0,
-    limit: 50,
-  });
   const navigate = useNavigate();
   const data = useMemo(() => sigTransactions.value.filter((t) => t.id > 0), [sigTransactions.value]);
-
-  const getTransactions = useCallback(() => {
-    axios
-      .get("/api/transactions/paginated", {
-        params: { ...pagination },
-      })
-      .then((r) => r.data)
-      .then(({ next_offset, items }: { next_offset: number; items: Transaction[] }) => {
-        setPagination((prev) => ({
-          ...prev,
-          offset: next_offset,
-        }));
-        upsertTransactions(items);
-      });
-  }, [pagination]);
-
-  useEffect(getTransactions, []);
 
   const table = useReactTable({
     data,

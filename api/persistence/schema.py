@@ -46,6 +46,8 @@ class Receipt(Base):
     content_type = Column(String(32), nullable=False)
     content_length = Column(Integer, nullable=False)
     content_hash = Column(String(64), nullable=False, unique=True)
+    rotation = Column(Integer, nullable=False)
+    ocr_metadata = Column(JSONB, nullable=False)
 
     transactions = relationship("Transaction", back_populates="receipt")
 

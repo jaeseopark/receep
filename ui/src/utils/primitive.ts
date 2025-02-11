@@ -5,3 +5,17 @@ export function hash(str: string): number {
   }
   return hash;
 }
+
+export const isPositiveInteger = (str?: string): boolean => {
+  if (!str) {
+    return false;
+  }
+
+  const int = Number.parseInt(str);
+  if (Number.isNaN(int)) {
+    return false;
+  }
+
+  // TODO: need a more robust logic because this will return true if str="1.5" for example.
+  return int >= 0;
+};

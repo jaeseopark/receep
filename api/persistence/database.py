@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from persistence.exceptions import DuplicateReceipt, NotFound
 from persistence.schema import Base, Receipt, Role, Transaction, User
-from sqlalchemy import create_engine, desc, func, select
+from sqlalchemy import create_engine, desc, func, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import joinedload, sessionmaker
 
@@ -142,13 +142,16 @@ class Database:
                 content_type=content_type,
                 content_length=content_length,
                 content_hash=content_hash,
+                rotation=0,
+                ocr_metadata={}
             )
             try:
                 session.add(receipt)
                 session.commit()
 
                 receipt.id  # trigger lazy-loading of the id field.
-                receipt.transactions = [] # initialize a blank list before the session ends.
+                # initialize a blank list before the session ends.
+                receipt.transactions = []
             except IntegrityError:
                 # Most likely caused by the unique constraint on the hash field.
                 # TODO: make sure this is indeed the cause of IntegrityError.
@@ -156,12 +159,27 @@ class Database:
 
         return receipt
 
-    def delete_receipt(self, receipt_id: str):
+    def rotate_receipt(self, receipt_id: int, delta: int) -> Receipt:
         with get_session() as session:
-            receipt = session.get(Receipt, receipt_id)
+            stmt = update(Receipt) \
+                .where(Receipt.id == receipt_id) \
+                .values(rotation=(Receipt.rotation + delta) % 360)
+            session.execute(stmt)
+            session.commit()
+
+            return session.query(Receipt).filter_by(id=receipt_id).options(joinedload(Receipt.transactions)).first()
+
+    def delete_receipt(self, user_id: int, receipt_id: str):
+        with get_session() as session:
+            # TODO: need to detach from associated transactions first?
+            receipt = session.query(Receipt).filter(
+                Receipt.id == receipt_id).first()
             if not receipt:
                 msg = f"Receipt cannot be deleted because it does not exist. {receipt_id=}"
                 logger.warning(msg)
+
+            # TODO: allow admins?
+            assert user_id == receipt.user_id, "Only the original uploader can delete the receipt."
 
             session.delete(receipt)
             session.commit()
@@ -171,7 +189,6 @@ class Database:
         with get_session() as session:
             receipts = session.query(Receipt).options(joinedload(Receipt.transactions)).order_by(
                 desc(Receipt.id)).offset(offset).limit(limit).all()
-            # [r.transactions for r in receipts] # trigger lazy loading
             return receipts
 
     def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:

@@ -2,16 +2,18 @@ import { Save, ZoomIn } from "lucide-preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
 import { axios } from "@/api";
 import { sigTransactions, sigUserInfo, upsertTransactions } from "@/store";
+import { isPositiveInteger } from "@/utils/primitive";
 
 const TransactionEditView = () => {
   const [formData, setFormData] = useState<Transaction>();
   const { id } = useParams();
+  const [params] = useSearchParams();
   const {
     register,
     handleSubmit,
@@ -33,17 +35,24 @@ const TransactionEditView = () => {
       }
 
       if (!id) {
-        setFormData({
+        const t: Transaction = {
           id: -1,
           created_at: Date.now() / 1000,
           user_id: sigUserInfo.value?.user_id,
           line_items: [],
-        });
+        };
+
+        const receiptId = params.get("receipt_id");
+        if (receiptId) {
+          t.receipt_id = Number.parseInt(receiptId);
+        }
+
+        setFormData(t);
         return;
       }
 
-      if (!Number.isInteger(id)) {
-        toast.error("The transaction id is not a valid integer.");
+      if (!isPositiveInteger(id)) {
+        toast.error(`The transaction id is not a valid integer. id='${id}'`);
         return;
       }
 

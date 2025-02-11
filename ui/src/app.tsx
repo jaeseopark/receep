@@ -8,10 +8,9 @@ import { axios } from "@/api";
 import Login from "@/components/Login";
 import Signup from "@/components/Signup";
 import AppFrame from "@/components/layout/AppFrame";
+import { AUTHENTICATED_ROUTES } from "@/routes";
 
-import { AUTHENTICATED_ROUTES } from "./routes";
-
-import "./app.scss";
+import "@/app.scss";
 
 const App = () => {
   const [appInfo, setAppInfo] = useState<AppInfo>();

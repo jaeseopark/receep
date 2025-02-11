@@ -1,6 +1,6 @@
 import { Signal, signal } from "@preact/signals";
 
-import { Receipt, Transaction, UserInfo } from "./types";
+import { Receipt, Transaction, UserInfo } from "@/types";
 
 const useUpdatingSignal = <T>(uniqueKey: keyof T) => {
   const sig: Signal<T[]> = signal([]);

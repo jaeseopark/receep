@@ -32,3 +32,10 @@ async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_aut
         return serialize(receipt)
     finally:
         file.file.close()
+
+
+@router.post("/receipts/{receipt_id}/rotate")
+async def rotate_receipt(receipt_id: int, _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    # allow any authorized user to rotate a receipt as it's not that big of a deal.
+    updated_receipt = db_instance.rotate_receipt(receipt_id, delta=90)
+    return serialize(updated_receipt)
