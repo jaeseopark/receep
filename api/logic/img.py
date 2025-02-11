@@ -14,8 +14,9 @@ def _get_thumb_path(path):
 
 def _process_image(source_path, output_path, thumb_size):
     with Image.open(source_path) as img:
+        exif = img.info['exif']
         img.thumbnail(thumb_size)
-        img.convert("RGB").save(output_path, "JPEG", quality=70)
+        img.convert("RGB").save(output_path, "JPEG", quality=70, exif=exif)
 
 
 def _process_pdf(source_path, output_path: str, thumb_size: Tuple[int, int]):
