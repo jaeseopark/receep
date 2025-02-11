@@ -32,6 +32,7 @@ const ReceiptDetailForm = ({ receipt }: { receipt: Receipt }) => {
           </th>
           <td>
             <div>
+              {receipt.transactions.length === 0 && <span>None</span>}
               {receipt.transactions.map((t) => (
                 <a key={t.id} className="link flex" href={`/transactions/edit/${t.id}`}>
                   TxID {t.id} <SquareArrowOutUpRight className="scale-50" />

@@ -6,12 +6,16 @@ import { Receipt } from "@/types";
 import { ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
 import { toRelativeTime } from "@/utils/dates";
 
-const ReceiptCard = (receipt: Receipt) => {
+const ReceiptCard = ({ receipt, onClickOverride }: { receipt: Receipt; onClickOverride?: () => void }) => {
   const { id, created_at, transactions } = receipt;
   const navigate = useNavigate();
 
   return (
-    <div key={id} className="card bg-base-100 w-48 h-72 shadow-sm" onClick={() => navigate(`/receipts/edit/${id}`)}>
+    <div
+      key={id}
+      className="card bg-base-100 w-48 h-72 shadow-sm"
+      onClick={onClickOverride || (() => navigate(`/receipts/edit/${id}`))}
+    >
       <figure className="h-64 bg-gray-100">
         <ReceiptThumbnail receipt={receipt} />
       </figure>

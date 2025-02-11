@@ -3,10 +3,10 @@ import { ReactNode } from "preact/compat";
 
 import Reports from "@/components/Reports";
 import Settings from "@/components/Settings";
-import TransactionEditView from "@/components/TransactionEditView";
-import TransactionsTable from "@/components/Transactions";
-import ReceiptEditView from "@/components/receipts/ReceiptEditView";
-import ReceiptsView from "@/components/receipts/ReceiptsView";
+import TransactionEditView from "@/components/transactions/TransactionEditView";
+import TransactionsTable from "@/components/transactions/Transactions";
+import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
+import ReceiptsView from "@/components/receipts/ReceiptGridView";
 
 type RouteEntry = {
   path: string;

@@ -1,6 +1,8 @@
 import { Filter, Plus } from "lucide-preact";
 
-export const AddReceiptButton = ({ uploadReceipts }: { uploadReceipts: (files: File[]) => void }) => (
+import { uploadReceipts } from "@/middleware/receipts";
+
+export const AddReceiptButton = () => (
   <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
     <input
       id="receipt-input"

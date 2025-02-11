@@ -1,26 +1,27 @@
 import { Save, ZoomIn } from "lucide-preact";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { useFieldArray, useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { Transaction } from "@/types";
+import { Receipt, Transaction } from "@/types";
 
-import { axios } from "@/api";
-import { sigTransactions, sigUserInfo, upsertTransactions } from "@/store";
-import { isPositiveInteger } from "@/utils/primitive";
+import { sigReceipts } from "@/store";
 
-const TransactionEditView = () => {
-  const [formData, setFormData] = useState<Transaction>();
-  const { id } = useParams();
-  const [params] = useSearchParams();
+import { ReceiptHighres } from "../receipts/ReceiptImg";
+
+const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm();
-  const navigate = useNavigate();
+    watch,
+  } = useForm({
+    defaultValues: transaction,
+  });
+  const receiptId = watch("receipt_id");
+  const [receipt, setReceipt] = useState<Receipt>();
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -28,64 +29,18 @@ const TransactionEditView = () => {
   });
 
   useEffect(() => {
-    const init = () => {
-      if (!sigUserInfo.value) {
-        setTimeout(init, 100);
-        return;
-      }
+    if (!receiptId) {
+      return;
+    }
+    const [r] = sigReceipts.value.filter((r) => r.id === receiptId);
+    if (r) {
+      setReceipt(r);
+    }
+  }, [receiptId]);
 
-      if (!id) {
-        const t: Transaction = {
-          id: -1,
-          created_at: Date.now() / 1000,
-          user_id: sigUserInfo.value?.user_id,
-          line_items: [],
-        };
-
-        const receiptId = params.get("receipt_id");
-        if (receiptId) {
-          t.receipt_id = Number.parseInt(receiptId);
-        }
-
-        setFormData(t);
-        return;
-      }
-
-      if (!isPositiveInteger(id)) {
-        toast.error(`The transaction id is not a valid integer. id='${id}'`);
-        return;
-      }
-
-      const [t] = sigTransactions.value.filter((t) => t.id === Number.parseInt(id));
-      if (t) {
-        setFormData({ ...t });
-        return;
-      }
-
-      toast.error("The requested transaction does not exist");
-    };
-
-    setTimeout(init, 100);
-  }, []);
-
-  const save = useCallback((data: Transaction) => {
-    axios
-      .post("/api/transactions", data, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-      .then((r) => r.data)
-      .then((transaction) => {
-        upsertTransactions([transaction]);
-        toast.success("Transaction saved.");
-        navigate("/transactions");
-      });
-  }, []);
-
-  if (!formData) {
-    return <div>Loading data...</div>;
-  }
+  /* ----------------
+   * End of hooks
+   * ---------------- */
 
   const renderVendorField = () => {
     return (
@@ -94,7 +49,7 @@ const TransactionEditView = () => {
         <input
           {...register("vendor")}
           className="mt-1 block w-full p-2 border rounded"
-          placeholder="Enter vendor name"
+          placeholder="(Optional) Ex. Walmart"
         />
       </label>
     );
@@ -206,7 +161,7 @@ const TransactionEditView = () => {
             append({
               id: Date.now(),
               name: "",
-              transaction_id: formData.id!,
+              transaction_id: transaction.id!,
               amount: 0,
               category_id: 0,
               biz_portion_input: "",
@@ -228,12 +183,18 @@ const TransactionEditView = () => {
     );
   };
 
-  const title = id ? "Edit Transaction" : "New Transaction";
+  const title = transaction.id === -1 ? "New Transaction" : "Edit Transaction";
 
   return (
     <>
       <form onSubmit={handleSubmit(console.log)} className="space-y-4 p-4">
         <h2 className="text-xl font-bold">{title}</h2>
+
+        {receipt && (
+          <div className="overflow-hidden">
+            <ReceiptHighres receipt={receipt} />
+          </div>
+        )}
 
         <div className="tabs tabs-box">
           <input type="radio" name="form_layout" className="tab" aria-label="Simple" defaultChecked />
@@ -269,4 +230,4 @@ const TransactionEditView = () => {
   );
 };
 
-export default TransactionEditView;
+export default TransactionForm;

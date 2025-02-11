@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { Receipt } from "@/types";
 
-import ReceiptDetailForm from "@/components/receipts/ReceiptDetailForm";
+import ReceiptDetailForm from "@/components/receipts/ReceiptForm";
 import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
 import { sigInitialLoadResult } from "@/gvars";
 import { sigReceipts, upsertReceipts } from "@/store";

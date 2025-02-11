@@ -28,6 +28,7 @@ const sigReceiptFilters = signal<ReceiptFilter[]>([
 ]);
 
 // TODO: ability to reset filter selections
+// TODO: date range
 
 export const applySelectedFilters = (r: Receipt): boolean =>
   sigReceiptFilters.value.filter((f) => f.isSelected).reduce((acc, { predicate }) => acc && predicate(r), true);
