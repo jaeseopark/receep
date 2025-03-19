@@ -1,10 +1,31 @@
+from typing import List, Optional
+
+from api.utils import get_api_safe_json
 from fastapi import APIRouter, Depends, Query
 from persistence.database import instance as db_instance
+from persistence.schema import Transaction
+from pydantic import BaseModel
 
 from api.access.authenticator import AuthMetadata
 from api.shared import get_auth_metadata
 
 router = APIRouter()
+
+PERS_LINE_ITEM_ATTRS = ()
+
+
+class LineItem(BaseModel):
+    name: str
+    amount_input: str
+    amount: int
+    notes: Optional[str]
+    category_id: int
+
+
+class UpsertRequest(BaseModel):
+    line_items: List[LineItem]
+    vendor_id: Optional[str]
+    receipt_id: Optional[str]
 
 
 @router.get("/transactions/paginated")
@@ -14,8 +35,44 @@ def get_stuff(
     auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
     txns = db_instance.get_transactions(
-        user_id=auth_metadata.user_id, offset=offset, limit=limit)
+        user_id=auth_metadata.user_id,
+        offset=offset,
+        limit=limit
+    )
     return dict(
         next_offset=offset+len(txns),
-        items=txns
+        items=get_api_safe_json(txns)
     )
+
+
+@router.post("/transactions")
+def create_transaction(
+    payload: UpsertRequest,
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    payload = payload.dict()  # work with plain JSON after api input validations have passed
+    tnx = db_instance.create_transaction(
+        user_id=auth_metadata.user_id,
+        vendor_id=payload.get("vendor_id"),
+        receipt_id=payload.get("receipt_id"),
+        line_items=payload.get("line_items")
+    )
+    return tnx
+
+
+@router.put("/transactions/{transaction_id}")
+def update_transaction(
+    transaction_id: int,
+    payload: UpsertRequest,
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    line_items = [to_pers_line_item(li) for li in payload.line_items]
+    tnx = db_instance.update_transaction(
+        user_id=auth_metadata.user_id,
+        transaction=Transaction(
+            id=transaction_id,
+            vendor_id=payload.vendor_id,
+            receipt_id=payload.receipt_id,
+            line_items=line_items
+        ))
+    return tnx

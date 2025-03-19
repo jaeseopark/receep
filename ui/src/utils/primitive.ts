@@ -28,3 +28,16 @@ export function toHumanFilesize(bytes: number): string {
 
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
+
+export const evaluateAmountInput = (input: string): number => {
+  const sanitizedInput = input.replace(/\s|[$€£¥]/g, "");
+
+  if (!/^[0-9+\-*/().]+$/.test(sanitizedInput)) {
+    throw new Error("Invalid input: contains unsupported characters.");
+  }
+
+  const result = Function(`"use strict"; return (${sanitizedInput})`)();
+
+  // Round the result to 2 decimal places
+  return Math.round(result * 100) / 100;
+};

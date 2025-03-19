@@ -11,6 +11,8 @@ import { sigInitialLoadResult } from "@/gvars";
 import { uploadReceipts } from "@/middleware/receipts";
 import { sigReceipts } from "@/store";
 
+import "@/components/receipts/ReceiptGridView.scss";
+
 const SORT_DESCENDING = (a: Receipt, b: Receipt) => b.created_at - a.created_at;
 
 const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
@@ -54,11 +56,12 @@ const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
 
   return (
     <div
-      className={classNames("receipt-view", {
-        "rounded-lg border bg-gray-100 border-gray-300": isDragActive,
+      className={classNames("receipt-grid-view", {
+        "bg-blue-100 active-drag": isDragActive,
       })}
       {...restDndRootProps}
     >
+      <div className="dnd-instructions">Drop file(s) here</div>
       <input {...getInputProps()} />
       {renderGrid()}
       {!onClickOverride && (

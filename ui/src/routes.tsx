@@ -1,19 +1,21 @@
 import { ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
+import Invite from "@/components/Invite";
 import Reports from "@/components/Reports";
 import Settings from "@/components/Settings";
-import TransactionEditView from "@/components/transactions/TransactionEditView";
-import TransactionsTable from "@/components/transactions/Transactions";
+import CategoryListView from "@/components/categories/CategoryListView";
 import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
+import TransactionEditView from "@/components/transactions/TransactionDetailView";
+import TransactionsTable from "@/components/transactions/Transactions";
 
 type RouteEntry = {
   path: string;
   name: string;
   description: string;
   component: () => ReactNode;
-  icon?: ReactNode;
+  dockIcon?: ReactNode;
 };
 
 export const AUTHENTICATED_ROUTES: RouteEntry[] = [
@@ -21,8 +23,8 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     path: "/receipts",
     name: "Receipts",
     description: "Upload and manage receipts",
-    component: ReceiptsView,
-    icon: <Receipt />,
+    component: () => <ReceiptsView />,
+    dockIcon: <Receipt />,
   },
   {
     path: "/receipts/edit/:id",
@@ -35,7 +37,7 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     name: "Transactions",
     description: "Manage transactions",
     component: TransactionsTable,
-    icon: <NotebookPen />,
+    dockIcon: <NotebookPen />,
   },
   {
     path: "/transactions/edit/:id",
@@ -54,13 +56,25 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     name: "Reports",
     description: "Data visualization and drilldown reporting",
     component: Reports,
-    icon: <ChartLine />,
+    dockIcon: <ChartLine />,
   },
   {
     path: "/settings",
     name: "Settings",
     description: "Manage application settings",
     component: Settings,
-    icon: <SettingsIcon />,
+    dockIcon: <SettingsIcon />,
+  },
+  {
+    path: "/settings/categories",
+    name: "Categories",
+    description: "Manage line item categories",
+    component: CategoryListView,
+  },
+  {
+    path: "/settings/invite",
+    name: "Invite",
+    description: "Invite Users",
+    component: Invite,
   },
 ];

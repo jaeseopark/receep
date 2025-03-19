@@ -15,11 +15,10 @@ export type LineItem = {
   id: number;
   name: string;
   transaction_id: number;
+  amount_input: string;
   amount: number;
   notes?: string;
   category_id: number;
-  biz_portion_input: string;
-  biz_portion: number;
 };
 
 export type Transaction = {
@@ -27,9 +26,8 @@ export type Transaction = {
   user_id: number;
   created_at: number;
   line_items: LineItem[];
-  vendor?: string;
+  vendor_id?: number;
   receipt_id?: number;
-  notes?: string;
 };
 
 export type Receipt = {
@@ -43,4 +41,18 @@ export type Receipt = {
   is_uploading: boolean;
   rotation: number;
   ocr_metadata: Record<string, number>;
+};
+
+export type Vendor = {
+  id: number;
+  user_id: number;
+  name: string;
+};
+
+export type Category = {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  user_id: number;
 };

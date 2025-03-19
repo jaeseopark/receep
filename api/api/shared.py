@@ -1,7 +1,7 @@
 import logging
 import os
 from types import SimpleNamespace
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 import jwt
 from fastapi import Depends, HTTPException, Request
@@ -65,3 +65,15 @@ def get_ws_auth_config():
         authjwt_secret_key: str = JWT_KEY
 
     return Settings()
+
+
+class Token(BaseModel):
+    token_type: str
+    token: str
+    message: str
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+    totp: Optional[str] = None

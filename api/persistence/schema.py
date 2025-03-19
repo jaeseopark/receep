@@ -1,3 +1,4 @@
+from typing import List
 from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, Table,
                         Text, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import JSONB
@@ -52,18 +53,15 @@ class Receipt(Base):
     transactions = relationship("Transaction", back_populates="receipt")
 
 
-class Transaction(Base):
-    __tablename__ = 'transactions'
+class Vendor(Base):
+    __tablename__ = 'vendors'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, default=func.now())
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    vendor = Column(String(32))
-    notes = Column(Text)
-    receipt_id = Column(Integer, ForeignKey('receipts.id'))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(64), nullable=False)
 
-    receipt = relationship("Receipt", back_populates="transactions")
-    line_items = relationship("LineItem")
+    __table_args__ = (UniqueConstraint(
+        'user_id', 'name', name='uq_user_vendor_name'),)
 
 
 class Category(Base):
@@ -87,11 +85,36 @@ class LineItem(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(64), nullable=False)
-    transaction_id = Column(Integer, ForeignKey(
-        'transactions.id'), nullable=False)
+    transaction_id = Column(
+        Integer,
+        ForeignKey('transactions.id'),
+        nullable=False
+    )
+    amount_input = Column(String, nullable=False)
     amount = Column(Integer, nullable=False)
     notes = Column(Text, nullable=True)
-    category_id = Column(Integer, ForeignKey(
-        'categories.id'), nullable=False)
-    biz_portion_input = Column(String(128), nullable=False)
-    biz_portion = Column(Integer, nullable=False)
+    category_id = Column(
+        Integer,
+        ForeignKey('categories.id'),
+        nullable=False
+    )
+
+
+class Transaction(Base):
+    __tablename__ = 'transactions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    created_at = Column(DateTime, default=func.now())
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'))
+    receipt_id = Column(Integer, ForeignKey('receipts.id'))
+
+    receipt = relationship(
+        "Receipt",
+        back_populates="transactions"
+    )
+    vendor = relationship("Vendor")
+    line_items = relationship(
+        "LineItem",
+        cascade="all, delete-orphan",
+    )

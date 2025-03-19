@@ -5,7 +5,7 @@ from functools import wraps
 from typing import List, Optional
 
 from persistence.exceptions import DuplicateReceipt, NotFound
-from persistence.schema import Base, Receipt, Role, Transaction, User
+from persistence.schema import Base, Category, LineItem, Receipt, Role, Transaction, User, Vendor
 from sqlalchemy import create_engine, desc, func, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import joinedload, sessionmaker
@@ -193,9 +193,79 @@ class Database:
 
     def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
         with get_session() as session:
-            stmt = select(Transaction).where(
-                Transaction.user_id == user_id).offset(offset).limit(limit)
+            stmt = select(Transaction) \
+                .where(Transaction.user_id == user_id) \
+                .offset(offset) \
+                .limit(limit)
             return session.scalars(stmt).all()
+
+    def create_transaction(self, user_id: int, line_items: List[dict], vendor_id: int = None, receipt_id: int = None) -> Transaction:
+        transaction = Transaction(
+            user_id=user_id,
+            receipt_id=receipt_id,
+            vendor_id=vendor_id
+        )
+
+        logger.info(f"type of line items: {type(line_items[0])}")
+
+        with get_session() as session:
+            session.add(transaction)
+            transaction = session.query(Transaction).order_by(
+                desc(Transaction.id)).limit(1).first()
+
+            transaction.line_items = [
+                LineItem(
+                    name=li_dict.get("name"),
+                    transaction_id=transaction.id,
+                    amount_input=li_dict.get("amount_input"),
+                    amount=li_dict.get("amount"),
+                    notes=li_dict.get("notes"),
+                    category_id=li_dict.get("category_id")
+                ) for li_dict in line_items
+            ]
+            session.commit()
+
+        return transaction
+
+    def update_transaction(self, user_id: int, transaction: Transaction) -> Transaction:
+        raise NotImplementedError
+
+    def get_vendors_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
+        with get_session() as session:
+            return session.query(Vendor).filter(Vendor.user_id == user_id).offset(offset).limit(limit).all()
+
+    def get_categories_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
+        with get_session() as session:
+            return session.query(Category).filter(Category.user_id == user_id).offset(offset).limit(limit).all()
+
+    def create_vendor(self, user_id: int, name: str) -> Vendor:
+        v = Vendor(
+            user_id=user_id,
+            name=name
+        )
+
+        with get_session() as session:
+            session.add(v)
+            session.commit()
+            v = session.query(Vendor).filter(
+                Vendor.user_id == user_id, Vendor.name == name).first()
+
+        return v
+
+    def create_category(self, user_id: int, code: str, name: str, description: str) -> Category:
+        c = Category(
+            user_id=user_id,
+            code=code,
+            name=name,
+            description=description
+        )
+
+        with get_session() as session:
+            session.add(c)
+            session.commit()
+            c = session.query(Category).filter(
+                Category.user_id == user_id, Category.code == code).first()
+        return c
 
 
 instance = Database()

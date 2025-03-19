@@ -1,8 +1,12 @@
 
 from functools import wraps
+import logging
 
 from fastapi.responses import JSONResponse
 from persistence.exceptions import DuplicateReceipt, DuplicateUsernameException
+
+logger = logging.getLogger("divvy")
+
 
 _HANDLERS = {}
 
@@ -19,7 +23,7 @@ def handler(cls):
 
 
 @handler(AssertionError)
-def unicorn_exception_handler(_, e: AssertionError):
+def assert_error_handler(_, e: AssertionError):
     return JSONResponse(
         status_code=400,
         content=dict(message=str(e))
@@ -27,7 +31,7 @@ def unicorn_exception_handler(_, e: AssertionError):
 
 
 @handler(NotImplementedError)
-def unicorn_exception_handler(*args, **kwargs):
+def not_implemented_error_handler(*args, **kwargs):
     return JSONResponse(
         status_code=500,
         content=dict(message="Not implemented")
@@ -35,7 +39,7 @@ def unicorn_exception_handler(*args, **kwargs):
 
 
 @handler(DuplicateUsernameException)
-def unicorn_exception_handler(*args, **kwargs):
+def duplicate_username_handler(*args, **kwargs):
     return JSONResponse(
         status_code=400,
         content=dict(message="The username is already in use.")
@@ -43,7 +47,7 @@ def unicorn_exception_handler(*args, **kwargs):
 
 
 @handler(DuplicateReceipt)
-def unicorn_exception_handler(*args, **kwargs):
+def duplicate_receipt_handler(*args, **kwargs):
     return JSONResponse(
         status_code=409,
         content=dict(

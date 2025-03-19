@@ -1,8 +1,8 @@
 import { Signal, signal } from "@preact/signals";
 
-import { Receipt, Transaction, UserInfo } from "@/types";
+import { Category, Receipt, Transaction, UserInfo, Vendor } from "@/types";
 
-const useUpdatingSignal = <T>(uniqueKey: keyof T) => {
+const useUpdatingSignal = <T>({ uniqueKey }: { uniqueKey: keyof T }) => {
   const sig: Signal<T[]> = signal([]);
   const upsert = (items: T[]) => {
     const processed = new Set<number | string>();
@@ -51,13 +51,17 @@ const useUpdatingSignal = <T>(uniqueKey: keyof T) => {
   return { sig, upsert, replace, remove };
 };
 
-export const { sig: sigTransactions, upsert: upsertTransactions } = useUpdatingSignal<Transaction>("id");
+export const { sig: sigTransactions, upsert: upsertTransactions } = useUpdatingSignal<Transaction>({ uniqueKey: "id" });
 
 export const {
   sig: sigReceipts,
   upsert: upsertReceipts,
   replace: replaceReceipt,
   remove: removeReceipt,
-} = useUpdatingSignal<Receipt>("id");
+} = useUpdatingSignal<Receipt>({ uniqueKey: "id" });
+
+export const { sig: sigVendors, upsert: upsertVendors } = useUpdatingSignal<Vendor>({ uniqueKey: "id" });
+
+export const { sig: sigCategories, upsert: upsertCategories } = useUpdatingSignal<Category>({ uniqueKey: "id" });
 
 export const sigUserInfo = signal<UserInfo>();

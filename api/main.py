@@ -1,7 +1,7 @@
 import asyncio
 import json
-import logging
-from typing import Callable, List, Optional
+from logging import StreamHandler, FileHandler, getLogger, INFO, ERROR
+from typing import Callable, List
 
 from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, status
 from fastapi.responses import FileResponse
@@ -9,7 +9,6 @@ from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from logic import divvy
 from persistence import database
-from pydantic import BaseModel
 from starlette.websockets import WebSocketDisconnect
 
 from api.access import authenticator
@@ -18,18 +17,22 @@ from api.access.exceptions import InvalidCredsException
 from api.exceptions import register_exception_handlers
 from api.routers.receipts import router as receipt_router
 from api.routers.transactions import router as transaction_router
+from api.routers.categories import router as category_router
+from api.routers.vendors import router as vendor_router
 from api.routers.users import router as user_router
-from api.shared import get_app_info, get_auth_metadata
+from api.shared import LoginRequest, Token, get_app_info, get_auth_metadata
+from utils.logging import set_format
 
-logger = logging.getLogger("divvy")
-logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
-logger.addHandler(logging.FileHandler("/var/log/divvy/api/app.log"))
+logger = getLogger("divvy")
+logger.setLevel(INFO)
+logger.addHandler(set_format(StreamHandler()))
+logger.addHandler(set_format(FileHandler("/var/log/divvy/api/app.log")))
 
-uvicorn_logger = logging.getLogger("uvicorn.error")
-uvicorn_logger.addHandler(logging.StreamHandler())
-uvicorn_logger.addHandler(logging.FileHandler(
-    "/var/log/divvy/api/uvicorn.log"))
+uvicorn_logger = getLogger("uvicorn.error")
+uvicorn_logger.setLevel(ERROR)
+uvicorn_logger.addHandler(set_format(StreamHandler()))
+uvicorn_logger.addHandler(set_format(
+    FileHandler("/var/log/divvy/api/uvicorn.log")))
 
 fastapi_app = FastAPI(redirect_slashes=False)
 sockets: List[WebSocket] = []
@@ -41,21 +44,11 @@ app = divvy.instance
 
 fastapi_app.include_router(transaction_router)
 fastapi_app.include_router(receipt_router)
+fastapi_app.include_router(vendor_router)
+fastapi_app.include_router(category_router)
 fastapi_app.include_router(user_router)
 
 register_exception_handlers(fastapi_app)
-
-
-class Token(BaseModel):
-    token_type: str
-    token: str
-    message: str
-
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-    totp: Optional[str] = None
 
 
 def get_broadcast_function(topic: str) -> Callable[[dict], None]:

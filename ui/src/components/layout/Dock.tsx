@@ -9,7 +9,7 @@ const Dock = () => {
 
   return (
     <div className="dock dock-lg">
-      {AUTHENTICATED_ROUTES.filter((r) => r.icon).map(({ path, name, icon }) => {
+      {AUTHENTICATED_ROUTES.filter((r) => r.dockIcon).map(({ path, name, dockIcon: icon }) => {
         const isSelected = path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
         return (

@@ -13,7 +13,7 @@ const ReceiptCard = ({ receipt, onClickOverride }: { receipt: Receipt; onClickOv
   return (
     <div
       key={id}
-      className="card bg-base-100 w-48 h-72 shadow-sm"
+      className="receipt-card card bg-base-100 w-48 h-72 shadow-sm"
       onClick={onClickOverride || (() => navigate(`/receipts/edit/${id}`))}
     >
       <figure className="h-64 bg-gray-100">

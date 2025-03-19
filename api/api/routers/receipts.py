@@ -6,7 +6,7 @@ from persistence.database import instance as db_instance
 
 from api.access.authenticator import AuthMetadata
 from api.shared import get_auth_metadata
-from api.utils import serialize
+from api.utils import get_api_safe_json
 
 router = APIRouter()
 logger = logging.getLogger("divvy")
@@ -21,15 +21,16 @@ def get_stuff(
     receipts = db_instance.get_receipts(offset=offset, limit=limit)
     return dict(
         next_offset=offset+len(receipts),
-        items=serialize(receipts)
+        items=get_api_safe_json(receipts)
     )
 
 
 @router.post("/receipts")
 async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     try:
-        receipt = app_instance.upload(metadata.user_id, file.content_type, file.file)
-        return serialize(receipt)
+        receipt = app_instance.upload(
+            metadata.user_id, file.content_type, file.file)
+        return get_api_safe_json(receipt)
     finally:
         file.file.close()
 
@@ -38,4 +39,4 @@ async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_aut
 async def rotate_receipt(receipt_id: int, _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     # allow any authorized user to rotate a receipt as it's not that big of a deal.
     updated_receipt = db_instance.rotate_receipt(receipt_id, delta=90)
-    return serialize(updated_receipt)
+    return get_api_safe_json(updated_receipt)

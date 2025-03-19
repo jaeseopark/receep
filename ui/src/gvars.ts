@@ -1,10 +1,10 @@
 import { signal } from "@preact/signals";
 import toast from "react-hot-toast";
 
-import { Receipt, Transaction } from "@/types";
+import { Category, Receipt, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
-import { sigUserInfo, upsertReceipts, upsertTransactions } from "@/store";
+import { sigUserInfo, upsertCategories, upsertReceipts, upsertTransactions, upsertVendors } from "@/store";
 
 export const sigInitialLoadResult = signal<"PENDING" | "SUCCEEDED" | "FAILED">("PENDING");
 
@@ -19,6 +19,16 @@ const receiptPagination = signal<PaginationState>({
 });
 
 const transactionPagination = signal<PaginationState>({
+  offset: 0,
+  limit: 50,
+});
+
+const vendorPagination = signal<PaginationState>({
+  offset: 0,
+  limit: 50,
+});
+
+const categoryPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
 });
@@ -57,6 +67,40 @@ export const fetchTransactions = () =>
       console.error(e);
     });
 
+export const fetchVendors = () =>
+  axios
+    .get("/api/vendors/paginated", {
+      params: { ...vendorPagination.value },
+    })
+    .then((r) => r.data)
+    .then(({ next_offset, items }: { next_offset: number; items: Vendor[] }) => {
+      vendorPagination.value = {
+        ...vendorPagination.value,
+        offset: next_offset,
+      };
+      upsertVendors(items);
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+
+export const fetchCategories = () =>
+  axios
+    .get("/api/categories/paginated", {
+      params: { ...categoryPagination.value },
+    })
+    .then((r) => r.data)
+    .then(({ next_offset, items }: { next_offset: number; items: Category[] }) => {
+      categoryPagination.value = {
+        ...categoryPagination.value,
+        offset: next_offset,
+      };
+      upsertCategories(items);
+    })
+    .catch((e) => {
+      console.error(e);
+    });
+
 export const fetchUserInfo = () =>
   axios
     .get("/api/me")
@@ -70,7 +114,7 @@ export const fetchUserInfo = () =>
     });
 
 export const fetchInitialData = () => {
-  Promise.allSettled([fetchReceipts(), fetchTransactions(), fetchUserInfo()])
+  Promise.allSettled([fetchReceipts(), fetchTransactions(), fetchUserInfo(), fetchVendors(), fetchCategories()])
     .then((result) => result.filter(({ status }) => status === "fulfilled"))
     .then((isSuccessful) => {
       if (isSuccessful) {

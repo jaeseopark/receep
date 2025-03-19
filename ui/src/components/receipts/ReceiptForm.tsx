@@ -7,7 +7,7 @@ import { toHumanFilesize } from "@/utils/primitive";
 
 const ReceiptDetailForm = ({ receipt }: { receipt: Receipt }) => {
   return (
-    <table className="table h-fit">
+    <table className="table h-fit w-auto md:w-max-[50%]">
       <tbody>
         <tr>
           <th>Upload Timestamp</th>
@@ -24,11 +24,14 @@ const ReceiptDetailForm = ({ receipt }: { receipt: Receipt }) => {
         <tr>
           <th>
             Transaction(s)
-            <a className="ml-2" href={`/transactions/new?receipt_id=${receipt.id}`}>
-              <button className="btn btn-sm rounded-full">
-                <Link className="scale-50" />
-              </button>
-            </a>
+            <button
+              className="btn btn-sm rounded-full"
+              onClick={() => {
+                // TODO: open modal to select a transaction
+              }}
+            >
+              <Link className="scale-50" />
+            </button>
           </th>
           <td>
             <div>

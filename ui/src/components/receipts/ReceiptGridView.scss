@@ -1,0 +1,23 @@
+.receipt-grid-view {
+  height: var(--content-max-height);
+  
+  .active-drag {
+    .receipt-card {
+      opacity: 0.5;
+    }
+
+    .dnd-instructions {
+      display: unset;
+    }
+  }
+
+  .dnd-instructions {
+    display: none;
+    position: fixed;
+    width: 100vw;
+    height: var(--content-max-height);
+    line-height: var(--content-max-height);
+    font-size: xxx-large;
+    text-align: center;
+  }
+}

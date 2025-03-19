@@ -4,10 +4,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
+import TransactionForm from "@/components/transactions/TransactionForm";
 import { sigTransactions, sigUserInfo } from "@/store";
 import { isPositiveInteger } from "@/utils/primitive";
-
-import TransactionForm from "./TransactionForm";
 
 const TransactionEditView = () => {
   const { id } = useParams();
@@ -26,7 +25,8 @@ const TransactionEditView = () => {
           id: -1,
           created_at: Date.now() / 1000,
           user_id: sigUserInfo.value?.user_id,
-          line_items: [],
+          // @ts-ignore
+          line_items: [{}],
         };
 
         const receiptId = params.get("receipt_id");
@@ -49,6 +49,8 @@ const TransactionEditView = () => {
         return;
       }
 
+      // TODO: query the backend
+
       toast.error("The requested transaction does not exist");
     };
 
@@ -59,7 +61,14 @@ const TransactionEditView = () => {
     return <div>Loading data...</div>;
   }
 
-  return <TransactionForm transaction={transaction} />;
+  const title = transaction.id === -1 ? "New Transaction" : "Edit Transaction";
+
+  return (
+    <div className="space-y-4 p-4 md:h-(--content-max-height)">
+      <h2 className="text-xl font-bold justify-center">{title}</h2>
+      <TransactionForm transaction={transaction} />
+    </div>
+  );
 };
 
 export default TransactionEditView;
