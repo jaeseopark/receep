@@ -3,19 +3,19 @@
 ## Development
 
 ```shell
-docker-compose -f docker-compose-dev.yml up --build -d
+docker compose -f docker-compose-dev.yml up --build -d
 
 # See API logs
-docker-compose logs --tail=100 -f api
+docker compose logs --tail=100 -f api
 
 # Add ShadCN components
-docker-compose exec ui npx -y shadcn@latest add COMP_NAME
+docker compose exec ui npx -y shadcn@latest add COMP_NAME
 
 # Run Prettier against the UI code
-docker-compose exec ui npx prettier --write .
+docker compose exec ui npx prettier --write .
 
 # Invoke yarn
-docker-compose exec ui yarn add # ...
+docker compose exec ui yarn add # ...
 ```
 
 ### Fix Filesystem Permissions
@@ -45,5 +45,5 @@ TODO: work in progress...
 
 ## Usage
 ```shell
-docker-compose up -d
+docker compose up -d
 ```

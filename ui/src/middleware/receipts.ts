@@ -8,8 +8,8 @@ import { hash } from "@/utils/primitive";
 
 export const uploadReceipts = (files: File[]): Promise<void>[] => {
   // Add blank receipts to display spinners while uploading
-  upsertReceipts(
-    files.map((file) => ({
+  upsertReceipts({
+    items: files.map((file) => ({
       id: hash(file.name),
       user_id: 0,
       content_type: "",
@@ -21,7 +21,7 @@ export const uploadReceipts = (files: File[]): Promise<void>[] => {
       rotation: 0,
       ocr_metadata: {},
     })),
-  );
+  });
 
   return files.map((file): Promise<void> => {
     const formData = new FormData();
