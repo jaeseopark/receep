@@ -1,6 +1,5 @@
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Plus } from "lucide-preact";
-import { useMemo } from "preact/hooks";
 import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
@@ -10,6 +9,8 @@ import { toRelativeTime } from "@/utils/dates";
 
 const columnHelper = createColumnHelper<Transaction>();
 
+// TODO: implement sorting
+
 const columns = [
   columnHelper.accessor("created_at", {
     header: () => "Time",
@@ -17,17 +18,17 @@ const columns = [
       // TODO: abs time on hover?
       return <span>{toRelativeTime(info.getValue())}</span>;
     },
-    footer: (info) => info.column.id,
   }),
-  columnHelper.accessor("notes", {
-    cell: (info) => <i>{info.getValue()}</i>,
-    header: () => <span>Notes</span>,
-    footer: (info) => info.column.id,
-  }),
-  columnHelper.accessor("vendor", {
-    cell: (info) => <i>{info.getValue()}</i>,
-    header: () => <span>Vendor</span>,
-    footer: (info) => info.column.id,
+  columnHelper.accessor("amount", {
+    cell: (info) => {
+      const formattedPrice = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD", // TODO parameterize currency
+      }).format(info.getValue());
+
+      return <i>{formattedPrice}</i>;
+    },
+    header: () => <span>Amount</span>,
   }),
   columnHelper.accessor("receipt_id", {
     header: "Receipt",
@@ -41,16 +42,14 @@ const columns = [
         );
       }
     },
-    footer: (info) => info.column.id,
   }),
 ];
 
 const TransactionsTable = () => {
   const navigate = useNavigate();
-  const data = useMemo(() => sigTransactions.value.filter((t) => t.id > 0), [sigTransactions.value]);
 
   const table = useReactTable({
-    data,
+    data: sigTransactions.value,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });

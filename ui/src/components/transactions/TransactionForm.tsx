@@ -62,20 +62,26 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   const upsertTransaction = (submittedTransaction: Transaction) => {
     const { id } = submittedTransaction;
-    let apiPromise = axios.post("/api/transactions", submittedTransaction, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    let apiPromise;
 
-    if (submittedTransaction.id !== -1) {
-      // if ID is not -1 -- i.e. an existing transaction, then hit the PUT endpoint
-      apiPromise = axios.put(`/api/transactions/${id}`);
+    if (submittedTransaction.id === -1) {
+      // ID is -1, meaning this is a brand new transaction.
+      apiPromise = axios.post("/api/transactions", submittedTransaction, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      apiPromise = axios.put(`/api/transactions/${id}`, submittedTransaction, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
     }
 
     apiPromise
       .then((r) => r.data)
-      .then((t) => upsertTransactions([t]))
+      .then((t) => upsertTransactions({ items: [t], toFront: true }))
       .then(() => {
         toast.success("Transaction saved.");
         navigate("/transactions");

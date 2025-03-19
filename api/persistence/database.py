@@ -59,6 +59,14 @@ def get_user_by_id(self, user_id: int) -> Optional[User]:
     return self.query(User).options(joinedload(User.roles)).filter(User.id == user_id).first()
 
 
+@session_decorator
+def get_transaction(self, user_id: int, transaction_id: int) -> Optional[Transaction]:
+    return self.query(Transaction) \
+        .filter(Transaction.user_id == user_id, Transaction.id == transaction_id) \
+        .options(joinedload(Transaction.line_items)) \
+        .first()
+
+
 def get_session():
     session = Session()
 
@@ -199,30 +207,33 @@ class Database:
         with get_session() as session:
             stmt = select(Transaction) \
                 .where(Transaction.user_id == user_id) \
+                .order_by(desc(Transaction.id)) \
                 .offset(offset) \
                 .limit(limit)
             return session.scalars(stmt).all()
-    
-    def get_transaction(self, id: int, user_id: str) -> Transaction:
+
+    def get_transaction(self, transaction_id: int, user_id: str) -> Transaction:
         with get_session() as session:
-            stmt = select(Transaction) \
-                .where(Transaction.user_id == user_id, Transaction.id == id) \
-                .options(joinedload(Transaction.line_items))
-            return session.scalars(stmt).first()
+            t = session.get_transaction(
+                transaction_id=transaction_id, user_id=user_id)
+            if not t:
+                raise NotFound
+            return t
 
     def create_transaction(self, user_id: int, line_items: List[dict], vendor_id: int = None, receipt_id: int = None) -> Transaction:
         transaction = Transaction(
             user_id=user_id,
             receipt_id=receipt_id,
-            vendor_id=vendor_id
+            vendor_id=vendor_id,
+            amount=sum([li.get("amount") for li in line_items])
         )
-
-        logger.info(f"type of line items: {type(line_items[0])}")
 
         with get_session() as session:
             session.add(transaction)
-            transaction = session.query(Transaction).order_by(
-                desc(Transaction.id)).limit(1).first()
+            transaction: Transaction = session.query(Transaction) \
+                .order_by(desc(Transaction.id)) \
+                .limit(1) \
+                .first()
 
             transaction.line_items = [
                 LineItem(
@@ -236,10 +247,36 @@ class Database:
             ]
             session.commit()
 
-        return transaction
+            return session.get_transaction(transaction_id=transaction.id, user_id=user_id)
 
-    def update_transaction(self, user_id: int, transaction: Transaction) -> Transaction:
-        raise NotImplementedError
+    def update_transaction(self, user_id: int, transaction_id: int, line_items: List[dict], vendor_id: int = None, receipt_id: int = None) -> Transaction:
+        transaction: Transaction = None
+        with get_session() as session:
+            transaction = session \
+                .query(Transaction) \
+                .filter(Transaction.user_id == user_id, Transaction.id == transaction_id) \
+                .first()
+
+            if not transaction:
+                raise NotFound
+
+            transaction.amount = sum([li_dict.get("amount")
+                                     for li_dict in line_items])
+            transaction.receipt_id = receipt_id
+            transaction.vendor_id = vendor_id
+            transaction.line_items = [
+                LineItem(
+                    name=li_dict.get("name"),
+                    transaction_id=transaction.id,
+                    amount_input=li_dict.get("amount_input"),
+                    amount=li_dict.get("amount"),
+                    notes=li_dict.get("notes"),
+                    category_id=li_dict.get("category_id")
+                ) for li_dict in line_items
+            ]
+            session.commit()
+
+            return session.get_transaction(transaction_id=transaction.id, user_id=user_id)
 
     def get_vendors_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
         with get_session() as session:

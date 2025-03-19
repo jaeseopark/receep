@@ -55,7 +55,7 @@ const TransactionEditView = () => {
         .get(`/api/transactions/single/${id}`)
         .then((r) => r.data)
         .then((t) => {
-          upsertTransactions([t]);
+          upsertTransactions({ items: [t] });
           setTransaction({ ...t });
         })
         .catch((e) => {

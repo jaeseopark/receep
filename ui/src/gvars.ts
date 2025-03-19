@@ -44,7 +44,7 @@ export const fetchReceipts = () =>
         ...receiptPagination.value,
         offset: next_offset,
       };
-      upsertReceipts(items);
+      upsertReceipts({ items });
     })
     .catch((e) => {
       console.error(e);
@@ -61,7 +61,7 @@ export const fetchTransactions = () =>
         ...transactionPagination.value,
         offset: next_offset,
       };
-      upsertTransactions(items);
+      upsertTransactions({ items });
     })
     .catch((e) => {
       console.error(e);
@@ -78,7 +78,7 @@ export const fetchVendors = () =>
         ...vendorPagination.value,
         offset: next_offset,
       };
-      upsertVendors(items);
+      upsertVendors({ items });
     })
     .catch((e) => {
       console.error(e);
@@ -95,7 +95,7 @@ export const fetchCategories = () =>
         ...categoryPagination.value,
         offset: next_offset,
       };
-      upsertCategories(items);
+      upsertCategories({ items });
     })
     .catch((e) => {
       console.error(e);

@@ -28,6 +28,7 @@ export type Transaction = {
   line_items: LineItem[];
   vendor_id?: number;
   receipt_id?: number;
+  amount: number;
 };
 
 export type Receipt = {

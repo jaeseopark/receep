@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import (Column, DateTime, ForeignKey, Integer, String, Table,
+from sqlalchemy import (Column, DateTime, ForeignKey, Integer, Float, String, Table,
                         Text, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -91,7 +91,7 @@ class LineItem(Base):
         nullable=False
     )
     amount_input = Column(String, nullable=False)
-    amount = Column(Integer, nullable=False)
+    amount = Column(Float, nullable=False)
     notes = Column(Text, nullable=True)
     category_id = Column(
         Integer,
@@ -108,6 +108,7 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     vendor_id = Column(Integer, ForeignKey('vendors.id'))
     receipt_id = Column(Integer, ForeignKey('receipts.id'))
+    amount = Column(Float, nullable=False)
 
     receipt = relationship(
         "Receipt",

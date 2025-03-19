@@ -4,7 +4,7 @@ import { Category, Receipt, Transaction, UserInfo, Vendor } from "@/types";
 
 const useUpdatingSignal = <T>({ uniqueKey }: { uniqueKey: keyof T }) => {
   const sig: Signal<T[]> = signal([]);
-  const upsert = (items: T[]) => {
+  const upsert = ({ items, toFront = false }: { items: T[]; toFront?: boolean }) => {
     const keyToIndexMap = sig.value.reduce(
       (acc, next, i) => {
         acc[next[uniqueKey] as number | string] = i;
@@ -12,17 +12,24 @@ const useUpdatingSignal = <T>({ uniqueKey }: { uniqueKey: keyof T }) => {
       },
       {} as Record<number | string, number>,
     );
-    sig.value = [...sig.value, ...items].reduce((acc, next) => {
-      const key = next[uniqueKey] as number | string;
+    const oldElements = [...sig.value];
+    const newElements: T[] = [];
+
+    items.forEach((item) => {
+      const key = item[uniqueKey] as number | string;
       const i = keyToIndexMap[key];
       if (typeof i === "undefined") {
-        acc.push(next);
-        keyToIndexMap[key] = acc.length - 1;
+        newElements.push(item);
       } else {
-        acc[i] = next;
+        oldElements[i] = item;
       }
-      return acc;
-    }, [] as T[]);
+    });
+
+    if (toFront) {
+      sig.value = [...newElements, ...oldElements];
+    } else {
+      sig.value = [...oldElements, ...newElements];
+    }
   };
   /**
    * Removes old item with key == oldKey and inserts the new item at the same index.

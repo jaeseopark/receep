@@ -12,7 +12,7 @@ const rotate = (receipt_id: number) =>
   axios
     .post(`/api/receipts/${receipt_id}/rotate`)
     .then((r) => r.data)
-    .then((receipt) => upsertReceipts([receipt]));
+    .then((receipt) => upsertReceipts({ items: [receipt] }));
 
 const ReceiptImg = ({
   receipt: { id, rotation, content_type },
@@ -38,7 +38,7 @@ export const ReceiptHighres = ({ receipt }: { receipt: Receipt }) => (
   <div className="relative overflow-hidden md:h-max-(--content-max-height) md:w-full">
     <ReceiptImg receipt={receipt} pathGetter={getHighresPath} />
     <div className="top-6 right-6 shadow-lg outline-none rounded-full -mb-[2em] absolute">
-      <button className="btn btn-circle btn-primary" onClick={() => rotate(receipt.id)} tabIndex={-1}>
+      <button className="btn btn-circle btn-primary" type="button" onClick={() => rotate(receipt.id)} tabIndex={-1}>
         <RotateCwSquare />
       </button>
     </div>
