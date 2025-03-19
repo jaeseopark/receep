@@ -187,8 +187,12 @@ class Database:
     def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
         # In descending order of id -- i.e. latest first.
         with get_session() as session:
-            receipts = session.query(Receipt).options(joinedload(Receipt.transactions)).order_by(
-                desc(Receipt.id)).offset(offset).limit(limit).all()
+            receipts = session.query(Receipt) \
+                .options(joinedload(Receipt.transactions)) \
+                .order_by(desc(Receipt.id)) \
+                .offset(offset) \
+                .limit(limit) \
+                .all()
             return receipts
 
     def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
@@ -198,6 +202,13 @@ class Database:
                 .offset(offset) \
                 .limit(limit)
             return session.scalars(stmt).all()
+    
+    def get_transaction(self, id: int, user_id: str) -> Transaction:
+        with get_session() as session:
+            stmt = select(Transaction) \
+                .where(Transaction.user_id == user_id, Transaction.id == id) \
+                .options(joinedload(Transaction.line_items))
+            return session.scalars(stmt).first()
 
     def create_transaction(self, user_id: int, line_items: List[dict], vendor_id: int = None, receipt_id: int = None) -> Transaction:
         transaction = Transaction(

@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "preact/hooks";
 import { toast } from "react-hot-toast";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -5,18 +6,25 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { Transaction } from "@/types";
 
 import TransactionForm from "@/components/transactions/TransactionForm";
-import { sigTransactions, sigUserInfo } from "@/store";
+import { sigInitialLoadResult } from "@/gvars";
+import { sigUserInfo, upsertTransactions } from "@/store";
 import { isPositiveInteger } from "@/utils/primitive";
 
 const TransactionEditView = () => {
   const { id } = useParams();
   const [params] = useSearchParams();
   const [transaction, setTransaction] = useState<Transaction>();
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     const init = () => {
-      if (!sigUserInfo.value) {
+      if (sigInitialLoadResult.value === "PENDING") {
         setTimeout(init, 100);
+        return;
+      }
+
+      if (sigInitialLoadResult.value === "FAILED") {
+        setError("Initial load failed");
         return;
       }
 
@@ -24,7 +32,7 @@ const TransactionEditView = () => {
         const t: Transaction = {
           id: -1,
           created_at: Date.now() / 1000,
-          user_id: sigUserInfo.value?.user_id,
+          user_id: sigUserInfo.value?.user_id as number,
           // @ts-ignore
           line_items: [{}],
         };
@@ -43,19 +51,25 @@ const TransactionEditView = () => {
         return;
       }
 
-      const [t] = sigTransactions.value.filter((t) => t.id === Number.parseInt(id));
-      if (t) {
-        setTransaction({ ...t });
-        return;
-      }
-
-      // TODO: query the backend
-
-      toast.error("The requested transaction does not exist");
+      axios
+        .get(`/api/transactions/single/${id}`)
+        .then((r) => r.data)
+        .then((t) => {
+          upsertTransactions([t]);
+          setTransaction({ ...t });
+        })
+        .catch((e) => {
+          // TODO better error handling
+          toast.error("The requested transaction does not exist");
+        });
     };
 
     setTimeout(init, 100);
   }, []);
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   if (!transaction) {
     return <div>Loading data...</div>;

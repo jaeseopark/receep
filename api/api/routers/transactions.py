@@ -44,6 +44,13 @@ def get_stuff(
         items=get_api_safe_json(txns)
     )
 
+@router.get("/transactions/single/{id}")
+def get_single_transaction(
+    id: int,
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    t = db_instance.get_transaction(id, user_id=auth_metadata.user_id)
+    return t
 
 @router.post("/transactions")
 def create_transaction(
