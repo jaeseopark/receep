@@ -5,25 +5,22 @@ import { Category, Receipt, Transaction, UserInfo, Vendor } from "@/types";
 const useUpdatingSignal = <T>({ uniqueKey }: { uniqueKey: keyof T }) => {
   const sig: Signal<T[]> = signal([]);
   const upsert = (items: T[]) => {
-    const processed = new Set<number | string>();
-    const newItemLookup = items.reduce(
-      (acc, next) => {
-        acc[next[uniqueKey] as number | string] = next;
+    const keyToIndexMap = sig.value.reduce(
+      (acc, next, i) => {
+        acc[next[uniqueKey] as number | string] = i;
         return acc;
       },
-      {} as Record<number | string, T>,
+      {} as Record<number | string, number>,
     );
     sig.value = [...sig.value, ...items].reduce((acc, next) => {
       const key = next[uniqueKey] as number | string;
-      if (processed.has(key)) {
-        return acc;
-      }
-      if (newItemLookup[key]) {
-        acc.push(newItemLookup[key]);
-      } else {
+      const i = keyToIndexMap[key];
+      if (typeof i === "undefined") {
         acc.push(next);
+        keyToIndexMap[key] = acc.length - 1;
+      } else {
+        acc[i] = next;
       }
-      processed.add(key);
       return acc;
     }, [] as T[]);
   };
