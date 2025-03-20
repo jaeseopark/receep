@@ -57,3 +57,13 @@ export type Category = {
   description?: string;
   user_id: number;
 };
+
+export type ExpenseLineItem = {
+  category_id: number;
+  vendor_id: number;
+  year: number;
+  month: number;
+  day: number;
+  day_of_week: string;
+  amount: number;
+};

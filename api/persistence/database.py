@@ -324,6 +324,7 @@ class Database:
                     Transaction.user_id == user_id,
                     Transaction.created_at >= start,
                     Transaction.created_at <= end) \
+                .options(joinedload(LineItem.transaction)) \
                 .offset(offset) \
                 .limit(limit) \
                 .all()

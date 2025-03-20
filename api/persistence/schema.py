@@ -99,6 +99,8 @@ class LineItem(Base):
         nullable=False
     )
 
+    transaction = relationship("Transaction")
+
 
 class Transaction(Base):
     __tablename__ = 'transactions'

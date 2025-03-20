@@ -7,6 +7,7 @@ from persistence.database import instance as db_instance
 
 from api.access.authenticator import AuthMetadata
 from api.shared import get_auth_metadata
+from persistence.schema import LineItem
 
 logger = logging.getLogger("divvy")
 
@@ -29,7 +30,19 @@ def get_expenses_by_category(
         limit=limit
     )
 
+    def transform(line_item: LineItem) -> dict:
+        tx_time: datetime = line_item.transaction.created_at
+        return dict(
+            amount=line_item.amount,
+            category_id=line_item.category_id,
+            vendor_id=line_item.transaction.vendor_id,
+            year=tx_time.year,
+            month=tx_time.month,
+            day=tx_time.day,
+            day_of_week=tx_time.strftime("%A")
+        )
+
     return dict(
         next_offset=offset+len(line_items),
-        items=get_api_safe_json(line_items)
+        items=get_api_safe_json(list(map(transform, line_items)))
     )
