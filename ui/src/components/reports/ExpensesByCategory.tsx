@@ -16,22 +16,17 @@ type ReportResponse = {
 
 const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) => void }) => {
   const now = new Date();
-  const getStartOfMonth = () => {
-    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  };
-
-  const getStartOfYear = () => {
-    return new Date(now.getFullYear(), 0, 1).getTime();
-  };
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const getStartOfYear = new Date(now.getFullYear(), 0, 1).getTime();
 
   return (
     <div>
       <div>Pick a date range:</div>
       <div>
-        <button onClick={() => onSubmit(getStartOfMonth(), now.getTime())}>This Month</button>
+        <button onClick={() => onSubmit(startOfMonth, now.getTime())}>This Month</button>
       </div>
       <div>
-        <button onClick={() => onSubmit(getStartOfYear(), now.getTime())}>This Year</button>
+        <button onClick={() => onSubmit(getStartOfYear, now.getTime())}>This Year</button>
       </div>
     </div>
   );
