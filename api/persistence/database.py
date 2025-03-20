@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import os
 import types
@@ -314,6 +315,18 @@ class Database:
             c = session.query(Category).filter(
                 Category.user_id == user_id, Category.code == code).first()
         return c
+
+    def get_line_items(self, user_id: int, start: datetime, end: datetime, offset: int, limit: int) -> List[LineItem]:
+        with get_session() as session:
+            return session.query(LineItem) \
+                .join(Transaction, LineItem.transaction_id == Transaction.id) \
+                .filter(
+                    Transaction.user_id == user_id,
+                    Transaction.created_at >= start,
+                    Transaction.created_at <= end) \
+                .offset(offset) \
+                .limit(limit) \
+                .all()
 
 
 instance = Database()

@@ -2,11 +2,12 @@ import { ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucid
 import { ReactNode } from "preact/compat";
 
 import Invite from "@/components/Invite";
-import Reports from "@/components/Reports";
 import Settings from "@/components/Settings";
 import CategoryListView from "@/components/categories/CategoryListView";
 import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
+import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
+import Reports from "@/components/reports/Reports";
 import TransactionEditView from "@/components/transactions/TransactionDetailView";
 import TransactionsTable from "@/components/transactions/Transactions";
 
@@ -57,6 +58,12 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     description: "Data visualization and drilldown reporting",
     component: Reports,
     dockIcon: <ChartLine />,
+  },
+  {
+    path: "/reports/expenses-by-category",
+    name: "Expenses By Category",
+    description: "Categorized expense summary",
+    component: ExpensesByCategory,
   },
   {
     path: "/settings",

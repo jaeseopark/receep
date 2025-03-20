@@ -20,6 +20,7 @@ from api.routers.transactions import router as transaction_router
 from api.routers.categories import router as category_router
 from api.routers.vendors import router as vendor_router
 from api.routers.users import router as user_router
+from api.routers.reports import router as report_router
 from api.shared import LoginRequest, Token, get_app_info, get_auth_metadata
 from utils.logging import set_format
 
@@ -47,6 +48,7 @@ fastapi_app.include_router(receipt_router)
 fastapi_app.include_router(vendor_router)
 fastapi_app.include_router(category_router)
 fastapi_app.include_router(user_router)
+fastapi_app.include_router(report_router)
 
 register_exception_handlers(fastapi_app)
 

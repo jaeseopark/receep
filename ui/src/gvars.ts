@@ -1,7 +1,7 @@
 import { signal } from "@preact/signals";
 import toast from "react-hot-toast";
 
-import { Category, Receipt, Transaction, Vendor } from "@/types";
+import { Category, LineItem, Receipt, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
 import { sigUserInfo, upsertCategories, upsertReceipts, upsertTransactions, upsertVendors } from "@/store";
@@ -125,3 +125,5 @@ export const fetchInitialData = () => {
       }
     });
 };
+
+export const sigExpensesByCategory = signal<LineItem[]>();

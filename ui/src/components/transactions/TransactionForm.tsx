@@ -102,7 +102,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       .post("/api/vendors", newVendor, {})
       .then((r) => r.data)
       .then((returnedVenor) => {
-        upsertVendors([returnedVenor]);
+        upsertVendors({ items: [returnedVenor] });
         setTimeout(() => setValue("vendor_id", returnedVenor.id), 100);
         // TODO: backpopuplate receipts
       })
@@ -168,7 +168,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               {...register(`line_items.${index}.amount_input`)}
               className="mt-1 block w-full p-2 border rounded w-[30%]"
               placeholder="Amount"
-              onChange={({ target: { value } }) => {
+              onChange={({ target: { value } }: any) => {
                 setValue(`line_items.${index}.amount`, evaluateAmountInput(value));
               }}
             />
