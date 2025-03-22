@@ -231,12 +231,6 @@ class Database:
 
         with get_session() as session:
             session.add(transaction)
-            # TODO: Do I really need the following query?
-            transaction: Transaction = session.query(Transaction) \
-                .order_by(desc(Transaction.id)) \
-                .limit(1) \
-                .first()
-
             transaction.line_items = [
                 LineItem(
                     name=li_dict.get("name"),
