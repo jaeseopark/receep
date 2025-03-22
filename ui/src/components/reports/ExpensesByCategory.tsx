@@ -1,13 +1,19 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import PivotTableUI from "react-pivottable/PivotTableUI";
 
-import { ExpenseLineItem, LineItem } from "@/types";
+import { ExpenseLineItem } from "@/types";
 
 import { axios } from "@/api";
 import { sigExpensesByCategory } from "@/gvars";
 import { sigCategories, sigVendors } from "@/store";
 
 import "react-pivottable/pivottable.css";
+
+const DEFAULT_TABLE_PROPS = {
+  cols: ["month"],
+  rows: ["category"],
+  vals: ["amount"],
+};
 
 type ReportResponse = {
   items: ExpenseLineItem[];
@@ -33,7 +39,20 @@ const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) 
 };
 
 const ExpensesByCategory = () => {
-  const [tableProps, setTableProps] = useState({});
+  const [tableProps, setTableProps] = useState(DEFAULT_TABLE_PROPS);
+
+  useEffect(() => {
+    // Unable to set aggregatorName until 'aggregators' is populated.
+    // PivotTableUI populates aggregators on load. Give it 100 ms.
+    setTimeout(
+      () =>
+        setTableProps((prev) => ({
+          ...prev,
+          aggregatorName: "Sum",
+        })),
+      100,
+    );
+  }, []);
 
   const fetchReportData = (start: number, end: number) => {
     const fetchedItems: ExpenseLineItem[] = [];
