@@ -52,7 +52,6 @@ export type Vendor = {
 
 export type Category = {
   id: number;
-  code: string;
   name: string;
   description: string;
   user_id: number;

@@ -231,6 +231,7 @@ class Database:
 
         with get_session() as session:
             session.add(transaction)
+            # TODO: Do I really need the following query?
             transaction: Transaction = session.query(Transaction) \
                 .order_by(desc(Transaction.id)) \
                 .limit(1) \
@@ -301,10 +302,9 @@ class Database:
 
         return v
 
-    def create_category(self, user_id: int, code: str, name: str, description: str) -> Category:
+    def create_category(self, user_id: int,  name: str, description: str) -> Category:
         c = Category(
             user_id=user_id,
-            code=code,
             name=name,
             description=description
         )
@@ -312,8 +312,8 @@ class Database:
         with get_session() as session:
             session.add(c)
             session.commit()
-            c = session.query(Category).filter(
-                Category.user_id == user_id, Category.code == code).first()
+            # lazy load the aut-gen ID
+            c.id
         return c
 
     def get_line_items(self, user_id: int, start: datetime, end: datetime, offset: int, limit: int) -> List[LineItem]:

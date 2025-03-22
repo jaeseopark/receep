@@ -14,7 +14,6 @@ logger = logging.getLogger("divvy")
 
 class UpsertRequest(BaseModel):
     id: int
-    code: str
     name: str
     description: str
     user_id: str
@@ -41,7 +40,6 @@ def create_category(
 ):
     category = db_instance.create_category(
         user_id=metadata.user_id,
-        code=payload.code,
         name=payload.name,
         description=payload.description
     )

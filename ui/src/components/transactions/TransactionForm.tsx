@@ -4,7 +4,6 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
-import { v4 as uuidv4 } from "uuid";
 
 import { Category, LineItem, Receipt, Transaction, Vendor } from "@/types";
 
@@ -106,7 +105,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
     const category: Category = {
       id: DEFAULT_FIELD_ID,
       user_id: DEFAULT_FIELD_ID,
-      code: uuidv4().substring(0, 32),
       name: categoryName,
       description: "Auto-Generated from a transaction",
     };

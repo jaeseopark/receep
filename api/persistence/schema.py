@@ -68,7 +68,6 @@ class Category(Base):
     __tablename__ = 'categories'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    code = Column(String(32), nullable=False)
     name = Column(String(64), nullable=False)
     description = Column(Text, nullable=True)
 
@@ -76,7 +75,6 @@ class Category(Base):
 
     __table_args__ = (
         UniqueConstraint('user_id', 'name', name='uq_user_category_name'),
-        UniqueConstraint('user_id', 'code', name='code'),
     )
 
 

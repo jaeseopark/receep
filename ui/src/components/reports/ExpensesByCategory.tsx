@@ -1,3 +1,4 @@
+import { RefreshCw } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
 import PivotTableUI from "react-pivottable/PivotTableUI";
 
@@ -84,8 +85,8 @@ const ExpensesByCategory = () => {
   }
 
   const categoryNameLookup = sigCategories.value.reduce(
-    (acc, { id, code, name }) => {
-      acc[id] = `${code}-${name}`;
+    (acc, { id, name }) => {
+      acc[id] = name;
       return acc;
     },
     {} as Record<number, string>,
@@ -107,7 +108,16 @@ const ExpensesByCategory = () => {
 
   return (
     <div>
-      <div>Expenses by category</div>
+      <div>
+        Expenses by category
+        <button
+          onClick={() => {
+            sigExpensesByCategory.value = undefined;
+          }}
+        >
+          <RefreshCw />
+        </button>
+      </div>
       <PivotTableUI data={rows} onChange={setTableProps} {...tableProps} />
     </div>
   );
