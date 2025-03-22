@@ -1,20 +1,19 @@
 import { Minus, Plus, Save } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
-import { useFieldArray, useForm } from "react-hook-form";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import Select from "react-select";
 import CreatableSelect from "react-select/creatable";
+import { v4 as uuidv4 } from "uuid";
 
-import { LineItem, Receipt, Transaction, Vendor } from "@/types";
+import { Category, LineItem, Receipt, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
 import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
-import { sigCategories, sigReceipts, sigVendors, upsertTransactions, upsertVendors } from "@/store";
+import { sigCategories, sigReceipts, sigVendors, upsertCategories, upsertTransactions, upsertVendors } from "@/store";
 import { evaluateAmountInput } from "@/utils/primitive";
 
-const DEFAULT_NEW_VENDOR_ID = 0;
-const DEFAULT_NEW_VENDOR_USER_ID = 0;
+const DEFAULT_FIELD_ID = 0;
 
 const createLineItem = (transaction: Transaction): LineItem => ({
   id: Date.now(),
@@ -27,15 +26,7 @@ const createLineItem = (transaction: Transaction): LineItem => ({
 
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-    watch,
-    getValues,
-    setValue,
-  } = useForm<Transaction>({
+  const { register, handleSubmit, control, watch, setValue } = useForm<Transaction>({
     defaultValues: transaction,
   });
   const receiptId = watch("receipt_id");
@@ -93,8 +84,8 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   const createVendor = (name: string) => {
     const newVendor: Vendor = {
-      id: DEFAULT_NEW_VENDOR_ID,
-      user_id: DEFAULT_NEW_VENDOR_USER_ID,
+      id: DEFAULT_FIELD_ID,
+      user_id: DEFAULT_FIELD_ID,
       name,
     };
 
@@ -111,22 +102,67 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       });
   };
 
+  const createCategory = (fieldName, categoryName: string) => {
+    const category: Category = {
+      id: DEFAULT_FIELD_ID,
+      user_id: DEFAULT_FIELD_ID,
+      code: uuidv4().substring(0, 32),
+      name: categoryName,
+      description: "Auto-Generated from a transaction",
+    };
+
+    axios
+      .post("/api/categories", category)
+      .then((r) => r.data)
+      .then((returnedCategory: Category) => {
+        upsertCategories({ items: [returnedCategory] });
+        setTimeout(() => setValue(fieldName, returnedCategory.id), 100);
+      })
+      .catch((e) => {
+        // TODO
+      });
+  };
+
   /* ----------------
    * End of event handlers
    * ---------------- */
 
   const renderVendorField = () => (
     <label className="block">
-      <CreatableSelect
-        {...register("vendor_id")}
-        options={sigVendors.value.map(({ id: value, name: label }) => ({
-          value,
-          label,
-        }))}
-        isSearchable
-        placeholder="Select a vendor..."
-        onCreateOption={createVendor}
-        onChange={(selectedItem) => setValue("vendor_id", selectedItem?.value)}
+      <Controller
+        name="vendor_id"
+        control={control}
+        render={({ field: { value, onChange } }) => {
+          const options = sigVendors.value.map(({ name, id }) => ({
+            label: name,
+            value: id,
+          }));
+          let selectedOption;
+          if (typeof value !== "undefined") {
+            const match = options.find(({ value: optionValue }) => optionValue === value);
+            if (match) {
+              selectedOption = match;
+            } else {
+              selectedOption = {
+                label: "Select",
+                value: -1,
+              };
+            }
+          }
+
+          return (
+            <CreatableSelect
+              options={options}
+              value={selectedOption}
+              isSearchable
+              isClearable
+              placeholder="Select a vendor..."
+              onCreateOption={createVendor}
+              // @ts-ignore
+              onChange={({ value }) => onChange(value)}
+            />
+          );
+        }}
       />
     </label>
   );
@@ -174,15 +210,41 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             />
           </div>
           <label className="block">
-            <Select
-              options={sigCategories.value.map(({ name, id }) => ({
-                label: name,
-                value: id,
-              }))}
-              isSearchable
-              onChange={(selectedOption) => setValue(`line_items.${index}.category_id`, selectedOption?.value!)}
+            <Controller
+              name={`line_items.${index}.category_id`}
+              control={control}
+              render={({ field: { name: fieldName, value, onChange } }) => {
+                const options = sigCategories.value.map(({ name, id }) => ({
+                  label: name,
+                  value: id,
+                }));
+                let selectedOption;
+                if (typeof value !== "undefined") {
+                  const match = options.find(({ value: optionValue }) => optionValue === value);
+                  if (match) {
+                    selectedOption = match;
+                  } else {
+                    selectedOption = {
+                      label: "Select",
+                      value: -1,
+                    };
+                  }
+                }
+
+                return (
+                  <CreatableSelect
+                    options={options}
+                    value={selectedOption}
+                    isSearchable
+                    isClearable
+                    placeholder="Select a category..."
+                    onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
+                    // @ts-ignore
+                    onChange={({ value }) => onChange(value)}
+                  />
+                );
+              }}
             />
-            <input type="number" {...register(`line_items.${index}.category_id`)} className="invisible" />
           </label>
           <div className="line-item-fields-row-2">
             <textarea

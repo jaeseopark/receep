@@ -54,7 +54,7 @@ export type Category = {
   id: number;
   code: string;
   name: string;
-  description?: string;
+  description: string;
   user_id: number;
 };
 

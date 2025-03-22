@@ -22,8 +22,8 @@ const CategoryListView = () => {
     axios
       .post("/api/categories", category)
       .then((r) => r.data)
-      .then((returnedCategory) => {
-        upsertCategories([returnedCategory]);
+      .then((returnedCategory: Category) => {
+        upsertCategories({ items: [returnedCategory] });
       });
   };
 
