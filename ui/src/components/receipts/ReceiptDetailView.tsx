@@ -1,4 +1,4 @@
-import { Link, NotebookPen } from "lucide-preact";
+import { NotebookPen } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -60,16 +60,6 @@ const ReceiptEditView = () => {
               onClick={() => navigate(`/transactions/new?receipt_id=${receipt.id}`)}
             >
               <NotebookPen />
-            </button>
-          </div>
-          <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
-            <button
-              className="btn btn-circle btn-primary"
-              onClick={() => {
-                // TODO: open modal to select a transaction
-              }}
-            >
-              <Link className="scale-85" />
             </button>
           </div>
         </>
