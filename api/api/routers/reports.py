@@ -31,7 +31,7 @@ def get_expenses_by_category(
     )
 
     def transform(line_item: LineItem) -> dict:
-        tx_time: datetime = line_item.transaction.created_at
+        tx_time: datetime = line_item.transaction.timestamp
         return dict(
             amount=line_item.amount,
             category_id=line_item.category_id,
