@@ -4,7 +4,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 import { Receipt } from "@/types";
 
-import { upsertReceipts } from "@/store";
+import { sigReceipts, upsertReceipts } from "@/store";
 
 import "./ReceiptImg.scss";
 
@@ -50,14 +50,24 @@ export const ReceiptThumbnail = ({ receipt }: { receipt: Receipt }) => (
   <ReceiptImg receipt={receipt} pathGetter={getThumbnailPath} contentTypeOverride="image/jpeg" />
 );
 
-export const ReceiptHighres = ({ receipt }: { receipt: Receipt }) => {
+export const ReceiptHighres = ({ receipt, id }: { receipt?: Receipt; id?: number }) => {
+  if (!receipt) {
+    const match = sigReceipts.value.find((r) => r.id === id);
+    if (!match) {
+      // TODO handle error
+    }
+    receipt = match as Receipt;
+  } else {
+    id = receipt.id;
+  }
+
   const { content_type } = receipt;
   return (
     <div className="relative overflow-hidden md:h-max-(--content-max-height) md:w-full">
       <ReceiptImg receipt={receipt} pathGetter={getHighresPath} />
       {content_type.startsWith("image/") && (
         <div className="top-6 right-6 shadow-lg outline-none rounded-full -mb-[2em] absolute">
-          <button className="btn btn-circle btn-primary" type="button" onClick={() => rotate(receipt.id)} tabIndex={-1}>
+          <button className="btn btn-circle btn-primary" type="button" onClick={() => rotate(id)} tabIndex={-1}>
             <RotateCwSquare />
           </button>
         </div>

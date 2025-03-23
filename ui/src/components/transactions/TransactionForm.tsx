@@ -1,4 +1,4 @@
-import { Minus, Plus, Save } from "lucide-preact";
+import { Minus, Plus, Save, Trash } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -10,7 +10,15 @@ import { Category, LineItem, Receipt, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
 import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
-import { sigCategories, sigReceipts, sigVendors, upsertCategories, upsertTransactions, upsertVendors } from "@/store";
+import {
+  sigCategories,
+  sigReceipts,
+  sigVendors,
+  upsertCategories,
+  upsertReceipts,
+  upsertTransactions,
+  upsertVendors,
+} from "@/store";
 import { evaluateAmountInput } from "@/utils/primitive";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -28,26 +36,14 @@ const createLineItem = (transaction: Transaction): LineItem => ({
 
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
-  const { register, handleSubmit, control, watch, setValue } = useForm<Transaction>({
+  const { register, handleSubmit, control, setValue } = useForm<Transaction>({
     defaultValues: transaction,
   });
-  const receiptId = watch("receipt_id");
-  const [receipt, setReceipt] = useState<Receipt>();
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "line_items",
   });
-
-  useEffect(() => {
-    if (!receiptId) {
-      return;
-    }
-    const [r] = sigReceipts.value.filter((r) => r.id === receiptId);
-    if (r) {
-      setReceipt(r);
-    }
-  }, [receiptId, sigReceipts.value]);
 
   /* ----------------
    * End of hooks
@@ -74,7 +70,26 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
     apiPromise
       .then((r) => r.data)
-      .then((t) => upsertTransactions({ items: [t], toFront: true }))
+      .then((t: Transaction) => {
+        upsertTransactions({ items: [t], toFront: true });
+        if (t.receipt_id) {
+          const receipt = sigReceipts.value.find(({ id }) => id === t.receipt_id);
+
+          if (!receipt) {
+            return;
+          }
+
+          const existingTransactionReference = receipt?.transactions.find(({ id }) => id === t.id);
+
+          if (!existingTransactionReference) {
+            receipt.transactions.push(t);
+          }
+
+          upsertReceipts({ items: [receipt] });
+        } else {
+          // TODO: clear transaction refenrece from the receipt object
+        }
+      })
       .then(() => {
         toast.success("Transaction saved.");
         navigate("/transactions");
@@ -97,7 +112,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       .then((returnedVenor) => {
         upsertVendors({ items: [returnedVenor] });
         setTimeout(() => setValue("vendor_id", returnedVenor.id), 100);
-        // TODO: backpopuplate receipts
       })
       .catch((e) => {
         // TODO
@@ -127,6 +141,70 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   /* ----------------
    * End of event handlers
    * ---------------- */
+
+  const renderReceipt = () => {
+    const openModal = () => (document.getElementById("receipt-modal") as HTMLDialogElement).showModal();
+
+    const closeModal = () => document.getElementById("receipt-modal-close")?.click();
+
+    return (
+      <Controller
+        name="receipt_id"
+        control={control}
+        render={({ field: { value } }) => (
+          <>
+            <div className="md:max-w-[50%] md:max-h-(--content-max-height)">
+              {value && (
+                <div className="overflow-hidden">
+                  <ReceiptHighres id={value} />
+                </div>
+              )}
+            </div>
+            <div className="btn" onClick={openModal}>
+              {value ? "Change/Remove receipt" : "Select receipt"}
+            </div>
+            <dialog id="receipt-modal" className="modal">
+              <div className="modal-box">
+                <h3 className="font-bold text-lg">Select a receipt</h3>
+                <ul className="list bg-base-100 rounded-box shadow-md">
+                  {sigReceipts.value.map((r) => {
+                    return (
+                      <li
+                        key={r.id}
+                        className="list-row"
+                        onClick={() => {
+                          setValue("receipt_id", r.id);
+                          closeModal();
+                        }}
+                      >
+                        {r.id}
+                      </li>
+                    );
+                  })}
+                  {value && (
+                    <li className="list-row">
+                      <div
+                        className="btn"
+                        onClick={() => {
+                          setValue("receipt_id", undefined);
+                          closeModal();
+                        }}
+                      >
+                        <Trash />
+                      </div>
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <form method="dialog" className="modal-backdrop">
+                <button id="receipt-modal-close">close</button>
+              </form>
+            </dialog>
+          </>
+        )}
+      />
+    );
+  };
 
   const renderDateField = () => {
     return (
@@ -289,15 +367,8 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   return (
     <form onSubmit={handleSubmit(upsertTransaction)} className="md:flex">
-      <div className="md:max-w-[50%] md:max-h-(--content-max-height)">
-        {receipt && (
-          <div className="overflow-hidden">
-            <ReceiptHighres receipt={receipt} />
-          </div>
-        )}
-      </div>
-
       <div className="fields md:min-w-[50%] mt-[1em]">
+        {renderReceipt()}
         {renderDateField()}
         {renderVendorField()}
         {renderLineItemHeader()}
