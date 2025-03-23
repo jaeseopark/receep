@@ -151,57 +151,60 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       <Controller
         name="receipt_id"
         control={control}
-        render={({ field: { value } }) => (
-          <>
-            <div className="md:max-w-[50%] md:max-h-(--content-max-height)">
-              {value && (
-                <div className="overflow-hidden">
-                  <ReceiptHighres id={value} />
-                </div>
-              )}
-            </div>
-            <div className="btn" onClick={openModal}>
-              {value ? "Change/Remove receipt" : "Select receipt"}
-            </div>
-            <dialog id="receipt-modal" className="modal">
-              <div className="modal-box">
-                <h3 className="font-bold text-lg">Select a receipt</h3>
-                <ul className="list bg-base-100 rounded-box shadow-md">
-                  {sigReceipts.value.map((r) => {
-                    return (
-                      <li
-                        key={r.id}
-                        className="list-row"
-                        onClick={() => {
-                          setValue("receipt_id", r.id);
-                          closeModal();
-                        }}
-                      >
-                        {r.id}
-                      </li>
-                    );
-                  })}
-                  {value && (
-                    <li className="list-row">
-                      <div
-                        className="btn"
-                        onClick={() => {
-                          setValue("receipt_id", undefined);
-                          closeModal();
-                        }}
-                      >
-                        <Trash />
-                      </div>
-                    </li>
-                  )}
-                </ul>
+        render={({ field: { value } }) => {
+          const receiptIdExists = typeof value !== "undefined" && value;
+          return (
+            <>
+              <div className="md:max-w-[50%] md:max-h-(--content-max-height)">
+                {receiptIdExists && (
+                  <div className="overflow-hidden">
+                    <ReceiptHighres id={value} />
+                  </div>
+                )}
               </div>
-              <form method="dialog" className="modal-backdrop">
-                <button id="receipt-modal-close">close</button>
-              </form>
-            </dialog>
-          </>
-        )}
+              <div className="btn" onClick={openModal}>
+                {receiptIdExists ? "Change/Remove receipt" : "Select receipt"}
+              </div>
+              <dialog id="receipt-modal" className="modal">
+                <div className="modal-box">
+                  <h3 className="font-bold text-lg">Select a receipt</h3>
+                  <ul className="list bg-base-100 rounded-box shadow-md">
+                    {sigReceipts.value.map((r) => {
+                      return (
+                        <li
+                          key={r.id}
+                          className="list-row"
+                          onClick={() => {
+                            setValue("receipt_id", r.id);
+                            closeModal();
+                          }}
+                        >
+                          {r.id}
+                        </li>
+                      );
+                    })}
+                    {value && (
+                      <li className="list-row">
+                        <div
+                          className="btn"
+                          onClick={() => {
+                            setValue("receipt_id", undefined);
+                            closeModal();
+                          }}
+                        >
+                          <Trash />
+                        </div>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                <form method="dialog" className="modal-backdrop">
+                  <button id="receipt-modal-close">close</button>
+                </form>
+              </dialog>
+            </>
+          );
+        }}
       />
     );
   };
