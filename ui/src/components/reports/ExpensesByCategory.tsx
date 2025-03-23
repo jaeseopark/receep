@@ -1,3 +1,4 @@
+import { startOfYear } from "date-fns";
 import { RefreshCw } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
 import PivotTableUI from "react-pivottable/PivotTableUI";
@@ -24,18 +25,22 @@ type ReportResponse = {
 const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) => void }) => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  const getStartOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+  const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
 
   return (
-    <div>
-      <div>Pick a date range:</div>
-      <div>
-        <button onClick={() => onSubmit(startOfMonth, now.getTime())}>This Month</button>
-      </div>
-      <div>
-        <button onClick={() => onSubmit(getStartOfYear, now.getTime())}>This Year</button>
-      </div>
-    </div>
+    <ul className="list bg-base-100 rounded-box shadow-md m-4">
+      <li className="p-4 pb-2 text-lg opacity-60 tracking-wide">Pick a date range</li>
+      <li className="list-row">
+        <span className="hover:underline" onClick={() => onSubmit(startOfMonth, now.getTime())}>
+          This Month
+        </span>
+      </li>
+      <li className="list-row">
+        <span className="hover:underline" onClick={() => onSubmit(startOfYear, now.getTime())}>
+          This Year
+        </span>
+      </li>
+    </ul>
   );
 };
 

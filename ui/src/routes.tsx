@@ -1,4 +1,4 @@
-import { ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
+import { BookUser, ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
 import Invite from "@/components/Invite";
@@ -16,8 +16,37 @@ type RouteEntry = {
   name: string;
   description: string;
   component: () => ReactNode;
-  dockIcon?: ReactNode;
+  icon?: ReactNode;
+  type: "DOCKED" | "NOT_DOCKED";
 };
+
+const REPORT_ROUTES: RouteEntry[] = [
+  {
+    path: "/reports/expenses-by-category",
+    name: "Expenses By Category",
+    description: "Categorized expense summary",
+    component: ExpensesByCategory,
+    type: "NOT_DOCKED",
+  },
+];
+
+const SETTING_ROUTES: RouteEntry[] = [
+  {
+    path: "/settings/categories",
+    name: "Manage Categories",
+    description: "Manage line item categories",
+    component: CategoryListView,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: "/settings/invite",
+    name: "Invite Users",
+    description: "Invite friends to use Divvy",
+    component: Invite,
+    icon: <BookUser />,
+    type: "NOT_DOCKED",
+  },
+];
 
 export const AUTHENTICATED_ROUTES: RouteEntry[] = [
   {
@@ -25,63 +54,54 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     name: "Receipts",
     description: "Upload and manage receipts",
     component: () => <ReceiptsView />,
-    dockIcon: <Receipt />,
+    icon: <Receipt />,
+    type: "DOCKED",
   },
   {
     path: "/receipts/edit/:id",
     name: "Edit Receipt",
     description: "View and edit a receipt",
     component: ReceiptEditView,
+    type: "NOT_DOCKED",
   },
   {
     path: "/transactions",
     name: "Transactions",
     description: "Manage transactions",
     component: TransactionsTable,
-    dockIcon: <NotebookPen />,
+    icon: <NotebookPen />,
+    type: "DOCKED",
   },
   {
     path: "/transactions/edit/:id",
     name: "Edit Transaction",
     description: "Edit transaction",
     component: TransactionEditView,
+    type: "NOT_DOCKED",
   },
   {
     path: "/transactions/new",
     name: "New Transaction",
     description: "Create transaction",
     component: TransactionEditView,
+    type: "NOT_DOCKED",
   },
   {
     path: "/reports",
     name: "Reports",
     description: "Data visualization and drilldown reporting",
-    component: Reports,
-    dockIcon: <ChartLine />,
-  },
-  {
-    path: "/reports/expenses-by-category",
-    name: "Expenses By Category",
-    description: "Categorized expense summary",
-    component: ExpensesByCategory,
+    component: () => <Reports reportRoutes={REPORT_ROUTES} />,
+    icon: <ChartLine />,
+    type: "DOCKED",
   },
   {
     path: "/settings",
     name: "Settings",
     description: "Manage application settings",
-    component: Settings,
-    dockIcon: <SettingsIcon />,
+    component: () => <Settings routes={SETTING_ROUTES} />,
+    icon: <SettingsIcon />,
+    type: "DOCKED",
   },
-  {
-    path: "/settings/categories",
-    name: "Categories",
-    description: "Manage line item categories",
-    component: CategoryListView,
-  },
-  {
-    path: "/settings/invite",
-    name: "Invite",
-    description: "Invite Users",
-    component: Invite,
-  },
+  ...REPORT_ROUTES,
+  ...SETTING_ROUTES,
 ];

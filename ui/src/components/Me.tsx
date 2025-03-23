@@ -17,23 +17,23 @@ const Me = () => {
     return (
       <div>
         <div>
-          Welcome, <span className="variable">{sigUserInfo.value.username}</span>!
+          Welcome, <span className="variable">{sigUserInfo.value.username}</span>!{" "}
+          {sigUserInfo.value.roles.length === 1 ? (
+            <>
+              Your role is: <span className="variable">{sigUserInfo.value.roles[0]}</span>.
+            </>
+          ) : (
+            <>
+              Your roles are: [
+              {sigUserInfo.value.roles.map((role) => (
+                <span key={role} className="variable">
+                  {role}
+                </span>
+              ))}
+              ].
+            </>
+          )}
         </div>
-        {sigUserInfo.value.roles.length === 1 ? (
-          <div>
-            Your role is: <span className="variable">{sigUserInfo.value.roles[0]}</span>.
-          </div>
-        ) : (
-          <div>
-            Your roles are: [
-            {sigUserInfo.value.roles.map((role) => (
-              <span key={role} className="variable">
-                {role}
-              </span>
-            ))}
-            ].
-          </div>
-        )}
       </div>
     );
   };
