@@ -112,10 +112,11 @@ const ExpensesByCategory = () => {
   }));
 
   return (
-    <div>
+    <div className="m-4">
       <div>
-        Expenses by category
+        <span className="text-lg">Expenses by category</span>
         <button
+          className="btn scale-50"
           onClick={() => {
             sigExpensesByCategory.value = undefined;
           }}
