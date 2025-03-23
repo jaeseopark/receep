@@ -130,8 +130,8 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   const renderDateField = () => {
     return (
-      <div>
-        Transaction Date:{" "}
+      <div className="flex">
+        <span className="mr-2">Date:</span>
         <Controller
           name="timestamp"
           control={control}
