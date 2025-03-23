@@ -167,7 +167,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               <dialog id="receipt-modal" className="modal">
                 <div className="modal-box">
                   <h3 className="font-bold text-lg">Select a receipt</h3>
-                  {value && (
+                  {receiptIdExists && (
                     <li className="list-row">
                       <div
                         className="btn"
