@@ -221,12 +221,13 @@ class Database:
                 raise NotFound
             return t
 
-    def create_transaction(self, user_id: int, line_items: List[dict], vendor_id: int = None, receipt_id: int = None) -> Transaction:
+    def create_transaction(self, user_id: int, line_items: List[dict], timestamp=datetime, vendor_id: int = None, receipt_id: int = None) -> Transaction:
         transaction = Transaction(
             user_id=user_id,
             receipt_id=receipt_id,
             vendor_id=vendor_id,
-            amount=sum([li.get("amount") for li in line_items])
+            amount=sum([li.get("amount") for li in line_items]),
+            timestamp=timestamp
         )
 
         with get_session() as session:
@@ -245,7 +246,7 @@ class Database:
 
             return session.get_transaction(transaction_id=transaction.id, user_id=user_id)
 
-    def update_transaction(self, user_id: int, transaction_id: int, line_items: List[dict], vendor_id: int = None, receipt_id: int = None) -> Transaction:
+    def update_transaction(self, user_id: int, transaction_id: int, line_items: List[dict], timestamp=datetime, vendor_id: int = None, receipt_id: int = None) -> Transaction:
         transaction: Transaction = None
         with get_session() as session:
             transaction = session \
@@ -260,6 +261,7 @@ class Database:
                                      for li_dict in line_items])
             transaction.receipt_id = receipt_id
             transaction.vendor_id = vendor_id
+            transaction.timestamp = timestamp
             transaction.line_items = [
                 LineItem(
                     name=li_dict.get("name"),
@@ -316,8 +318,8 @@ class Database:
                 .join(Transaction, LineItem.transaction_id == Transaction.id) \
                 .filter(
                     Transaction.user_id == user_id,
-                    Transaction.created_at >= start,
-                    Transaction.created_at <= end) \
+                    Transaction.timestamp >= start,
+                    Transaction.timestamp <= end) \
                 .options(joinedload(LineItem.transaction)) \
                 .offset(offset) \
                 .limit(limit) \

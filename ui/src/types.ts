@@ -24,7 +24,7 @@ export type LineItem = {
 export type Transaction = {
   id: number;
   user_id: number;
-  created_at: number;
+  timestamp: number;
   line_items: LineItem[];
   vendor_id?: number;
   receipt_id?: number;

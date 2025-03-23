@@ -31,7 +31,7 @@ const TransactionEditView = () => {
       if (!id) {
         const t: Transaction = {
           id: -1,
-          created_at: Date.now() / 1000,
+          timestamp: Date.now() / 1000,
           user_id: sigUserInfo.value?.user_id as number,
           // @ts-ignore
           line_items: [{}],

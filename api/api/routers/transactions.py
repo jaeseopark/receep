@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 from typing import List, Optional
 
@@ -28,6 +29,7 @@ class UpsertRequest(BaseModel):
     line_items: List[LineItem]
     vendor_id: Optional[str]
     receipt_id: Optional[str]
+    timestamp: float
 
 
 @router.get("/transactions/paginated")
@@ -68,7 +70,8 @@ def create_transaction(
         user_id=auth_metadata.user_id,
         vendor_id=payload.get("vendor_id"),
         receipt_id=payload.get("receipt_id"),
-        line_items=payload.get("line_items")
+        line_items=payload.get("line_items"),
+        timestamp=datetime.fromtimestamp(payload.get("timestamp")),
     )
     return get_api_safe_json(t)
 
@@ -86,6 +89,7 @@ def update_transaction(
         vendor_id=payload.get("vendor_id"),
         receipt_id=payload.get("receipt_id"),
         line_items=payload.get("line_items"),
+        timestamp=datetime.fromtimestamp(payload.get("timestamp")),
     )
 
     return get_api_safe_json(t)

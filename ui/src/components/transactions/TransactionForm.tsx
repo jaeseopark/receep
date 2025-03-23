@@ -1,5 +1,6 @@
 import { Minus, Plus, Save } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
+import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +12,8 @@ import { axios } from "@/api";
 import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
 import { sigCategories, sigReceipts, sigVendors, upsertCategories, upsertTransactions, upsertVendors } from "@/store";
 import { evaluateAmountInput } from "@/utils/primitive";
+
+import "react-datepicker/dist/react-datepicker.css";
 
 const DEFAULT_FIELD_ID = 0;
 
@@ -124,6 +127,35 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   /* ----------------
    * End of event handlers
    * ---------------- */
+
+  const renderDateField = () => {
+    return (
+      <div>
+        Transaction Date:{" "}
+        <Controller
+          name="timestamp"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <DatePicker
+              dateFormat="YYYY-MM-dd"
+              selected={new Date(value * 1000)}
+              onChange={(date) => {
+                if (date) {
+                  const newValue = date?.getTime() / 1000;
+                  onChange(newValue);
+                } else {
+                  // TODO error handling
+                }
+              }}
+            />
+          )}
+        />
+        <div className="btn" onClick={() => setValue("timestamp", Date.now() / 1000)}>
+          Today
+        </div>
+      </div>
+    );
+  };
 
   const renderVendorField = () => (
     <label className="block">
@@ -266,6 +298,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       </div>
 
       <div className="fields md:min-w-[50%] mt-[1em]">
+        {renderDateField()}
         {renderVendorField()}
         {renderLineItemHeader()}
         {renderLineItems()}

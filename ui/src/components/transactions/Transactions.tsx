@@ -12,8 +12,8 @@ const columnHelper = createColumnHelper<Transaction>();
 // TODO: implement sorting
 
 const columns = [
-  columnHelper.accessor("created_at", {
-    header: () => "Time",
+  columnHelper.accessor("timestamp", {
+    header: () => "Date",
     cell: (info) => {
       // TODO: abs time on hover?
       return <span>{toRelativeTime(info.getValue())}</span>;

@@ -1,4 +1,4 @@
-import { Link, Plus, SquareArrowOutUpRight } from "lucide-preact";
+import { Plus, SquareArrowOutUpRight } from "lucide-preact";
 import { useNavigate } from "react-router-dom";
 
 import { Receipt } from "@/types";

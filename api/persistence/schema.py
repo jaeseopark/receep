@@ -104,7 +104,7 @@ class Transaction(Base):
     __tablename__ = 'transactions'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    created_at = Column(DateTime, default=func.now())
+    timestamp = Column(DateTime)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     vendor_id = Column(Integer, ForeignKey('vendors.id'))
     receipt_id = Column(Integer, ForeignKey('receipts.id'))
