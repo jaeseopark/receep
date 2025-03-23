@@ -1,15 +1,14 @@
 import { Minus, Plus, Save, Trash } from "lucide-preact";
-import { useEffect, useState } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 
-import { Category, LineItem, Receipt, Transaction, Vendor } from "@/types";
+import { Category, LineItem, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
-import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
+import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
 import {
   sigCategories,
   sigReceipts,
@@ -168,6 +167,19 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               <dialog id="receipt-modal" className="modal">
                 <div className="modal-box">
                   <h3 className="font-bold text-lg">Select a receipt</h3>
+                  {value && (
+                    <li className="list-row">
+                      <div
+                        className="btn"
+                        onClick={() => {
+                          setValue("receipt_id", undefined);
+                          closeModal();
+                        }}
+                      >
+                        <Trash />
+                      </div>
+                    </li>
+                  )}
                   <ul className="list bg-base-100 rounded-box shadow-md">
                     {sigReceipts.value.map((r) => {
                       return (
@@ -179,23 +191,10 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                             closeModal();
                           }}
                         >
-                          {r.id}
+                          <ReceiptThumbnail receipt={r} />
                         </li>
                       );
                     })}
-                    {value && (
-                      <li className="list-row">
-                        <div
-                          className="btn"
-                          onClick={() => {
-                            setValue("receipt_id", undefined);
-                            closeModal();
-                          }}
-                        >
-                          <Trash />
-                        </div>
-                      </li>
-                    )}
                   </ul>
                 </div>
                 <form method="dialog" className="modal-backdrop">
