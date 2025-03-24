@@ -39,7 +39,11 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
     defaultValues: transaction,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields: lineItemFields,
+    append: appendLineItem,
+    remove: removeLineItem,
+  } = useFieldArray({
     control,
     name: "line_items",
   });
@@ -150,17 +154,15 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       <Controller
         name="receipt_id"
         control={control}
-        render={({ field: { value } }) => {
-          const receiptIdExists = typeof value !== "undefined" && value;
+        render={({ field: { value: receiptId } }) => {
+          const receiptIdExists = typeof receiptId !== "undefined" && receiptId !== null;
           return (
             <>
-              <div className="md:max-w-[50%] md:max-h-(--content-max-height)">
-                {receiptIdExists && (
-                  <div className="overflow-hidden">
-                    <ReceiptHighres id={value} />
-                  </div>
-                )}
-              </div>
+              {receiptIdExists && (
+                <div className="md:max-w-[50%] md:max-h-(--content-max-height) overflow-hidden">
+                  <ReceiptHighres id={receiptId} />
+                </div>
+              )}
               <div className="btn" onClick={openModal}>
                 {receiptIdExists ? "Change/Remove receipt" : "Select receipt"}
               </div>
@@ -172,7 +174,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                       <div
                         className="btn"
                         onClick={() => {
-                          setValue("receipt_id", undefined);
+                          setValue("receipt_id", null as any);
                           closeModal();
                         }}
                       >
@@ -181,20 +183,18 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                     </li>
                   )}
                   <ul className="list bg-base-100 rounded-box shadow-md">
-                    {sigReceipts.value.map((r) => {
-                      return (
-                        <li
-                          key={r.id}
-                          className="list-row"
-                          onClick={() => {
-                            setValue("receipt_id", r.id);
-                            closeModal();
-                          }}
-                        >
-                          <ReceiptThumbnail receipt={r} />
-                        </li>
-                      );
-                    })}
+                    {sigReceipts.value.map((r) => (
+                      <li
+                        key={r.id}
+                        className="list-row"
+                        onClick={() => {
+                          setValue("receipt_id", r.id);
+                          closeModal();
+                        }}
+                      >
+                        <ReceiptThumbnail receipt={r} />
+                      </li>
+                    ))}
                   </ul>
                 </div>
                 <form method="dialog" className="modal-backdrop">
@@ -283,7 +283,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       <button
         type="button"
         className="btn btn-circle btn-primary btn-sm scale-75"
-        onClick={() => append(createLineItem(transaction))}
+        onClick={() => appendLineItem(createLineItem(transaction))}
       >
         <Plus />
       </button>
@@ -291,13 +291,13 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   );
 
   const renderLineItems = () =>
-    fields.map((item, index, ary) => (
+    lineItemFields.map((item, index, ary) => (
       <div key={item.id} className="flex">
         <div>
           <button
             type="button"
             className="btn btn-circle btn-red btn-sm scale-75"
-            onClick={() => remove(index)}
+            onClick={() => removeLineItem(index)}
             disabled={ary.length === 1 && index === 0}
           >
             <Minus />
