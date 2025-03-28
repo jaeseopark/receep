@@ -17,8 +17,14 @@ const SORT_DESCENDING = (a: Receipt, b: Receipt) => b.created_at - a.created_at;
 
 const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    Promise.allSettled(uploadReceipts(acceptedFiles)).then(() => {
-      // TODO: toast
+    uploadReceipts(acceptedFiles, (progressObjects) => {
+      const isDone = !progressObjects.some(({ isActive, progress }) => isActive || progress < 1);
+      if (isDone) {
+        // TODO toast
+        return;
+      }
+
+      // TODO update progerss bar
     });
   }, []);
 
