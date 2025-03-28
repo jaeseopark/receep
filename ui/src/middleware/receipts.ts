@@ -14,7 +14,7 @@ type UploadProgrses = {
 
 export const uploadReceipts = (
   files: File[],
-  reportProgress: (uploadProgressArray: UploadProgrses[]) => void,
+  reportProgress: (update: { isDone: boolean; items: UploadProgrses[] }) => void,
   granularity = 0.1,
 ): Promise<void> => {
   // Add blank receipts to display spinners while uploading
@@ -49,14 +49,17 @@ export const uploadReceipts = (
           headers: {
             Accept: "application/json",
           },
-          onUploadProgress: ({ loaded, total }) => {
+          onUploadProgress: ({ total, loaded }) => {
             if (!Number.isNaN(total)) {
               const progress = loaded / total!;
               const isBigEnough = progressObjects[i].progress + granularity < progress;
-              if (isBigEnough) {
+              if (loaded < total! && isBigEnough) {
                 progressObjects[i].isActive = true;
                 progressObjects[i].progress = progress;
-                reportProgress(progressObjects);
+                reportProgress({
+                  isDone: false,
+                  items: progressObjects,
+                });
               }
             }
           },
@@ -66,7 +69,10 @@ export const uploadReceipts = (
           replaceReceipt(hash(file.name), receipt);
           progressObjects[i].isActive = false;
           progressObjects[i].progress = 1;
-          reportProgress(progressObjects);
+          reportProgress({
+            isDone: !progressObjects.some(({ isActive, progress }) => isActive || progress < 1),
+            items: progressObjects,
+          });
         })
         .catch((e) => {
           if (e?.response?.data?.code === "DUP_RECEIPT") {

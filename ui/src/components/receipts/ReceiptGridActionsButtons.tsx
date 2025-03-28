@@ -13,14 +13,8 @@ export const AddReceiptButton = () => (
       onChange={(e) => {
         const files: File[] = e?.target?.files || [];
         if (files.length > 0) {
-          uploadReceipts([...files], (progressObjects) => {
-            const isDone = !progressObjects.some(({ isActive, progress }) => isActive || progress < 1);
-            if (isDone) {
-              // TODO toast
-              return;
-            }
-
-            // TODO update progerss bar
+          uploadReceipts([...files], (update) => {
+            // TODO
           });
         }
       }}
