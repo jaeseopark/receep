@@ -1,6 +1,7 @@
-import { BookUser, ChartLine, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
+import { BookUser, ChartLine, Database, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
+import DataImportExport from "@/components/DataImportExport";
 import Invite from "@/components/Invite";
 import Settings from "@/components/Settings";
 import CategoryListView from "@/components/categories/CategoryListView";
@@ -44,6 +45,14 @@ const SETTING_ROUTES: RouteEntry[] = [
     description: "Invite friends to use Divvy",
     component: Invite,
     icon: <BookUser />,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: "/settings/data",
+    name: "Data",
+    description: "Manage data (import/export)",
+    component: DataImportExport,
+    icon: <Database />,
     type: "NOT_DOCKED",
   },
 ];
