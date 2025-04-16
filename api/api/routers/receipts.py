@@ -16,9 +16,9 @@ logger = logging.getLogger("divvy")
 def get_stuff(
     offset: int = Query(0, ge=0),
     limit: int = Query(100, le=500),
-    metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+    _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    receipts = db_instance.get_receipts(user_id=metadata.user_id, offset=offset, limit=limit)
+    receipts = db_instance.get_receipts(offset=offset, limit=limit)
     return dict(
         next_offset=offset+len(receipts),
         items=get_api_safe_json(receipts)

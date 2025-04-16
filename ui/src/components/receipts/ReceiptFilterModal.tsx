@@ -3,6 +3,8 @@ import { Info } from "lucide-preact";
 
 import { Receipt } from "@/types";
 
+import { sigUserInfo } from "@/store";
+
 type ReceiptFilter = {
   name: string;
   tooltip: string;
@@ -11,6 +13,12 @@ type ReceiptFilter = {
 };
 
 const sigReceiptFilters = signal<ReceiptFilter[]>([
+  {
+    name: "Show my receipts only",
+    tooltip: "Hides the receipt uploaded by other users.",
+    predicate: (r) => r.user_id === sigUserInfo.value?.user_id,
+    isSelected: true,
+  },
   {
     name: "Show unvetted receipts only",
     tooltip: "Hides the receipts that have not been associated with any transactions.",

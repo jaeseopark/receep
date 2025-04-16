@@ -193,11 +193,10 @@ class Database:
             session.delete(receipt)
             session.commit()
 
-    def get_receipts(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
+    def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
         # In descending order of id -- i.e. latest first.
         with get_session() as session:
             receipts = session.query(Receipt) \
-                .filter(Receipt.user_id == user_id) \
                 .options(joinedload(Receipt.transactions)) \
                 .order_by(desc(Receipt.id)) \
                 .offset(offset) \
