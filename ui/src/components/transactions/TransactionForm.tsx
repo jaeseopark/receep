@@ -1,4 +1,6 @@
+import { parse } from "date-fns";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
+import { KeyboardEvent } from "preact/compat";
 import { useCallback, useMemo } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
@@ -224,13 +226,19 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           render={({ field: { value, onChange } }) => (
             <DatePicker
               dateFormat="YYYY-MM-dd"
-              selected={new Date(value * 1000 - TZ_OFFSET_HRS * 3600)}
+              selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
               onChange={(date) => {
                 if (date) {
                   const newValue = date?.getTime() / 1000 + TZ_OFFSET_HRS * 3600;
                   onChange(newValue);
                 } else {
                   // TODO error handling
+                }
+              }}
+              onChangeRaw={(date: KeyboardEvent<HTMLInputElement>) => {
+                const newValue = parse(date.currentTarget.value, "yyyy-MM-dd", new Date());
+                if (newValue instanceof Date) {
+                  onChange(newValue.getTime() / 1000 + TZ_OFFSET_HRS * 3600);
                 }
               }}
             />
