@@ -29,7 +29,7 @@ export function toHumanFilesize(bytes: number): string {
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
 
-export const evaluateAmountInput = (input: string): number => {
+export const evaluateAmountInput = (input: string, decimals: number): number => {
   // TODO: if the string strats with a dot. prefix with a leading 0
   // TODO: if there's no number in front of a dot, add a 0.
 
@@ -42,5 +42,5 @@ export const evaluateAmountInput = (input: string): number => {
   const result = Function(`"use strict"; return (${sanitizedInput})`)();
 
   // Round the result to 2 decimal places
-  return Math.round(result * 100) / 100;
+  return result.toFixed(decimals);
 };

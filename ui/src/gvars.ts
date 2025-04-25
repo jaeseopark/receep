@@ -106,7 +106,14 @@ export const fetchUserInfo = () =>
     .get("/api/me")
     .then((r) => r.data)
     .then((userInfo) => {
-      sigUserInfo.value = userInfo;
+      const { config, ...rest } = userInfo;
+      sigUserInfo.value = {
+        ...rest,
+        config: {
+          tax_rate: config.tax_rate || 0,
+          currency_decimal_places: config.currency_decimal_places || 2,
+        },
+      };
     })
     .catch((e) => {
       console.error(e);

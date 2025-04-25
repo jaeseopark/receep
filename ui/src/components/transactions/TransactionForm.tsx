@@ -1,23 +1,27 @@
 import { Minus, Plus, Save, Trash } from "lucide-preact";
+import { useCallback, useMemo } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 
-import { Category, LineItem, Transaction, Vendor } from "@/types";
+import { Category, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
 import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
+import useAutoTax from "@/hooks/useAutoTax";
 import {
   sigCategories,
   sigReceipts,
+  sigUserInfo,
   sigVendors,
   upsertCategories,
   upsertReceipts,
   upsertTransactions,
   upsertVendors,
 } from "@/store";
+import { createLineItem } from "@/utils/forms";
 import { evaluateAmountInput } from "@/utils/primitive";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -26,20 +30,15 @@ const DEFAULT_FIELD_ID = 0;
 
 const TZ_OFFSET_HRS = -new Date().getTimezoneOffset() / 60;
 
-const createLineItem = (transaction: Transaction): LineItem => ({
-  id: Date.now(),
-  name: "",
-  transaction_id: transaction.id!,
-  amount_input: "",
-  amount: 0,
-  category_id: 0,
-});
+type FormData = Transaction & { enableAutoTax: boolean };
 
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
-  const { register, handleSubmit, control, setValue } = useForm<Transaction>({
-    defaultValues: transaction,
+  const { register, handleSubmit, control, setValue } = useForm<FormData>({
+    defaultValues: { ...transaction, enableAutoTax: true },
   });
+  const { applyAutoTax } = useAutoTax();
+  const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
 
   const {
     fields: lineItemFields,
@@ -50,23 +49,24 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
     name: "line_items",
   });
 
-  /* ----------------
-   * End of hooks
-   * ---------------- */
-
-  const upsertTransaction = (submittedTransaction: Transaction) => {
-    const { id } = submittedTransaction;
+  const upsertTransaction = useCallback((formData: FormData) => {
+    const { enableAutoTax, ...t } = formData;
     let apiPromise;
 
-    if (submittedTransaction.id === -1) {
+    if (isNewTransaction) {
       // ID is -1, meaning this is a brand new transaction.
-      apiPromise = axios.post("/api/transactions", submittedTransaction, {
+
+      if (enableAutoTax) {
+        applyAutoTax(formData);
+      }
+
+      apiPromise = axios.post("/api/transactions", formData, {
         headers: {
           "Content-Type": "application/json",
         },
       });
     } else {
-      apiPromise = axios.put(`/api/transactions/${id}`, submittedTransaction, {
+      apiPromise = axios.put(`/api/transactions/${t.id}`, formData, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -102,7 +102,11 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       .catch((e) => {
         // TODO
       });
-  };
+  }, []);
+
+  /* ----------------
+   * End of hooks
+   * ---------------- */
 
   const createVendor = (name: string) => {
     const newVendor: Vendor = {
@@ -280,16 +284,26 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   );
 
   const renderLineItemHeader = () => (
-    <h3 className="text-lg font-semibold">
-      Line Items
-      <button
-        type="button"
-        className="btn btn-circle btn-primary btn-sm scale-75"
-        onClick={() => appendLineItem(createLineItem(transaction))}
-      >
-        <Plus />
-      </button>
-    </h3>
+    <div>
+      <h3 className="text-lg font-semibold">
+        Line Items
+        <button
+          type="button"
+          className="btn btn-circle btn-primary btn-sm scale-75"
+          onClick={() => appendLineItem(createLineItem(transaction))}
+        >
+          <Plus />
+        </button>
+      </h3>
+      {isNewTransaction && (
+        <div className="mt-2">
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" {...register("enableAutoTax")} className="checkbox" />
+            <span>Enable Auto Tax</span>
+          </label>
+        </div>
+      )}
+    </div>
   );
 
   const renderLineItems = () =>
@@ -317,7 +331,10 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               className="mt-1 block w-full p-2 border rounded w-[30%]"
               placeholder="Amount"
               onChange={({ target: { value } }: any) => {
-                setValue(`line_items.${index}.amount`, evaluateAmountInput(value));
+                setValue(
+                  `line_items.${index}.amount`,
+                  evaluateAmountInput(value, sigUserInfo.value!.config.currency_decimal_places),
+                );
               }}
             />
           </div>

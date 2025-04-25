@@ -3,8 +3,8 @@ export type UserInfo = {
   username: string;
   roles: string[];
   config: {
-    // Note: this property needs to be flexible. Make everything undefinable.
-    tax_rate?: number; // Ex. 0.05
+    tax_rate: number; // Ex. 0.05
+    currency_decimal_places: number; // Ex. 2
   };
 };
 

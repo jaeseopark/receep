@@ -8,15 +8,18 @@ import { sigUserInfo } from "@/store";
 
 type FormData = {
   taxRate: string;
+  currencyDecimalPlaces: string;
 };
 
-const ConfigForm = ({ onSubmit }: { onSubmit: SubmitHandler<FormData> }) => {
+const ConfigForm = ({ config, onSubmit }: { config: UserInfo["config"]; onSubmit: SubmitHandler<FormData> }) => {
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
-      taxRate: sigUserInfo.value?.config?.tax_rate?.toString() || "0.1",
+      taxRate: config.tax_rate.toString(),
+      currencyDecimalPlaces: config.currency_decimal_places.toString(),
     },
   });
 
+  // todo make this pretty
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div>
@@ -25,9 +28,15 @@ const ConfigForm = ({ onSubmit }: { onSubmit: SubmitHandler<FormData> }) => {
           <Controller
             name="taxRate"
             control={control}
-            render={({ field }) => (
-              <input type="string" {...field} placeholder="Enter tax rate in fraction Ex. 0.1" />
-            )}
+            render={({ field }) => <input type="string" {...field} placeholder="Enter tax rate in fraction Ex. 0.1" />}
+          />
+        </div>
+        <div>
+          <label>Currency Decimal Places</label>
+          <Controller
+            name="currencyDecimalPlaces"
+            control={control}
+            render={({ field }) => <input type="number" {...field} placeholder="Enter currency decimal places Ex. 2" />}
           />
         </div>
       </div>
@@ -45,6 +54,7 @@ const Config = () => {
     (formData: FormData) => {
       const updatedConfig: UserInfo["config"] = {
         tax_rate: Number.parseFloat(formData.taxRate),
+        currency_decimal_places: Number.parseInt(formData.currencyDecimalPlaces),
       };
 
       axios
@@ -61,7 +71,7 @@ const Config = () => {
     [sigUserInfo.value],
   );
 
-  return <ConfigForm onSubmit={onSubmit} />;
+  return <ConfigForm config={sigUserInfo.value!.config} onSubmit={onSubmit} />;
 };
 
 export default Config;
