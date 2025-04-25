@@ -31,7 +31,7 @@ class AuthMetadata:
     authenticated: bool = False
     user_id: Optional[int]
     username: Optional[str]
-    roles: List[str] = []
+    roles: List[str] = []  # "admin"
     config: Optional[dict]
 
 
