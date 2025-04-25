@@ -9,3 +9,8 @@ export const toRelativeTime = (epoch: number): string => {
     .replace("less than a minute ago", "Just now")
     .replace("in less than a minute", "Just now");
 };
+
+export const getYearTimestamps = (y: number) => ({
+  start: new Date(y, 0, 1).getTime(),
+  end: new Date(y, 11, 31, 23, 59, 59, 999).getTime(),
+});

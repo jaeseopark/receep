@@ -1,4 +1,3 @@
-import { startOfYear } from "date-fns";
 import { RefreshCw } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
 import PivotTableUI from "react-pivottable/PivotTableUI";
@@ -8,6 +7,7 @@ import { ExpenseLineItem } from "@/types";
 import { axios } from "@/api";
 import { sigExpensesByCategory } from "@/gvars";
 import { sigCategories, sigVendors } from "@/store";
+import { getYearTimestamps } from "@/utils/dates";
 
 import "react-pivottable/pivottable.css";
 
@@ -23,23 +23,24 @@ type ReportResponse = {
 };
 
 const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) => void }) => {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+  const lastFiveYears = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
   return (
     <ul className="list bg-base-100 rounded-box shadow-md m-4">
-      <li className="p-4 pb-2 text-lg opacity-60 tracking-wide">Pick a date range</li>
-      <li className="list-row">
-        <span className="hover:underline" onClick={() => onSubmit(startOfMonth, now.getTime())}>
-          This Month
-        </span>
-      </li>
-      <li className="list-row">
-        <span className="hover:underline" onClick={() => onSubmit(startOfYear, now.getTime())}>
-          This Year
-        </span>
-      </li>
+      <li className="p-4 pb-2 text-lg opacity-60 tracking-wide">Pick a year:</li>
+      {lastFiveYears.map((year) => (
+        <li className="list-row" key={year}>
+          <span
+            className="hover:underline"
+            onClick={() => {
+              const { start, end } = getYearTimestamps(year);
+              onSubmit(start, end);
+            }}
+          >
+            {year}
+          </span>
+        </li>
+      ))}
     </ul>
   );
 };
