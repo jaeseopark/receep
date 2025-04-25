@@ -70,6 +70,7 @@ const ExpensesByCategory = () => {
             start: start / 1000,
             end: end / 1000,
             offset,
+            tz: -new Date().getTimezoneOffset() / 60,
           },
         })
         .then((r) => r.data)

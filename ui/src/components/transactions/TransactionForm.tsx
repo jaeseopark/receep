@@ -24,6 +24,8 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const DEFAULT_FIELD_ID = 0;
 
+const TZ_OFFSET_HRS = -new Date().getTimezoneOffset() / 60;
+
 const createLineItem = (transaction: Transaction): LineItem => ({
   id: Date.now(),
   name: "",
@@ -218,10 +220,10 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           render={({ field: { value, onChange } }) => (
             <DatePicker
               dateFormat="YYYY-MM-dd"
-              selected={new Date(value * 1000)}
+              selected={new Date(value * 1000 - TZ_OFFSET_HRS * 3600)}
               onChange={(date) => {
                 if (date) {
-                  const newValue = date?.getTime() / 1000;
+                  const newValue = date?.getTime() / 1000 + TZ_OFFSET_HRS * 3600;
                   onChange(newValue);
                 } else {
                   // TODO error handling
@@ -230,7 +232,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             />
           )}
         />
-        <div className="btn" onClick={() => setValue("timestamp", Date.now() / 1000)}>
+        <div className="btn" onClick={() => setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
           Today
         </div>
       </div>
