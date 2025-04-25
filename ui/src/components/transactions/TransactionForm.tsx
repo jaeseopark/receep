@@ -23,14 +23,13 @@ import {
   upsertTransactions,
   upsertVendors,
 } from "@/store";
+import { TZ_OFFSET_HRS } from "@/utils/dates";
 import { createLineItem } from "@/utils/forms";
 import { evaluateAmountInput } from "@/utils/primitive";
 
 import "react-datepicker/dist/react-datepicker.css";
 
 const DEFAULT_FIELD_ID = 0;
-
-const TZ_OFFSET_HRS = -new Date().getTimezoneOffset() / 60;
 
 type FormData = Transaction & { enableAutoTax: boolean };
 

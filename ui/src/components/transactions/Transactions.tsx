@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
-import { sigTransactions } from "@/store";
-import { toRelativeTime } from "@/utils/dates";
+import { sigTransactions, sigVendors } from "@/store";
+import { toAbsoluteDate } from "@/utils/dates";
 
 const columnHelper = createColumnHelper<Transaction>();
 
@@ -15,8 +15,15 @@ const columns = [
   columnHelper.accessor("timestamp", {
     header: () => "Date",
     cell: (info) => {
-      // TODO: abs time on hover?
-      return <span>{toRelativeTime(info.getValue())}</span>;
+      const timestamp = info.getValue();
+      return <span>{toAbsoluteDate(timestamp)}</span>;
+    },
+  }),
+  columnHelper.accessor("vendor_id", {
+    header: () => <span>Vendor</span>,
+    cell: (info) => {
+      const vendor = sigVendors.value.find((v) => v.id === info.getValue());
+      return <span>{vendor?.name}</span>;
     },
   }),
   columnHelper.accessor("amount", {
