@@ -31,10 +31,6 @@ class InviteRequest(BaseModel):
     username: str
 
 
-class ConfigRequest(BaseModel):
-    tax_rate: float
-
-
 @router.post("/signup", response_model=SignupResponse)
 async def signup(signup_req: SignupRequest, app_info=Depends(get_app_info)):
     if app_info.user_count == 0 or app_info.signup == "OPEN":
@@ -92,10 +88,10 @@ async def get_my_info(metadata: AuthMetadata = Depends(get_auth_metadata(assert_
     )
 
 
-@router.post("/me/config")
+@router.put("/me/config")
 async def update_user_config(
-    payload: ConfigRequest,
+    payload: dict,
     auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    db.update_user_config(auth_metadata.user_id, payload.__dict__)
+    db.update_user_config(auth_metadata.user_id, payload)
     return dict(message="success")

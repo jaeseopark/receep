@@ -1,7 +1,7 @@
 import { ReactNode } from "preact/compat";
 import { useNavigate } from "react-router-dom";
 
-import Me from "@/components/Me";
+import Me from "@/components/user/Me";
 
 const Settings = ({ routes }: { routes: { path: string; name: string; description: string; icon?: ReactNode }[] }) => {
   const navigate = useNavigate();

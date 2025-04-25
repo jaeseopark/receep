@@ -2,7 +2,10 @@ export type UserInfo = {
   user_id: number;
   username: string;
   roles: string[];
-  config: Record<string, any>;
+  config: {
+    // Note: this property needs to be flexible. Make everything undefinable.
+    tax_rate?: number; // Ex. 0.05
+  };
 };
 
 export type AppInfo = {

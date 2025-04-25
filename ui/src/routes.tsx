@@ -12,6 +12,7 @@ import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
 import Reports from "@/components/reports/Reports";
 import TransactionEditView from "@/components/transactions/TransactionDetailView";
 import TransactionsTable from "@/components/transactions/Transactions";
+import Config from "@/components/user/Config";
 
 type RouteEntry = {
   path: string;
@@ -33,6 +34,14 @@ const REPORT_ROUTES: RouteEntry[] = [
 ];
 
 const SETTING_ROUTES: RouteEntry[] = [
+  {
+    path: "/settings/configs",
+    name: "User Configs",
+    description: "Manage Configs",
+    component: Config,
+    icon: <SettingsIcon />, // duplicate.. find new?
+    type: "NOT_DOCKED",
+  },
   {
     path: "/settings/categories",
     name: "Manage Categories",
