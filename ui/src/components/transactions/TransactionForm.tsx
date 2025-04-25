@@ -224,7 +224,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           control={control}
           render={({ field: { value, onChange } }) => (
             <DatePicker
-              dateFormat="YYYY-MM-dd"
+              dateFormat="yyyy-MM-dd"
               selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
               onChange={(date) => {
                 if (date) {
@@ -235,9 +235,13 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                 }
               }}
               onChangeRaw={(date: KeyboardEvent<HTMLInputElement>) => {
-                const newValue = parse(date.currentTarget.value, "yyyy-MM-dd", new Date());
-                if (newValue instanceof Date) {
-                  onChange(newValue.getTime() / 1000 + TZ_OFFSET_HRS * 3600);
+                try {
+                  const newValue = parse(date.currentTarget.value, "yyyy-MM-dd", new Date());
+                  if (newValue instanceof Date) {
+                    onChange(newValue.getTime() / 1000 + TZ_OFFSET_HRS * 3600);
+                  }
+                } catch (error) {
+                  // TODO
                 }
               }}
             />
