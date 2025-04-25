@@ -30,6 +30,9 @@ export function toHumanFilesize(bytes: number): string {
 }
 
 export const evaluateAmountInput = (input: string): number => {
+  // TODO: if the string strats with a dot. prefix with a leading 0
+  // TODO: if there's no number in front of a dot, add a 0.
+
   const sanitizedInput = input.replace(/\s|[$€£¥]/g, "");
 
   if (!/^[0-9+\-*/().]+$/.test(sanitizedInput)) {

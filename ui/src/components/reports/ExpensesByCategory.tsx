@@ -2,14 +2,13 @@ import { RefreshCw } from "lucide-preact";
 import { useEffect, useState } from "preact/hooks";
 import PivotTableUI from "react-pivottable/PivotTableUI";
 
-import { ExpenseLineItem } from "@/types";
-
 import { axios } from "@/api";
-import { sigExpensesByCategory } from "@/gvars";
 import { sigCategories, sigVendors } from "@/store";
 import { getYearTimestamps } from "@/utils/dates";
 
 import "react-pivottable/pivottable.css";
+
+const TZ_OFFSET = -new Date().getTimezoneOffset() / 60;
 
 const DEFAULT_TABLE_PROPS = {
   cols: ["month"],
@@ -17,9 +16,45 @@ const DEFAULT_TABLE_PROPS = {
   vals: ["amount"],
 };
 
-type ReportResponse = {
+type ExpenseLineItem = {
+  category_id: number;
+  vendor_id: number;
+  year: number;
+  month: number;
+  day: number;
+  day_of_week: string;
+  amount: number;
+};
+
+type PaginatedReportResponse = {
   items: ExpenseLineItem[];
   next_offset: number;
+};
+
+const fetchReportData = async (start: number, end: number): Promise<ExpenseLineItem[]> => {
+  const fetchNext = (offset: number): Promise<PaginatedReportResponse> =>
+    axios
+      .get("/api/reports/expenses-by-category/paginated", {
+        params: {
+          start: start / 1000,
+          end: end / 1000,
+          offset,
+          tz: TZ_OFFSET, // The API returns Y/M/D in UTC by default. Providing this query param adjusts the values to the local timezone.
+        },
+      })
+      .then((r) => r.data);
+
+  const allItems: ExpenseLineItem[] = [];
+  let offset = 0;
+
+  do {
+    // keep fetching the next page until there is none.
+    const { items, next_offset } = await fetchNext(offset);
+    allItems.push(...items);
+    offset = items.length > 0 ? next_offset : 0;
+  } while (offset > 0);
+
+  return allItems;
 };
 
 const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) => void }) => {
@@ -47,6 +82,7 @@ const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) 
 
 const ExpensesByCategory = () => {
   const [tableProps, setTableProps] = useState(DEFAULT_TABLE_PROPS);
+  const [lineItems, setLineItems] = useState<ExpenseLineItem[]>();
 
   useEffect(() => {
     // Unable to set aggregatorName until 'aggregators' is populated.
@@ -61,34 +97,8 @@ const ExpensesByCategory = () => {
     );
   }, []);
 
-  const fetchReportData = (start: number, end: number) => {
-    const fetchedItems: ExpenseLineItem[] = [];
-    const fetchNext = (offset: number = 0) =>
-      axios
-        .get("/api/reports/expenses-by-category/paginated", {
-          params: {
-            start: start / 1000,
-            end: end / 1000,
-            offset,
-            tz: -new Date().getTimezoneOffset() / 60,
-          },
-        })
-        .then((r) => r.data)
-        .then(({ items, next_offset }: ReportResponse) => {
-          offset = next_offset;
-          fetchedItems.push(...items);
-          if (items.length > 0) {
-            fetchNext(next_offset);
-          } else {
-            sigExpensesByCategory.value = fetchedItems;
-          }
-        });
-
-    fetchNext();
-  };
-
-  if (!sigExpensesByCategory.value) {
-    return <DateRangePicker onSubmit={fetchReportData} />;
+  if (!lineItems) {
+    return <DateRangePicker onSubmit={(start, end) => fetchReportData(start, end).then(setLineItems)} />;
   }
 
   const categoryNameLookup = sigCategories.value.reduce(
@@ -107,7 +117,7 @@ const ExpensesByCategory = () => {
     {} as Record<number, string>,
   );
 
-  const rows = sigExpensesByCategory.value.map((lineItem) => ({
+  const rows = lineItems.map((lineItem) => ({
     category: categoryNameLookup[lineItem.category_id],
     vendor: vendorNameLookup[lineItem.vendor_id],
     ...lineItem,
@@ -117,12 +127,7 @@ const ExpensesByCategory = () => {
     <div className="m-4">
       <div>
         <span className="text-lg">Expenses by category</span>
-        <button
-          className="btn scale-50"
-          onClick={() => {
-            sigExpensesByCategory.value = undefined;
-          }}
-        >
+        <button className="btn scale-50" onClick={() => setLineItems(undefined)}>
           <RefreshCw />
         </button>
       </div>
