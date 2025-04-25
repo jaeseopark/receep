@@ -1,4 +1,4 @@
-import { BookUser, ChartLine, Database, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
+import { BookUser, ChartLine, Database, Dot, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
 import DataImportExport from "@/components/DataImportExport";
@@ -38,6 +38,7 @@ const SETTING_ROUTES: RouteEntry[] = [
     name: "Manage Categories",
     description: "Manage line item categories",
     component: CategoryListView,
+    icon: <Dot />, // TODO: use a better icon
     type: "NOT_DOCKED",
   },
   {
