@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends, Query, UploadFile
-from logic.divvy import instance as app_instance
+from logic.receep import instance as app_instance
 from persistence.database import instance as db_instance
 
 from api.access.authenticator import AuthMetadata
@@ -9,7 +9,7 @@ from api.shared import get_auth_metadata
 from api.utils import get_api_safe_json
 
 router = APIRouter()
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 
 @router.get("/receipts/paginated")

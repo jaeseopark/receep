@@ -9,7 +9,7 @@ from api.access.authenticator import AuthMetadata
 from api.shared import get_auth_metadata
 from persistence.schema import LineItem
 
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 router = APIRouter()
 

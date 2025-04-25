@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, status
 from fastapi.responses import FileResponse
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from logic import divvy
+from logic import receep
 from persistence import database
 from starlette.websockets import WebSocketDisconnect
 
@@ -24,16 +24,16 @@ from api.routers.reports import router as report_router
 from api.shared import LoginRequest, Token, get_app_info, get_auth_metadata
 from utils.logging import set_format
 
-logger = getLogger("divvy")
+logger = getLogger("receep")
 logger.setLevel(INFO)
 logger.addHandler(set_format(StreamHandler()))
-logger.addHandler(set_format(FileHandler("/var/log/divvy/api/app.log")))
+logger.addHandler(set_format(FileHandler("/var/log/receep/api/app.log")))
 
 uvicorn_logger = getLogger("uvicorn.error")
 uvicorn_logger.setLevel(ERROR)
 uvicorn_logger.addHandler(set_format(StreamHandler()))
 uvicorn_logger.addHandler(set_format(
-    FileHandler("/var/log/divvy/api/uvicorn.log")))
+    FileHandler("/var/log/receep/api/uvicorn.log")))
 
 fastapi_app = FastAPI(redirect_slashes=False)
 sockets: List[WebSocket] = []
@@ -41,7 +41,7 @@ sockets: List[WebSocket] = []
 
 db = database.instance
 auth = authenticator.instance
-app = divvy.instance
+app = receep.instance
 
 fastapi_app.include_router(transaction_router)
 fastapi_app.include_router(receipt_router)

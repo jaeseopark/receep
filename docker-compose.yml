@@ -17,7 +17,7 @@ services:
     volumes:
       - ./ui:/app/ui
   api:
-    image: divvy:latest
+    image: receep:latest
     build:
       context: api
     working_dir: /app/api
@@ -26,7 +26,7 @@ services:
     volumes:
       - ./api:/app/api
       - ./mnt/data:/data
-      - ./mnt/log:/var/log/divvy/api
+      - ./mnt/log:/var/log/receep/api
     env_file:
       - .env
     depends_on:

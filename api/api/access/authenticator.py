@@ -24,7 +24,7 @@ from api.access.exceptions import InvalidCredsException, NoInvitationFound
 JWT_KEY = os.getenv("JWT_KEY")
 JWT_ALG = "HS256"
 
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 
 class AuthMetadata:
@@ -108,7 +108,7 @@ class Authenticator:
         user.totp_private_key = totp.secret
         self.db.update_user_creds(user)
 
-        uri = totp.provisioning_uri(username, issuer_name="divvy")
+        uri = totp.provisioning_uri(username, issuer_name="receep")
 
         # Create the QR code
         qr = qrcode.QRCode(

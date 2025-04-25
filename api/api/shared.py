@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from api.access import authenticator
 from api.access.authenticator import JWT_KEY, AuthMetadata
 
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 auth = authenticator.instance
 
 

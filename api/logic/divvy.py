@@ -12,7 +12,7 @@ from persistence.schema import Receipt
 
 RECEIPT_DIR = "/data/receipts"
 
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 
 def get_reader_info(reader: BufferedReader, chunk_size=8192):
@@ -33,7 +33,7 @@ def get_reader_info(reader: BufferedReader, chunk_size=8192):
     return file_size, sha256_hash.hexdigest()
 
 
-class Divvy:
+class Receep:
     def __init__(self, db: Database):
         self.db = db
         for dir in (RECEIPT_DIR,):
@@ -46,7 +46,7 @@ class Divvy:
         receipt = self.db.create_receipt(
             user_id, content_type, content_length, hash)
 
-        # ".dr" stands for "Divvy Receipt"
+        # ".dr" stands for "Receep Receipt"
         save_path = os.path.join(RECEIPT_DIR, f"{receipt.id}.dr")
         try:
             with open(save_path, "wb") as fp:
@@ -67,4 +67,4 @@ class Divvy:
         raise NotImplementedError
 
 
-instance = Divvy(db_instance)
+instance = Receep(db_instance)

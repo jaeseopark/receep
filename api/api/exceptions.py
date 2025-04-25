@@ -5,7 +5,7 @@ import logging
 from fastapi.responses import JSONResponse
 from persistence.exceptions import DuplicateReceipt, DuplicateUsernameException
 
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 
 _HANDLERS = {}

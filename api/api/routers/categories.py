@@ -9,7 +9,7 @@ from api.shared import get_auth_metadata
 from api.utils import get_api_safe_json
 
 router = APIRouter()
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 
 class UpsertRequest(BaseModel):

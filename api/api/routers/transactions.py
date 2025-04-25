@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from api.access.authenticator import AuthMetadata
 from api.shared import get_auth_metadata
 
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 router = APIRouter()
 

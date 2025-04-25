@@ -1,4 +1,4 @@
-# divvy
+# receep
 
 ## Development
 

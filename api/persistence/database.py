@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import joinedload, sessionmaker
 
 password = os.getenv("POSTGRES_PASSWORD")
-logger = logging.getLogger("divvy")
+logger = logging.getLogger("receep")
 
 SESSION_DECORATORS = dict()
 
