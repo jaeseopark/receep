@@ -1,7 +1,5 @@
-import { signal } from "@preact/signals";
+import { Signal, signal } from "@preact/signals";
 import toast from "react-hot-toast";
-
-import { Category, Receipt, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
 import { sigUserInfo, upsertCategories, upsertReceipts, upsertTransactions, upsertVendors } from "@/store";
@@ -38,83 +36,39 @@ const categoryPagination = signal<PaginationState>({
   isExausted: false,
 });
 
-export const fetchReceipts = () =>
-  axios
-    .get("/api/receipts/paginated", {
-      params: { ...receiptPagination.value },
-    })
-    .then((r) => r.data)
-    .then(({ next_offset, items }: { next_offset: number; items: Receipt[] }) => {
-      receiptPagination.value = {
-        ...receiptPagination.value,
-        offset: next_offset,
-        isExausted: items.length === 0,
-      };
-      upsertReceipts({ items });
-    })
-    .catch((e) => {
-      console.error(e);
-    });
+const fetchPaginatedData =
+  <T>(url: string, sigPagination: Signal<PaginationState>, upsert: ({ items }: { items: T[] }) => void) =>
+  () => {
+    if (sigPagination.value.isExausted) {
+      return Promise.resolve();
+    }
 
-export const fetchTransactions = () => {
-  if (transactionPagination.value.isExausted) {
-    return;
-  }
+    return axios
+      .get(url, {
+        params: { ...sigPagination.value },
+      })
+      .then((r) => r.data)
+      .then(({ next_offset, items }: { next_offset: number; items: T[] }) => {
+        sigPagination.value.offset = next_offset;
+        sigPagination.value.isExausted = items.length === 0;
 
-  return axios
-    .get("/api/transactions/paginated", {
-      params: { ...transactionPagination.value },
-    })
-    .then((r) => r.data)
-    .then(({ next_offset, items }: { next_offset: number; items: Transaction[] }) => {
-      transactionPagination.value = {
-        ...transactionPagination.value,
-        offset: next_offset,
-        isExausted: items.length === 0,
-      };
-      upsertTransactions({ items });
-    })
-    .catch((e) => {
-      console.error(e);
-    });
-};
-export const fetchVendors = () =>
-  axios
-    .get("/api/vendors/paginated", {
-      params: { ...vendorPagination.value },
-    })
-    .then((r) => r.data)
-    .then(({ next_offset, items }: { next_offset: number; items: Vendor[] }) => {
-      vendorPagination.value = {
-        ...vendorPagination.value,
-        offset: next_offset,
-        isExausted: items.length === 0,
-      };
-      upsertVendors({ items });
-    })
-    .catch((e) => {
-      console.error(e);
-    });
+        upsert({ items });
+      });
+  };
 
-export const fetchCategories = () =>
-  axios
-    .get("/api/categories/paginated", {
-      params: { ...categoryPagination.value },
-    })
-    .then((r) => r.data)
-    .then(({ next_offset, items }: { next_offset: number; items: Category[] }) => {
-      categoryPagination.value = {
-        ...categoryPagination.value,
-        offset: next_offset,
-        isExausted: items.length === 0,
-      };
-      upsertCategories({ items });
-    })
-    .catch((e) => {
-      console.error(e);
-    });
+const fetchReceipts = fetchPaginatedData("/api/receipts/paginated", receiptPagination, upsertReceipts);
 
-export const fetchUserInfo = () =>
+export const fetchTransactions = fetchPaginatedData(
+  "/api/transactions/paginated",
+  transactionPagination,
+  upsertTransactions,
+);
+
+const fetchVendors = fetchPaginatedData("/api/vendors/paginated", vendorPagination, upsertVendors);
+
+const fetchCategories = fetchPaginatedData("/api/categories/paginated", categoryPagination, upsertCategories);
+
+const fetchUserInfo = () =>
   axios
     .get("/api/me")
     .then((r) => r.data)
