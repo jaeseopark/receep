@@ -5,7 +5,7 @@ import Dock from "@/components/layout/Dock";
 const AppFrame = ({ children }: { children: ReactNode }) => {
   return (
     <>
-      <div className="app-content mb-[4.5rem]">{children}</div>
+      <div className="app-content pb-[4.5rem]">{children}</div>
       <Dock />
     </>
   );

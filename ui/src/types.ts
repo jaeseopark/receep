@@ -5,6 +5,7 @@ export type UserInfo = {
   config: {
     tax_rate: number; // Ex. 0.05
     currency_decimal_places: number; // Ex. 2
+    advanced_mode: boolean;
   };
 };
 

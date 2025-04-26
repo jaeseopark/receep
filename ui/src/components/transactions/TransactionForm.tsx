@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import { parse } from "date-fns";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
 import { KeyboardEvent } from "preact/compat";
@@ -166,13 +167,15 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           return (
             <>
               {receiptIdExists && (
-                <div className="md:max-w-[50%] md:max-h-(--content-max-height) overflow-hidden">
+                <div className="max-h-(--content-max-height) overflow-hidden">
                   <ReceiptHighres id={receiptId} />
                 </div>
               )}
-              <div className="btn" onClick={openModal}>
-                {receiptIdExists ? "Change/Remove receipt" : "Select receipt"}
-              </div>
+              {sigUserInfo.value?.config.advanced_mode && (
+                <div className="btn" onClick={openModal}>
+                  {receiptIdExists ? "Change/Remove receipt" : "Select receipt"}
+                </div>
+              )}
               <dialog id="receipt-modal" className="modal">
                 <div className="modal-box">
                   <h3 className="font-bold text-lg">Select a receipt</h3>
@@ -217,13 +220,15 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   const renderDateField = () => {
     return (
-      <div className="flex">
+      <div className="flex gap-4 items-center">
         <span className="mr-2">Date:</span>
         <Controller
           name="timestamp"
           control={control}
           render={({ field: { value, onChange } }) => (
             <DatePicker
+              className="rounded-lg p-2"
+              required
               dateFormat="yyyy-MM-dd"
               selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
               onChange={(date) => {
@@ -281,6 +286,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             <CreatableSelect
               options={options}
               value={selectedOption}
+              required
               isSearchable
               isClearable
               placeholder="Select a vendor..."
@@ -295,7 +301,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   );
 
   const renderLineItemHeader = () => (
-    <div>
+    <div className="flex flex-row items-center gap-2">
       <h3 className="text-lg font-semibold">
         Line Items
         <button
@@ -306,19 +312,17 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           <Plus />
         </button>
       </h3>
-      {isNewTransaction && (
-        <div className="mt-2">
-          <label className="flex items-center space-x-2">
-            <input type="checkbox" {...register("enableAutoTax")} className="checkbox" />
-            <span>Enable Auto Tax</span>
-          </label>
-        </div>
-      )}
+      <div className={classNames("auto-tax-container", { hidden: !isNewTransaction })}>
+        <label className="flex items-center space-x-2">
+          <input type="checkbox" {...register("enableAutoTax")} className="checkbox" />
+          <span>Enable Auto Tax</span>
+        </label>
+      </div>
     </div>
   );
 
-  const renderLineItems = () =>
-    lineItemFields.map((item, index, ary) => (
+  const renderLineItems = () => {
+    const children = lineItemFields.map((item, index, ary) => (
       <div key={item.id} className="flex">
         <div>
           <button
@@ -331,24 +335,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           </button>
         </div>
         <div className="line-item-fields">
-          <div className="line-item-fields-row-1 flex">
-            <input
-              {...register(`line_items.${index}.name`)}
-              className="mt-1 block w-full p-2 border rounded"
-              placeholder="Item description"
-            />
-            <input
-              {...register(`line_items.${index}.amount_input`)}
-              className="mt-1 block w-full p-2 border rounded w-[30%]"
-              placeholder="Amount"
-              onChange={({ target: { value } }: any) => {
-                setValue(
-                  `line_items.${index}.amount`,
-                  evaluateAmountInput(value, sigUserInfo.value!.config.currency_decimal_places),
-                );
-              }}
-            />
-          </div>
           <label className="block">
             <Controller
               name={`line_items.${index}.category_id`}
@@ -376,6 +362,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                     options={options}
                     value={selectedOption}
                     isSearchable
+                    required
                     isClearable
                     placeholder="Select a category..."
                     onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
@@ -386,7 +373,30 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               }}
             />
           </label>
-          <div className="line-item-fields-row-2">
+          <div className="line-item-fields-row-1 flex gap-2">
+            <input
+              {...register(`line_items.${index}.name`)}
+              className="mt-1 block w-full p-2 border rounded"
+              placeholder="(Optional) Description"
+            />
+            <input
+              {...register(`line_items.${index}.amount_input`)}
+              required
+              className="mt-1 block w-full p-2 border rounded w-[30%]"
+              placeholder="Amount"
+              onChange={({ target: { value } }: any) => {
+                setValue(
+                  `line_items.${index}.amount`,
+                  evaluateAmountInput(value, sigUserInfo.value!.config.currency_decimal_places),
+                );
+              }}
+            />
+          </div>
+          <div
+            className={classNames("line-item-fields-row-2", {
+              hidden: !sigUserInfo.value?.config.advanced_mode,
+            })}
+          >
             <textarea
               {...register(`line_items.${index}.notes`)}
               className="mt-1 block w-full p-2 border rounded"
@@ -397,14 +407,19 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       </div>
     ));
 
+    return <div className="flex flex-col gap-4">{children}</div>;
+  };
+
   return (
-    <form onSubmit={handleSubmit(upsertTransaction)} className="md:flex">
-      <div className="fields md:min-w-[50%] mt-[1em]">
-        {renderReceipt()}
-        {renderDateField()}
-        {renderVendorField()}
-        {renderLineItemHeader()}
-        {renderLineItems()}
+    <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
+      <div className="field-columns mt-[1em] max-w-[1024px] flex flex-col md:flex-row gap-4">
+        <div className="field-column w-full">{renderReceipt()}</div>
+        <div className="field-column md:max-w-[450px] md:flex-shrink-0 flex flex-col gap-4">
+          {renderDateField()}
+          {renderVendorField()}
+          {renderLineItemHeader()}
+          {renderLineItems()}
+        </div>
       </div>
 
       <div className="bottom-24 fixed right-6 shadow-lg rounded-full">

@@ -48,7 +48,7 @@ const ReceiptEditView = () => {
   // TODO: make the image maintain its aspect ratio
   return (
     <div className="receipt-edit-view">
-      <div className="overflow-hidden object-cover md:flex md:max-w-[50vw]">
+      <div className="overflow-hidden object-cover md:flex">
         <ReceiptHighres receipt={receipt} />
         <ReceiptDetailForm receipt={receipt} />
       </div>
