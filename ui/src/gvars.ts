@@ -11,26 +11,31 @@ export const sigInitialLoadResult = signal<"PENDING" | "SUCCEEDED" | "FAILED">("
 type PaginationState = {
   offset: number;
   limit: number;
+  isExausted: boolean;
 };
 
 const receiptPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
+  isExausted: false,
 });
 
-const transactionPagination = signal<PaginationState>({
+export const transactionPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
+  isExausted: false,
 });
 
 const vendorPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
+  isExausted: false,
 });
 
 const categoryPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
+  isExausted: false,
 });
 
 export const fetchReceipts = () =>
@@ -43,6 +48,7 @@ export const fetchReceipts = () =>
       receiptPagination.value = {
         ...receiptPagination.value,
         offset: next_offset,
+        isExausted: items.length === 0,
       };
       upsertReceipts({ items });
     })
@@ -50,8 +56,12 @@ export const fetchReceipts = () =>
       console.error(e);
     });
 
-export const fetchTransactions = () =>
-  axios
+export const fetchTransactions = () => {
+  if (transactionPagination.value.isExausted) {
+    return;
+  }
+
+  return axios
     .get("/api/transactions/paginated", {
       params: { ...transactionPagination.value },
     })
@@ -60,13 +70,14 @@ export const fetchTransactions = () =>
       transactionPagination.value = {
         ...transactionPagination.value,
         offset: next_offset,
+        isExausted: items.length === 0,
       };
       upsertTransactions({ items });
     })
     .catch((e) => {
       console.error(e);
     });
-
+};
 export const fetchVendors = () =>
   axios
     .get("/api/vendors/paginated", {
@@ -77,6 +88,7 @@ export const fetchVendors = () =>
       vendorPagination.value = {
         ...vendorPagination.value,
         offset: next_offset,
+        isExausted: items.length === 0,
       };
       upsertVendors({ items });
     })
@@ -94,6 +106,7 @@ export const fetchCategories = () =>
       categoryPagination.value = {
         ...categoryPagination.value,
         offset: next_offset,
+        isExausted: items.length === 0,
       };
       upsertCategories({ items });
     })
@@ -112,6 +125,7 @@ export const fetchUserInfo = () =>
         config: {
           tax_rate: config.tax_rate || 0,
           currency_decimal_places: config.currency_decimal_places || 2,
+          advanced_mode: config.advanced_mode || false,
         },
       };
     })

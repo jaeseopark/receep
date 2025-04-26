@@ -3,6 +3,10 @@
 }
 
 :root {
-  --content-max-height: calc(100vh - 4.5rem);
-  --half-vw: 50vw;
+  --dock-height: 4.5rem;
+  --content-max-height: calc(100vh - var(--dock-height));
+}
+
+.app-content {
+  height: var(--content-max-height);
 }

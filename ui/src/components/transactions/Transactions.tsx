@@ -1,9 +1,11 @@
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Plus } from "lucide-preact";
+import { useCallback, useRef } from "preact/hooks";
 import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
+import { fetchTransactions, transactionPagination } from "@/gvars";
 import { sigTransactions, sigVendors } from "@/store";
 import { toAbsoluteDate } from "@/utils/dates";
 
@@ -54,12 +56,25 @@ const columns = [
 
 const TransactionsTable = () => {
   const navigate = useNavigate();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const table = useReactTable({
+  const table = useReactTable<Transaction>({
     data: sigTransactions.value,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const handleScroll = useCallback(() => {
+    // TODO: debounce or something.. may be finicky if user scrolls too fast.
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Check if the user has scrolled near the bottom
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+      fetchTransactions();
+    }
+  }, []);
 
   /* ---------------------------------------
    * End of hooks
@@ -100,8 +115,13 @@ const TransactionsTable = () => {
   };
 
   return (
-    <div className="transactions-view overflow-x-auto">
-      <div className="drawer-content">{renderTable()}</div>
+    <div
+      className="transactions-view overflow-x-auto h-full"
+      ref={scrollContainerRef}
+      onScroll={!transactionPagination.value.isExausted ? handleScroll : undefined}
+    >
+      {renderTable()}
+      {transactionPagination.value.isExausted && <div className="text-center p-4">No more transactions to load.</div>}
       <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
         <button
           className="btn btn-circle btn-primary"
