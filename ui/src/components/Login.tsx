@@ -117,7 +117,7 @@ const CredentialForm = ({ onSuccess }: { onSuccess: () => void }) => {
   );
 };
 
-const Login = ({ appInfo, isAuthenticated }: { appInfo: AppInfo; isAuthenticated: boolean }) => {
+const Login = ({ appInfo, isAuthenticated }: { appInfo?: AppInfo; isAuthenticated: boolean }) => {
   const [nowAuthenticated, setAuthenticated] = useState(false);
   const navigate = useNavigate();
 
