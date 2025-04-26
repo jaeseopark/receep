@@ -41,6 +41,7 @@ def get_expenses_by_category(
         return dict(
             amount=line_item.amount,
             category_id=line_item.category_id,
+            tx_id=line_item.transaction.id,
             vendor_id=line_item.transaction.vendor_id,
             year=tx_time.year,
             month=tx_time.month,

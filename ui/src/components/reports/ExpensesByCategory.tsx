@@ -19,6 +19,7 @@ const DEFAULT_TABLE_PROPS = {
 type ExpenseLineItem = {
   category_id: number;
   vendor_id: number;
+  tx_id: number;
   year: number;
   month: number;
   day: number;
