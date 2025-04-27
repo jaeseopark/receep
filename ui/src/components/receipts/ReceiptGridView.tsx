@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useCallback } from "preact/hooks";
+import { useCallback, useRef } from "preact/hooks";
 import { useDropzone } from "react-dropzone";
 
 import { Receipt } from "@/types";
@@ -7,7 +7,7 @@ import { Receipt } from "@/types";
 import ReceiptFilterModal, { applySelectedFilters } from "@/components/receipts/ReceiptFilterModal";
 import { AddReceiptButton, FilterButton } from "@/components/receipts/ReceiptGridActionsButtons";
 import ReceiptCard from "@/components/receipts/ReceiptGridCard";
-import { sigInitialLoadResult } from "@/gvars";
+import { fetchReceipts, receiptPagination, sigInitialLoadResult } from "@/gvars";
 import { uploadReceipts } from "@/middleware/receipts";
 import { sigReceipts } from "@/store";
 
@@ -23,6 +23,19 @@ const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    // TODO: debounce or something.. may be finicky if user scrolls too fast.
+
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Check if the user has scrolled near the bottom
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+      fetchReceipts();
+    }
+  }, [scrollContainerRef]);
 
   /* ---------------------------------------
    * End of hooks
@@ -43,7 +56,11 @@ const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
     }
 
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-4 p-4 overflow-hidden">
+      <div
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6 gap-4 p-4 overflow-hidden"
+        ref={scrollContainerRef}
+        onScroll={!receiptPagination.value.isExausted ? handleScroll : undefined}
+      >
         {sigReceipts.value
           .filter(applySelectedFilters)
           .sort(SORT_DESCENDING)

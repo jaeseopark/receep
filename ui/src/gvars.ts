@@ -12,9 +12,9 @@ type PaginationState = {
   isExausted: boolean;
 };
 
-const receiptPagination = signal<PaginationState>({
+export const receiptPagination = signal<PaginationState>({
   offset: 0,
-  limit: 50,
+  limit: 500, // TODO: load enough receipts to fill the view (for handleScroll to start working. load 500 for now.)
   isExausted: false,
 });
 
@@ -56,7 +56,7 @@ const fetchPaginatedData =
       });
   };
 
-const fetchReceipts = fetchPaginatedData("/api/receipts/paginated", receiptPagination, upsertReceipts);
+export const fetchReceipts = fetchPaginatedData("/api/receipts/paginated", receiptPagination, upsertReceipts);
 
 export const fetchTransactions = fetchPaginatedData(
   "/api/transactions/paginated",
