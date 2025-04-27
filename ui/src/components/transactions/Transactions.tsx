@@ -5,9 +5,11 @@ import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
+import { ROUTE_PATHS } from "@/const";
 import { fetchTransactions, transactionPagination } from "@/gvars";
 import { sigTransactions, sigVendors } from "@/store";
 import { toAbsoluteDate } from "@/utils/dates";
+import { getEditTransactionPath } from "@/utils/paths";
 
 const columnHelper = createColumnHelper<Transaction>();
 
@@ -103,7 +105,7 @@ const TransactionsTable = () => {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} onClick={() => navigate(`/transactions/edit/${row.original.id}`)}>
+            <tr key={row.id} onClick={() => navigate(getEditTransactionPath(row.original.id))}>
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
               ))}
@@ -123,12 +125,7 @@ const TransactionsTable = () => {
       {renderTable()}
       {transactionPagination.value.isExausted && <div className="text-center p-4">No more transactions to load.</div>}
       <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-        <button
-          className="btn btn-circle btn-primary"
-          onClick={() => {
-            navigate("/transactions/new");
-          }}
-        >
+        <button className="btn btn-circle btn-primary" onClick={() => navigate(ROUTE_PATHS.NEW_TRANSACTION)}>
           <Plus />
         </button>
       </div>

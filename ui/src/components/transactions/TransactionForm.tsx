@@ -13,6 +13,7 @@ import { Category, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
 import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
+import { ROUTE_PATHS } from "@/const";
 import useAutoTax from "@/hooks/useAutoTax";
 import {
   sigCategories,
@@ -37,7 +38,7 @@ type FormData = Transaction & { enableAutoTax: boolean };
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
   const { register, handleSubmit, control, setValue } = useForm<FormData>({
-    defaultValues: { ...transaction, enableAutoTax: true },
+    defaultValues: { ...transaction, enableAutoTax: taxRateExistsInConfig },
   });
   const { applyAutoTax } = useAutoTax();
   const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
@@ -99,7 +100,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       })
       .then(() => {
         toast.success("Transaction saved.");
-        navigate("/transactions");
+        navigate(ROUTE_PATHS.TRANSACTIONS);
       })
       .catch((e) => {
         // TODO
@@ -314,7 +315,12 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       </h3>
       <div className={classNames("auto-tax-container", { hidden: !isNewTransaction })}>
         <label className="flex items-center space-x-2">
-          <input type="checkbox" {...register("enableAutoTax")} className="checkbox" />
+          <input
+            type="checkbox"
+            {...register("enableAutoTax")}
+            className="checkbox"
+            disabled={!taxRateExistsInConfig}
+          />
           <span>Enable Auto Tax</span>
         </label>
       </div>

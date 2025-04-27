@@ -1,49 +1,29 @@
 import { Plus } from "lucide-preact";
-import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
 
-import { Category } from "@/types";
-
-import { axios } from "@/api";
-import { sigCategories, upsertCategories } from "@/store";
-import { hash } from "@/utils/primitive";
-
-const DEFAULT_NEW_CATEGORY_ID = 0;
-const DEFAULT_NEW_CATEGORY_USER_ID = 0;
+import { ROUTE_PATHS } from "@/const";
+import { sigCategories } from "@/store";
+import { getEditCategoryPath } from "@/utils/paths";
 
 const CategoryListView = () => {
-  const createCategory = () => {
-    const category: Category = {
-      id: DEFAULT_NEW_CATEGORY_ID,
-      user_id: DEFAULT_NEW_CATEGORY_USER_ID,
-      name: `cat-${hash(uuidv4())}`,
-      description: `desc-${hash(uuidv4())}`,
-    };
-    axios
-      .post("/api/categories", category)
-      .then((r) => r.data)
-      .then((returnedCategory: Category) => {
-        upsertCategories({ items: [returnedCategory] });
-      });
-  };
+  const navigate = useNavigate();
 
   return (
-    <div className="m-4">
-      <ul className="list bg-base-100 rounded-box shadow-md">
-        <li className="p-4 pb-2 opacity-60 tracking-wide">Categories</li>
-
+    <div className="m-4 flex justify-center h-full overflow-x-scroll">
+      <ul className="list bg-base-100 rounded-box shadow-md w-full max-w-[450px] h-fit-content">
+        <h1 className="p-4 pb-2 tracking-wide text-2xl font-bold">Categories</h1>
         {sigCategories.value.map(({ id, name, description }) => (
-          <li key={id} className="list-row">
-            <div>
+          <li key={id} className="list-row flex items-center gap-4 p-4">
+            <div className="hover:underline" onClick={() => navigate(getEditCategoryPath(id))}>
               <div>{name}</div>
               <div className="text-xs uppercase font-semibold opacity-60">{description}</div>
             </div>
-            <button className="btn btn-square btn-ghost">Edit</button>
-            <button className="btn btn-square btn-ghost">Delete</button>
+            <div className="flex-grow" />
           </li>
         ))}
       </ul>
       <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-        <button className="btn btn-circle btn-primary" onClick={createCategory}>
+        <button className="btn btn-circle btn-primary" onClick={() => navigate(ROUTE_PATHS.NEW_CATEGORY)}>
           <Plus />
         </button>
       </div>

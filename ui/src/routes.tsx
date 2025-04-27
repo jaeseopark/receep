@@ -10,9 +10,10 @@ import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
 import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
 import Reports from "@/components/reports/Reports";
-import TransactionEditView from "@/components/transactions/TransactionDetailView";
+import TransactionDetailView from "@/components/transactions/TransactionDetailView";
 import TransactionsTable from "@/components/transactions/Transactions";
 import Config from "@/components/user/Config";
+import { ROUTE_PATHS } from "@/const";
 
 type RouteEntry = {
   path: string;
@@ -25,7 +26,7 @@ type RouteEntry = {
 
 const REPORT_ROUTES: RouteEntry[] = [
   {
-    path: "/reports/expenses-by-category",
+    path: ROUTE_PATHS.EXPENSE_REPORT,
     name: "Expenses By Category",
     description: "Categorized expense summary",
     component: ExpensesByCategory,
@@ -35,7 +36,7 @@ const REPORT_ROUTES: RouteEntry[] = [
 
 const SETTING_ROUTES: RouteEntry[] = [
   {
-    path: "/settings/configs",
+    path: ROUTE_PATHS.USER_CONFIGS,
     name: "User Configs",
     description: "Manage Configs",
     component: Config,
@@ -43,7 +44,7 @@ const SETTING_ROUTES: RouteEntry[] = [
     type: "NOT_DOCKED",
   },
   {
-    path: "/settings/categories",
+    path: ROUTE_PATHS.CATEGORIES,
     name: "Manage Categories",
     description: "Manage line item categories",
     component: CategoryListView,
@@ -51,14 +52,14 @@ const SETTING_ROUTES: RouteEntry[] = [
     type: "NOT_DOCKED",
   },
   {
-    path: "/settings/categories/edit/:id",
+    path: ROUTE_PATHS.EDIT_CATEGORY,
     name: "Edit Category",
     description: "Edit Category",
     component: CategoryDetailView,
     type: "NOT_DOCKED",
   },
   {
-    path: "/settings/invite",
+    path: ROUTE_PATHS.INVITE,
     name: "Invite Users",
     description: "Invite friends to use Receep",
     component: Invite,
@@ -66,7 +67,7 @@ const SETTING_ROUTES: RouteEntry[] = [
     type: "NOT_DOCKED",
   },
   {
-    path: "/settings/data",
+    path: ROUTE_PATHS.DATA,
     name: "Data",
     description: "Manage data (import/export)",
     component: DataImportExport,
@@ -77,7 +78,7 @@ const SETTING_ROUTES: RouteEntry[] = [
 
 export const AUTHENTICATED_ROUTES: RouteEntry[] = [
   {
-    path: "/receipts",
+    path: ROUTE_PATHS.RECEIPTS,
     name: "Receipts",
     description: "Upload and manage receipts",
     component: () => <ReceiptsView />,
@@ -85,14 +86,14 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     type: "DOCKED",
   },
   {
-    path: "/receipts/edit/:id",
+    path: ROUTE_PATHS.EDIT_RECEIPT,
     name: "Edit Receipt",
     description: "View and edit a receipt",
     component: ReceiptEditView,
     type: "NOT_DOCKED",
   },
   {
-    path: "/transactions",
+    path: ROUTE_PATHS.TRANSACTIONS,
     name: "Transactions",
     description: "Manage transactions",
     component: TransactionsTable,
@@ -100,21 +101,14 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     type: "DOCKED",
   },
   {
-    path: "/transactions/edit/:id",
+    path: ROUTE_PATHS.EDIT_TRANSACTION,
     name: "Edit Transaction",
     description: "Edit transaction",
-    component: TransactionEditView,
+    component: TransactionDetailView,
     type: "NOT_DOCKED",
   },
   {
-    path: "/transactions/new",
-    name: "New Transaction",
-    description: "Create transaction",
-    component: TransactionEditView,
-    type: "NOT_DOCKED",
-  },
-  {
-    path: "/reports",
+    path: ROUTE_PATHS.REPORTS,
     name: "Reports",
     description: "Data visualization and drilldown reporting",
     component: () => <Reports reportRoutes={REPORT_ROUTES} />,
@@ -122,7 +116,7 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     type: "DOCKED",
   },
   {
-    path: "/settings",
+    path: ROUTE_PATHS.SETTINGS,
     name: "Settings",
     description: "Manage application settings",
     component: () => <Settings routes={SETTING_ROUTES} />,

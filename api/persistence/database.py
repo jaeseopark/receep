@@ -312,6 +312,21 @@ class Database:
             c.id
         return c
 
+    def update_category(self, id: int, user_id: int, name: str, description: str) -> Category:
+        with get_session() as session:
+            c = session.query(Category) \
+                .filter(Category.id == id, Category.user_id == user_id) \
+                .first()
+
+            c.name = name
+            c.description = description
+
+            session.commit()
+
+            return session.query(Category) \
+                .filter(Category.id == id) \
+                .first()
+
     def get_line_items(self, user_id: int, start: datetime, end: datetime, offset: int, limit: int) -> List[LineItem]:
         with get_session() as session:
             return session.query(LineItem) \

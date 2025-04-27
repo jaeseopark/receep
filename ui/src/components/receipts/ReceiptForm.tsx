@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Receipt } from "@/types";
 
 import { toRelativeTime } from "@/utils/dates";
+import { getEditTransactionPath } from "@/utils/paths";
 import { toHumanFilesize } from "@/utils/primitive";
 
 const ReceiptDetailForm = ({
@@ -34,7 +35,7 @@ const ReceiptDetailForm = ({
             <div>
               {transactions.length === 0 && <span>None</span>}
               {transactions.map((t) => (
-                <div key={t.id} onClick={() => navigate(`/transactions/edit/${t.id}`)}>
+                <div key={t.id} onClick={() => navigate(getEditTransactionPath(t.id))}>
                   TxID {t.id} <SquareArrowOutUpRight className="scale-50" />
                 </div>
               ))}

@@ -45,3 +45,19 @@ def create_category(
     )
 
     return category
+
+
+@router.put("/categories/{id}")
+def update_category(
+    id: int,
+    payload: UpsertRequest,
+    metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    category = db_instance.update_category(
+        id=id,
+        user_id=metadata.user_id,
+        name=payload.name,
+        description=payload.description
+    )
+
+    return category

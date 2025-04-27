@@ -9,6 +9,7 @@ import ReceiptDetailForm from "@/components/receipts/ReceiptForm";
 import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
 import { sigInitialLoadResult } from "@/gvars";
 import { sigReceipts } from "@/store";
+import { getNewTransactionPathWithReceiptId } from "@/utils/paths";
 import { isPositiveInteger } from "@/utils/primitive";
 
 const ReceiptEditView = () => {
@@ -57,7 +58,7 @@ const ReceiptEditView = () => {
           <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
             <button
               className="btn btn-circle btn-primary"
-              onClick={() => navigate(`/transactions/new?receipt_id=${receipt.id}`)}
+              onClick={() => navigate(getNewTransactionPathWithReceiptId(receipt.id))}
             >
               <NotebookPen />
             </button>

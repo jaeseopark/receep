@@ -32,7 +32,7 @@ const vendorPagination = signal<PaginationState>({
 
 const categoryPagination = signal<PaginationState>({
   offset: 0,
-  limit: 50,
+  limit: 500, // TODO: make sure all categories are in memory on initial load. 500 should be enough for now.
   isExausted: false,
 });
 

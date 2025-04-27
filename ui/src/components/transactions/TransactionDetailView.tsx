@@ -28,7 +28,7 @@ const TransactionEditView = () => {
         return;
       }
 
-      if (!id) {
+      if (id === "-1") {
         const t: Transaction = {
           id: -1,
           timestamp: Date.now() / 1000,
@@ -44,9 +44,7 @@ const TransactionEditView = () => {
 
         setTransaction(t);
         return;
-      }
-
-      if (!isPositiveInteger(id)) {
+      } else if (!isPositiveInteger(id)) {
         toast.error(`The transaction id is not a valid integer. id='${id}'`);
         return;
       }

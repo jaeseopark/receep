@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AppInfo } from "@/types";
 
 import { axios, setJwt } from "@/api";
+import { ROUTE_PATHS } from "@/const";
 
 const CredentialForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [formData, setFormData] = useState({
@@ -146,7 +147,7 @@ const Login = ({ appInfo, isAuthenticated }: { appInfo?: AppInfo; isAuthenticate
     <div className="flex justify-center items-center h-screen">
       <CredentialForm onSuccess={() => setAuthenticated(true)} />
       {(appInfo.signup === "OPEN" || appInfo.user_count === 0) && (
-        <button onClick={() => navigate("/signup")}>Sign Up</button>
+        <button onClick={() => navigate(ROUTE_PATHS.SIGNUP)}>Sign Up</button>
       )}
     </div>
   );
