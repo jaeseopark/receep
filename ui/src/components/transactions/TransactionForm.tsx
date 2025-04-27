@@ -211,7 +211,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           return (
             <>
               {receiptIdExists && (
-                <div className="max-h-(--content-max-height) overflow-hidden">
+                <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll">
                   <ReceiptHighres id={receiptId} />
                 </div>
               )}

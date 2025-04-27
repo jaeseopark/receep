@@ -10,4 +10,9 @@
 .app-content {
   height: var(--content-max-height);
   overflow-x: scroll;
+  padding-bottom: var(--dock-height);
+
+  @media (min-width: 768px) {
+    padding-bottom: 0;
+  }
 }
