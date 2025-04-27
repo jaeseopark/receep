@@ -30,7 +30,14 @@ const ReceiptImg = ({
 }) => {
   const contentType = contentTypeOverride || content_type;
   if (contentType.startsWith("image/")) {
-    return <img className="w-full h-auto" style={{ transform: `rotate(${rotation}deg)` }} src={getPath(id)} alt={id} />;
+    return (
+      <img
+        className="w-full md:w-50 h-auto"
+        style={{ transform: `rotate(${rotation}deg)` }}
+        src={getPath(id)}
+        alt={id}
+      />
+    );
   }
 
   if (contentType === "application/pdf") {
@@ -63,7 +70,7 @@ export const ReceiptHighres = ({ receipt, id }: { receipt?: Receipt; id?: number
 
   const { content_type } = receipt;
   return (
-    <div className="relative overflow-hidden md:h-max-(--content-max-height) md:w-full border-2 border-base-content rounded-lg">
+    <div className="relative overflow-hidden md:h-max-(--content-max-height) md:w-half md:max-w-50vw border-2 border-base-content rounded-lg">
       <ReceiptImg receipt={receipt} pathGetter={getHighresPath} />
       {content_type.startsWith("image/") && (
         <div className="top-6 right-6 shadow-lg outline-none rounded-full -mb-[2em] absolute">

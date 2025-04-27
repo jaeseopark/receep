@@ -9,4 +9,5 @@
 
 .app-content {
   height: var(--content-max-height);
+  overflow-x: scroll;
 }

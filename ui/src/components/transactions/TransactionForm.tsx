@@ -463,10 +463,11 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   return (
     <>
+      {deleteConfirmationDialog}
       <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
-        <div className="field-columns mt-[1em] max-w-[1024px] flex flex-col md:flex-row gap-4">
-          <div className="field-column w-full">{renderReceipt()}</div>
-          <div className="field-column md:max-w-[450px] md:flex-shrink-0 flex flex-col gap-4">
+        <div className="field-columns mt-[1em] max-w-[48rem] lg:max-w-[64rem] flex flex-col md:flex-row gap-4">
+          <div className="md:max-w-[24rem] lg:max-w-[40rem]">{renderReceipt()}</div>
+          <div className="md:max-w-[24rem] md:flex-shrink-0 flex flex-col gap-4">
             {renderDateField()}
             {renderVendorField()}
             {renderLineItemHeader()}
@@ -490,7 +491,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           <Trash />
         </button>
       </div>
-      {deleteConfirmationDialog}
     </>
   );
 };

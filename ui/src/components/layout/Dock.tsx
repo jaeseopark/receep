@@ -8,7 +8,7 @@ const Dock = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="dock dock-lg">
+    <div className="dock flex flex-row items-center justify-evenly">
       {AUTHENTICATED_ROUTES.filter(({ type }) => type === "DOCKED").map(({ path, name, icon: icon }) => {
         const isSelected = path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
