@@ -61,9 +61,9 @@ def get_user_by_id(self, user_id: int) -> Optional[User]:
 
 
 @session_decorator
-def get_transaction(self, user_id: int, transaction_id: int) -> Optional[Transaction]:
+def get_transaction(self, transaction_id: int) -> Optional[Transaction]:
     return self.query(Transaction) \
-        .filter(Transaction.user_id == user_id, Transaction.id == transaction_id) \
+        .filter(Transaction.id == transaction_id) \
         .options(joinedload(Transaction.line_items)) \
         .first()
 
@@ -213,10 +213,9 @@ class Database:
                 .limit(limit)
             return session.scalars(stmt).all()
 
-    def get_transaction(self, transaction_id: int, user_id: str) -> Transaction:
+    def get_transaction(self, transaction_id: int) -> Transaction:
         with get_session() as session:
-            t = session.get_transaction(
-                transaction_id=transaction_id, user_id=user_id)
+            t = session.get_transaction(transaction_id=transaction_id)
             if not t:
                 raise NotFound
             return t
@@ -244,7 +243,7 @@ class Database:
             ]
             session.commit()
 
-            return session.get_transaction(transaction_id=transaction.id, user_id=user_id)
+            return session.get_transaction(transaction_id=transaction.id)
 
     def update_transaction(self, user_id: int, transaction_id: int, line_items: List[dict], timestamp=datetime, vendor_id: int = None, receipt_id: int = None) -> Transaction:
         transaction: Transaction = None
@@ -274,7 +273,7 @@ class Database:
             ]
             session.commit()
 
-            return session.get_transaction(transaction_id=transaction.id, user_id=user_id)
+            return session.get_transaction(transaction_id=transaction.id)
 
     def delete_transaction(self, user_id: int, transaction_id: int) -> None:
         with get_session() as session:

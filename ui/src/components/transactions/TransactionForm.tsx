@@ -55,60 +55,69 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
     name: "line_items",
   });
 
-  const upsertTransaction = useCallback((formData: FormData) => {
-    const { enableAutoTax, ...t } = formData;
-    let apiPromise;
+  const isMyTransaction = useMemo(() => sigUserInfo.value?.user_id === transaction.user_id, [sigUserInfo.value]);
 
-    if (isNewTransaction) {
-      // ID is -1, meaning this is a brand new transaction.
-
-      if (enableAutoTax) {
-        applyAutoTax(formData);
+  const upsertTransaction = useCallback(
+    (formData: FormData) => {
+      if (!isMyTransaction) {
+        return;
       }
 
-      apiPromise = axios.post("/api/transactions", formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    } else {
-      apiPromise = axios.put(`/api/transactions/${t.id}`, formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
+      const { enableAutoTax, ...t } = formData;
+      let apiPromise;
 
-    apiPromise
-      .then((r) => r.data)
-      .then((t: Transaction) => {
-        upsertTransactions({ items: [t], toFront: true });
-        if (t.receipt_id) {
-          const receipt = sigReceipts.value.find(({ id }) => id === t.receipt_id);
+      if (isNewTransaction) {
+        // ID is -1, meaning this is a brand new transaction.
 
-          if (!receipt) {
-            return;
-          }
-
-          const existingTransactionReference = receipt?.transactions.find(({ id }) => id === t.id);
-
-          if (!existingTransactionReference) {
-            receipt.transactions.push(t);
-          }
-
-          upsertReceipts({ items: [receipt] });
-        } else {
-          // TODO: clear transaction refenrece from the receipt object
+        if (enableAutoTax) {
+          applyAutoTax(formData);
         }
-      })
-      .then(() => {
-        toast.success("Transaction saved.");
-        navigate(ROUTE_PATHS.TRANSACTIONS);
-      })
-      .catch((e) => {
-        // TODO
-      });
-  }, []);
+
+        apiPromise = axios.post("/api/transactions", formData, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      } else {
+        apiPromise = axios.put(`/api/transactions/${t.id}`, formData, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      }
+
+      apiPromise
+        .then((r) => r.data)
+        .then((t: Transaction) => {
+          upsertTransactions({ items: [t], toFront: true });
+          if (t.receipt_id) {
+            const receipt = sigReceipts.value.find(({ id }) => id === t.receipt_id);
+
+            if (!receipt) {
+              return;
+            }
+
+            const existingTransactionReference = receipt?.transactions.find(({ id }) => id === t.id);
+
+            if (!existingTransactionReference) {
+              receipt.transactions.push(t);
+            }
+
+            upsertReceipts({ items: [receipt] });
+          } else {
+            // TODO: clear transaction refenrece from the receipt object
+          }
+        })
+        .then(() => {
+          toast.success("Transaction saved.");
+          navigate(ROUTE_PATHS.TRANSACTIONS);
+        })
+        .catch((e) => {
+          // TODO
+        });
+    },
+    [isMyTransaction, isNewTransaction],
+  );
 
   const deleteTransaction = useCallback(() => {
     axios
@@ -466,7 +475,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         </div>
 
         <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-          <button type="submit" className="btn btn-circle btn-primary">
+          <button type="submit" className="btn btn-circle btn-primary" disabled={!isMyTransaction}>
             <Save />
           </button>
         </div>
@@ -476,6 +485,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           type="button"
           className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
           onClick={showDeleteConfirmation}
+          disabled={!isMyTransaction}
         >
           <Trash />
         </button>

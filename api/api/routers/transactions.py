@@ -53,10 +53,9 @@ def get_transactions(
 @router.get("/transactions/single/{id}")
 def get_single_transaction(
     id: int,
-    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+    _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    t = db_instance.get_transaction(
-        transaction_id=id, user_id=auth_metadata.user_id)
+    t = db_instance.get_transaction(transaction_id=id)
     return get_api_safe_json(t)
 
 
@@ -100,7 +99,7 @@ def delete_transaction(
     transaction_id: int,
     auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    t = db_instance.delete_transaction(
+    db_instance.delete_transaction(
         transaction_id=transaction_id,
         user_id=auth_metadata.user_id,
     )
