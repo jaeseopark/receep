@@ -93,3 +93,16 @@ def update_transaction(
     )
 
     return get_api_safe_json(t)
+
+
+@router.delete("/transactions/{transaction_id}")
+def delete_transaction(
+    transaction_id: int,
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    t = db_instance.delete_transaction(
+        transaction_id=transaction_id,
+        user_id=auth_metadata.user_id,
+    )
+
+    return dict(message="success")

@@ -19,12 +19,6 @@ const sigReceiptFilters = signal<ReceiptFilter[]>([
     predicate: (r) => r.user_id === sigUserInfo.value?.user_id,
     isSelected: true,
   },
-  {
-    name: "Show unvetted receipts only",
-    tooltip: "Hides the receipts that have not been associated with any transactions.",
-    predicate: (r) => r.transactions.length === 0,
-    isSelected: true,
-  },
 ]);
 
 // TODO: ability to reset filter selections

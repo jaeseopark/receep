@@ -15,7 +15,9 @@ import { axios } from "@/api";
 import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
 import { ROUTE_PATHS } from "@/const";
 import useAutoTax from "@/hooks/useAutoTax";
+import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
 import {
+  removeTransaction,
   sigCategories,
   sigReceipts,
   sigUserInfo,
@@ -37,6 +39,7 @@ type FormData = Transaction & { enableAutoTax: boolean };
 
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
+  const taxRateExistsInConfig = useMemo(() => (sigUserInfo.value?.config.tax_rate || 0) > 0, []);
   const { register, handleSubmit, control, setValue } = useForm<FormData>({
     defaultValues: { ...transaction, enableAutoTax: taxRateExistsInConfig },
   });
@@ -106,6 +109,37 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         // TODO
       });
   }, []);
+
+  const deleteTransaction = useCallback(() => {
+    axios
+      .delete(`/api/transactions/${transaction.id}`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then(() => {
+        removeTransaction(transaction.id);
+        toast.success("Transaction deleted.");
+        navigate(ROUTE_PATHS.TRANSACTIONS);
+      });
+  }, []);
+
+  const { show: showDeleteConfirmation, dialog: deleteConfirmationDialog } = useSimpleConfirmationDialog({
+    dialogId: "delete-transaction",
+    title: "Delete Transaction",
+    question: "Are you sure you want to delete this transaction? This action cannot be undone.",
+    choices: [
+      {
+        label: "Delete",
+        onClick: deleteTransaction,
+        isPrimary: true,
+      },
+      {
+        label: "Cancel",
+        onClick: () => {},
+      },
+    ],
+  });
 
   /* ----------------
    * End of hooks
@@ -266,10 +300,12 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         name="vendor_id"
         control={control}
         render={({ field: { value, onChange } }) => {
-          const options = sigVendors.value.map(({ name, id }) => ({
-            label: name,
-            value: id,
-          }));
+          const options = sigVendors.value
+            .map(({ name, id }) => ({
+              label: name,
+              value: id,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
           let selectedOption;
           if (typeof value !== "undefined") {
             const match = options.find(({ value: optionValue }) => optionValue === value);
@@ -417,23 +453,35 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   };
 
   return (
-    <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
-      <div className="field-columns mt-[1em] max-w-[1024px] flex flex-col md:flex-row gap-4">
-        <div className="field-column w-full">{renderReceipt()}</div>
-        <div className="field-column md:max-w-[450px] md:flex-shrink-0 flex flex-col gap-4">
-          {renderDateField()}
-          {renderVendorField()}
-          {renderLineItemHeader()}
-          {renderLineItems()}
+    <>
+      <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
+        <div className="field-columns mt-[1em] max-w-[1024px] flex flex-col md:flex-row gap-4">
+          <div className="field-column w-full">{renderReceipt()}</div>
+          <div className="field-column md:max-w-[450px] md:flex-shrink-0 flex flex-col gap-4">
+            {renderDateField()}
+            {renderVendorField()}
+            {renderLineItemHeader()}
+            {renderLineItems()}
+          </div>
         </div>
-      </div>
 
-      <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-        <button type="submit" className="btn btn-circle btn-primary">
-          <Save />
+        <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
+          <button type="submit" className="btn btn-circle btn-primary">
+            <Save />
+          </button>
+        </div>
+      </form>
+      <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
+        <button
+          type="button"
+          className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
+          onClick={showDeleteConfirmation}
+        >
+          <Trash />
         </button>
       </div>
-    </form>
+      {deleteConfirmationDialog}
+    </>
   );
 };
 

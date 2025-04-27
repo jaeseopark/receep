@@ -55,7 +55,11 @@ const useUpdatingSignal = <T>({ uniqueKey }: { uniqueKey: keyof T }) => {
   return { sig, upsert, replace, remove };
 };
 
-export const { sig: sigTransactions, upsert: upsertTransactions } = useUpdatingSignal<Transaction>({ uniqueKey: "id" });
+export const {
+  sig: sigTransactions,
+  upsert: upsertTransactions,
+  remove: removeTransaction,
+} = useUpdatingSignal<Transaction>({ uniqueKey: "id" });
 
 export const {
   sig: sigReceipts,

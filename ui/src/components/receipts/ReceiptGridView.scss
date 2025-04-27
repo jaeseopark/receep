@@ -1,6 +1,6 @@
 .receipt-grid-view {
   height: var(--content-max-height);
-  
+
   .active-drag {
     .receipt-card {
       opacity: 0.5;
@@ -19,5 +19,9 @@
     line-height: var(--content-max-height);
     font-size: xxx-large;
     text-align: center;
+  }
+
+  .vetted {
+    opacity: 0.5;
   }
 }

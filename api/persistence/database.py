@@ -276,6 +276,19 @@ class Database:
 
             return session.get_transaction(transaction_id=transaction.id, user_id=user_id)
 
+    def delete_transaction(self, user_id: int, transaction_id: int) -> None:
+        with get_session() as session:
+            transaction = session \
+                .query(Transaction) \
+                .filter(Transaction.user_id == user_id, Transaction.id == transaction_id) \
+                .first()
+
+            if not transaction:
+                raise NotFound
+
+            session.delete(transaction)
+            session.commit()
+
     def get_vendors_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
         with get_session() as session:
             return session.query(Vendor).filter(Vendor.user_id == user_id).offset(offset).limit(limit).all()
