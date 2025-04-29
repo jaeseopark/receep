@@ -1,5 +1,6 @@
 import { RefreshCw } from "lucide-preact";
-import { useEffect, useState } from "preact/hooks";
+import { render } from "preact";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import PivotTableUI from "react-pivottable/PivotTableUI";
 
 import { axios } from "@/api";
@@ -10,11 +11,7 @@ import "react-pivottable/pivottable.css";
 
 const TZ_OFFSET = -new Date().getTimezoneOffset() / 60;
 
-const DEFAULT_TABLE_PROPS = {
-  cols: ["month"],
-  rows: ["category"],
-  vals: ["amount"],
-};
+type PivotTableProps = { cols: string[]; rows: string[]; vals: string[] };
 
 type ExpenseLineItem = {
   category_id: number;
@@ -30,6 +27,21 @@ type ExpenseLineItem = {
 type PaginatedReportResponse = {
   items: ExpenseLineItem[];
   next_offset: number;
+};
+
+const REPORT_PRESETS: {
+  [key: string]: { props: PivotTableProps };
+} = {
+  Default: {
+    props: {
+      cols: ["month"],
+      rows: ["category"],
+      vals: ["amount"],
+    },
+  },
+  "Verify Transactions": {
+    props: { cols: ["category"], rows: ["month", "day", "tx_id", "vendor"], vals: ["amount"] },
+  },
 };
 
 const fetchReportData = async (start: number, end: number): Promise<ExpenseLineItem[]> => {
@@ -82,8 +94,47 @@ const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) 
 };
 
 const ExpensesByCategory = () => {
-  const [tableProps, setTableProps] = useState(DEFAULT_TABLE_PROPS);
+  const [tableProps, setTableProps] = useState(REPORT_PRESETS.Default.props);
   const [lineItems, setLineItems] = useState<ExpenseLineItem[]>();
+
+  const linkifyTransactions = useCallback((props: PivotTableProps) => {
+    const txIdRows = props.rows
+      .map((col, i) => ({ col, i }))
+      .find(({ col }) => {
+        return col === "tx_id";
+      });
+
+    if (!txIdRows) {
+      return;
+    }
+
+    setTimeout(
+      () =>
+        document.querySelectorAll("table.pvtTable tbody tr").forEach((row) => {
+          const thElements = row.querySelectorAll("th");
+          const txIdTh = thElements[thElements.length - (props.rows.length - txIdRows.i)];
+          const text = txIdTh.textContent?.trim(); // Get the text content of the <th>
+          if (text) {
+            const container = document.createElement("span"); // Create a container element
+            txIdTh.textContent = ""; // Clear the existing content
+            txIdTh.appendChild(container); // Append the container to the <th>
+
+            render(
+              <a
+                href={`/transactions/edit/${text}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 cursor-pointer hover:underline"
+              >
+                {text}
+              </a>,
+              container,
+            );
+          }
+        }),
+      100,
+    );
+  }, []);
 
   useEffect(() => {
     // Unable to set aggregatorName until 'aggregators' is populated.
@@ -97,6 +148,8 @@ const ExpensesByCategory = () => {
       100,
     );
   }, []);
+
+  useEffect(() => linkifyTransactions(tableProps), [tableProps, linkifyTransactions]);
 
   if (!lineItems) {
     return <DateRangePicker onSubmit={(start, end) => fetchReportData(start, end).then(setLineItems)} />;
@@ -132,7 +185,25 @@ const ExpensesByCategory = () => {
           <RefreshCw />
         </button>
       </div>
-      <PivotTableUI data={rows} onChange={setTableProps} {...tableProps} />
+      {Object.entries(REPORT_PRESETS).map(([name, { props }]) => (
+        <button
+          className="btn rounded-lg"
+          key={name}
+          onClick={() => {
+            setTableProps((prev) => ({ ...prev, ...props }));
+          }}
+        >
+          {name}
+        </button>
+      ))}
+      <PivotTableUI
+        data={rows}
+        onChange={(newProps: PivotTableProps) => {
+          setTableProps(newProps);
+          linkifyTransactions(newProps);
+        }}
+        {...tableProps}
+      />
     </div>
   );
 };
