@@ -15,9 +15,18 @@ type ReceiptFilter = {
 const sigReceiptFilters = signal<ReceiptFilter[]>([
   {
     name: "Show my receipts only",
-    tooltip: "Hides the receipt uploaded by other users.",
+    tooltip: "Hides receipt uploaded by other users.",
     predicate: (r) => r.user_id === sigUserInfo.value?.user_id,
     isSelected: true,
+  },
+  {
+    name: "Hide Vetted Receipts",
+    tooltip: "Hides receipts that have associated transactions.",
+    predicate(r) {
+      const hasTransaction = r.transactions && r.transactions.length > 0;
+      return !hasTransaction;
+    },
+    isSelected: false,
   },
 ]);
 
