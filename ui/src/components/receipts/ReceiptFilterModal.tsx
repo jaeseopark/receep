@@ -20,7 +20,7 @@ const sigReceiptFilters = signal<ReceiptFilter[]>([
     isSelected: true,
   },
   {
-    name: "Hide Vetted Receipts",
+    name: "Show unvetted receipts only",
     tooltip: "Hides receipts that have associated transactions.",
     predicate(r) {
       const hasTransaction = r.transactions && r.transactions.length > 0;
