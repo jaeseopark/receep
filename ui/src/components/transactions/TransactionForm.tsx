@@ -436,6 +436,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               className="mt-1 block w-full p-2 border rounded w-[30%]"
               placeholder="Amount"
               onChange={({ target: { value } }: any) => {
+                setValue(`line_items.${index}.amount_input`, value);
                 setValue(
                   `line_items.${index}.amount`,
                   evaluateAmountInput(value, sigUserInfo.value!.config.currency_decimal_places),
@@ -481,16 +482,18 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           </button>
         </div>
       </form>
-      <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
-        <button
-          type="button"
-          className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
-          onClick={showDeleteConfirmation}
-          disabled={!isMyTransaction}
-        >
-          <Trash />
-        </button>
-      </div>
+      {!isNewTransaction && (
+        <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
+          <button
+            type="button"
+            className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
+            onClick={showDeleteConfirmation}
+            disabled={!isMyTransaction}
+          >
+            <Trash />
+          </button>
+        </div>
+      )}
     </>
   );
 };
