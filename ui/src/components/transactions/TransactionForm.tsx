@@ -46,6 +46,28 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const { applyAutoTax } = useAutoTax();
   const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
 
+  const categoryOptions = useMemo(
+    () =>
+      sigCategories.value
+        .map(({ name, id }) => ({
+          label: name,
+          value: id,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [sigCategories.value],
+  );
+
+  const vendorOptions = useMemo(
+    () =>
+      sigVendors.value
+        .map(({ name, id }) => ({
+          label: name,
+          value: id,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [sigVendors.value],
+  );
+
   const {
     fields: lineItemFields,
     append: appendLineItem,
@@ -309,15 +331,9 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         name="vendor_id"
         control={control}
         render={({ field: { value, onChange } }) => {
-          const options = sigVendors.value
-            .map(({ name, id }) => ({
-              label: name,
-              value: id,
-            }))
-            .sort((a, b) => a.label.localeCompare(b.label));
           let selectedOption;
           if (typeof value !== "undefined") {
-            const match = options.find(({ value: optionValue }) => optionValue === value);
+            const match = vendorOptions.find(({ value: optionValue }) => optionValue === value);
             if (match) {
               selectedOption = match;
             } else {
@@ -330,7 +346,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
           return (
             <CreatableSelect
-              options={options}
+              options={vendorOptions}
               value={selectedOption}
               required
               isSearchable
@@ -391,13 +407,9 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               name={`line_items.${index}.category_id`}
               control={control}
               render={({ field: { name: fieldName, value, onChange } }) => {
-                const options = sigCategories.value.map(({ name, id }) => ({
-                  label: name,
-                  value: id,
-                }));
                 let selectedOption;
                 if (typeof value !== "undefined") {
-                  const match = options.find(({ value: optionValue }) => optionValue === value);
+                  const match = categoryOptions.find(({ value: optionValue }) => optionValue === value);
                   if (match) {
                     selectedOption = match;
                   } else {
@@ -410,7 +422,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
                 return (
                   <CreatableSelect
-                    options={options}
+                    options={categoryOptions}
                     value={selectedOption}
                     isSearchable
                     required
