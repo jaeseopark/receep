@@ -5,11 +5,9 @@ import PivotTableUI from "react-pivottable/PivotTableUI";
 
 import { axios } from "@/api";
 import { sigCategories, sigVendors } from "@/store";
-import { getYearTimestamps } from "@/utils/dates";
+import { TZ_OFFSET_HRS, getYearTimestamps } from "@/utils/dates";
 
 import "react-pivottable/pivottable.css";
-
-const TZ_OFFSET = -new Date().getTimezoneOffset() / 60;
 
 type PivotTableProps = { cols: string[]; rows: string[]; vals: string[] };
 
@@ -52,7 +50,7 @@ const fetchReportData = async (start: number, end: number): Promise<ExpenseLineI
           start: start / 1000,
           end: end / 1000,
           offset,
-          tz: TZ_OFFSET, // The API returns Y/M/D in UTC by default. Providing this query param adjusts the values to the local timezone.
+          tz: TZ_OFFSET_HRS, // The API returns Y/M/D in UTC by default. Providing this query param adjusts the values to the local timezone.
         },
       })
       .then((r) => r.data);
