@@ -2,6 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 
 export const TZ_OFFSET_HRS = -new Date().getTimezoneOffset() / 60;
 
+// TODO: ensure this function reflects the current timezone.
 export const toRelativeTime = (epoch: number): string => {
   // the epoch times in the backend are in seconds, so applying 1000 to make it ms.
   // addSuffix adds "ago"
@@ -18,6 +19,6 @@ export const toAbsoluteDate = (epoch: number): string => {
 };
 
 export const getYearTimestamps = (y: number) => ({
-  start: new Date(y, 0, 1).getTime(),
+  start: new Date(y, 0, 1).getTime() + TZ_OFFSET_HRS * 3600000,
   end: new Date(y, 11, 31, 23, 59, 59, 999).getTime(),
 });
