@@ -54,7 +54,7 @@ class Receep:
             generate_thumbnail(source_path=save_path,
                                content_type=content_type)
         except Exception as e:
-            self.db.delete_receipt(receipt.id)
+            self.db.delete_receipt(receipt.id, user_id)
             raise
 
         return receipt

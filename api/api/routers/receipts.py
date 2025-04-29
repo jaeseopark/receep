@@ -36,7 +36,20 @@ async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_aut
 
 
 @router.post("/receipts/{receipt_id}/rotate")
-async def rotate_receipt(receipt_id: int, _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
-    # allow any authorized user to rotate a receipt as it's not that big of a deal.
-    updated_receipt = db_instance.rotate_receipt(receipt_id, delta=90)
+async def rotate_receipt(receipt_id: int, auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    updated_receipt = db_instance.rotate_receipt(
+        receipt_id,
+        user_id=auth_metadata.user_id,
+        delta=90
+    )
     return get_api_safe_json(updated_receipt)
+
+
+@router.delete("/receipts/{receipt_id}")
+async def delete_receipt(receipt_id: int, auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    db_instance.delete_receipt(
+        receipt_id,
+        user_id=auth_metadata.user_id,
+    )
+
+    return dict(message="succes")

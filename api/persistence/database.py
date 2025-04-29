@@ -169,27 +169,33 @@ class Database:
 
         return receipt
 
-    def rotate_receipt(self, receipt_id: int, delta: int) -> Receipt:
+    def rotate_receipt(self, receipt_id: int, user_id: int, delta: int) -> Receipt:
         with get_session() as session:
             stmt = update(Receipt) \
-                .where(Receipt.id == receipt_id) \
+                .where(Receipt.id == receipt_id, Receipt.user_id == user_id) \
                 .values(rotation=(Receipt.rotation + delta) % 360)
             session.execute(stmt)
             session.commit()
 
-            return session.query(Receipt).filter_by(id=receipt_id).options(joinedload(Receipt.transactions)).first()
-
-    def delete_receipt(self, user_id: int, receipt_id: str):
-        with get_session() as session:
-            receipt = session.query(Receipt) \
-                .filter(Receipt.id == receipt_id, Receipt.user_id == user_id) \
+            return session.query(Receipt) \
+                .filter_by(id=receipt_id) \
+                .options(joinedload(Receipt.transactions)) \
                 .first()
 
-            if not receipt:
-                msg = f"Receipt cannot be deleted because it does not exist or it does not belong to you. {receipt_id=}"
-                logger.warning(msg)
+    def delete_receipt(self, receipt_id: int, user_id: int) -> None:
+        with get_session() as session:
+            r = session.query(Receipt) \
+                .filter(Receipt.id == receipt_id, Receipt.user_id == user_id) \
+                .options(joinedload(Receipt.transactions)) \
+                .first()
 
-            session.delete(receipt)
+            if not r:
+                raise NotFound
+
+            for transaction in r.transactions:
+                session.delete(transaction)
+
+            session.delete(r)
             session.commit()
 
     def get_receipts(self, offset=0, limit=100) -> List[Receipt]:
@@ -343,7 +349,7 @@ class Database:
             c = session.query(Category) \
                 .filter(Category.id == id, Category.user_id == user_id) \
                 .first()
-            
+
             if not c:
                 raise NotFound
 
