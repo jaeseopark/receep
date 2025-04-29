@@ -32,7 +32,7 @@ const ReceiptImg = ({
   if (contentType.startsWith("image/")) {
     return (
       <img
-        className="w-full md:w-50 h-auto"
+        className="w-full h-auto"
         style={{ transform: `rotate(${rotation}deg)` }}
         src={getPath(id)}
         alt={id}
