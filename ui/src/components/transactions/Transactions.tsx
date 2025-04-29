@@ -1,6 +1,13 @@
-import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import {
+  SortingState,
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { Plus } from "lucide-preact";
-import { useCallback, useRef } from "preact/hooks";
+import { useCallback, useRef, useState } from "preact/hooks";
 import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
@@ -59,11 +66,17 @@ const columns = [
 const TransactionsTable = () => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [sorting, setSorting] = useState<SortingState>([]); // State to manage sorting
 
   const table = useReactTable<Transaction>({
     data: sigTransactions.value,
     columns,
+    state: {
+      sorting, // Pass the sorting state to the table
+    },
+    onSortingChange: setSorting, // Update sorting state when it changes
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(), // Enable sorted row model
   });
 
   const handleScroll = useCallback(() => {
