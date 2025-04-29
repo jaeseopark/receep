@@ -61,3 +61,16 @@ def update_category(
     )
 
     return category
+
+
+@router.delete("/categories/{id}")
+def update_category(
+    id: int,
+    metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    category = db_instance.delete_category(
+        id=id,
+        user_id=metadata.user_id,
+    )
+
+    return category

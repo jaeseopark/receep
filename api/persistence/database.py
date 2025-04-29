@@ -116,6 +116,7 @@ class Database:
             user.config = config
             session.commit()
 
+    # TODO more explicit args
     def update_user_creds(self, user: User) -> None:
         with get_session() as session:
             try:
@@ -180,15 +181,13 @@ class Database:
 
     def delete_receipt(self, user_id: int, receipt_id: str):
         with get_session() as session:
-            # TODO: need to detach from associated transactions first?
-            receipt = session.query(Receipt).filter(
-                Receipt.id == receipt_id).first()
-            if not receipt:
-                msg = f"Receipt cannot be deleted because it does not exist. {receipt_id=}"
-                logger.warning(msg)
+            receipt = session.query(Receipt) \
+                .filter(Receipt.id == receipt_id, Receipt.user_id == user_id) \
+                .first()
 
-            # TODO: allow admins?
-            assert user_id == receipt.user_id, "Only the original uploader can delete the receipt."
+            if not receipt:
+                msg = f"Receipt cannot be deleted because it does not exist or it does not belong to you. {receipt_id=}"
+                logger.warning(msg)
 
             session.delete(receipt)
             session.commit()
@@ -338,6 +337,18 @@ class Database:
             return session.query(Category) \
                 .filter(Category.id == id) \
                 .first()
+
+    def delete_category(self, id: int, user_id: int) -> None:
+        with get_session() as session:
+            c = session.query(Category) \
+                .filter(Category.id == id, Category.user_id == user_id) \
+                .first()
+            
+            if not c:
+                raise NotFound
+
+            session.delete(c)
+            session.commit()
 
     def get_line_items(self, user_id: int, start: datetime, end: datetime, offset: int, limit: int) -> List[LineItem]:
         with get_session() as session:

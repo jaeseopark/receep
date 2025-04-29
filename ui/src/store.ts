@@ -70,6 +70,10 @@ export const {
 
 export const { sig: sigVendors, upsert: upsertVendors } = useUpdatingSignal<Vendor>({ uniqueKey: "id" });
 
-export const { sig: sigCategories, upsert: upsertCategories } = useUpdatingSignal<Category>({ uniqueKey: "id" });
+export const {
+  sig: sigCategories,
+  upsert: upsertCategories,
+  remove: removeCategory,
+} = useUpdatingSignal<Category>({ uniqueKey: "id" });
 
 export const sigUserInfo = signal<UserInfo>();
