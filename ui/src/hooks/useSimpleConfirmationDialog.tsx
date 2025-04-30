@@ -32,19 +32,21 @@ const useSimpleConfirmationDialog = ({
           {choices.length === 0 && (
             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
           )}
-          {choices.map(({ label, onClick: handleClick, isPrimary }) => (
-            <button
-              key={label}
-              className={classNames("btn", { "btn-primary": isPrimary })}
-              type="button"
-              onClick={() => {
-                (document.getElementById(dialogId) as HTMLDialogElement).close();
-                handleClick();
-              }}
-            >
-              {label}
-            </button>
-          ))}
+          <div className="flex gap-4">
+            {choices.map(({ label, onClick: handleClick, isPrimary }) => (
+              <button
+                key={label}
+                className={classNames("btn", { "btn-primary": isPrimary })}
+                type="button"
+                onClick={() => {
+                  (document.getElementById(dialogId) as HTMLDialogElement).close();
+                  handleClick();
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </form>
         {choices.length === 0 && renderMessage()}
       </div>
