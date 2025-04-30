@@ -1,12 +1,13 @@
 import axios from "axios";
 import { RotateCwSquare } from "lucide-preact";
+import { useCallback, useState } from "preact/hooks";
 import { Document, Page, pdfjs } from "react-pdf";
 
 import { Receipt } from "@/types";
 
 import { sigReceipts, upsertReceipts } from "@/store";
 
-import "./ReceiptImg.scss";
+import "@/components/receipts/ReceiptImg.scss";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 
@@ -28,23 +29,24 @@ const ReceiptImg = ({
   pathGetter: (id: number) => string;
   contentTypeOverride?: string;
 }) => {
+  const [numPages, setNumPages] = useState<number>(); // Track the total number of pages
   const contentType = contentTypeOverride || content_type;
+
+  const onDocumentLoadSuccess = useCallback(({ numPages: loadedNumPages }: { numPages: number }) => {
+    setNumPages(loadedNumPages); // Set the total number of pages
+  }, []);
+
   if (contentType.startsWith("image/")) {
-    return (
-      <img
-        className="w-full h-auto"
-        style={{ transform: `rotate(${rotation}deg)` }}
-        src={getPath(id)}
-        alt={id}
-      />
-    );
+    return <img className="w-full h-auto" style={{ transform: `rotate(${rotation}deg)` }} src={getPath(id)} alt={id} />;
   }
 
   if (contentType === "application/pdf") {
     return (
-      <div className="pdf-container">
-        <Document file={getPath(id)}>
-          <Page pageNumber={1} />
+      <div className="pdf-container overflow-y-auto h-full">
+        <Document file={getPath(id)} onLoadSuccess={onDocumentLoadSuccess}>
+          {Array.from({ length: numPages || 0 }, (_, index) => (
+            <Page key={index} renderTextLayer={false} pageNumber={index + 1} />
+          ))}
         </Document>
       </div>
     );
