@@ -80,6 +80,7 @@ const fetchUserInfo = () =>
           tax_rate: config.tax_rate || 0,
           currency_decimal_places: config.currency_decimal_places || 2,
           advanced_mode: config.advanced_mode || false,
+          notes: config.notes || "",
         },
       };
     })

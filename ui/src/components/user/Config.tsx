@@ -14,6 +14,7 @@ type FormData = {
   taxRate: string;
   currencyDecimalPlaces: string;
   advanced_mode: boolean;
+  notes: string;
 };
 
 const ConfigForm = ({ config }: { config: UserInfo["config"] }) => {
@@ -21,6 +22,8 @@ const ConfigForm = ({ config }: { config: UserInfo["config"] }) => {
     defaultValues: {
       taxRate: config.tax_rate.toString(),
       currencyDecimalPlaces: config.currency_decimal_places.toString(),
+      advanced_mode: config.advanced_mode,
+      notes: config.notes,
     },
   });
 
@@ -32,6 +35,7 @@ const ConfigForm = ({ config }: { config: UserInfo["config"] }) => {
         tax_rate: Number.parseFloat(formData.taxRate),
         currency_decimal_places: Number.parseInt(formData.currencyDecimalPlaces),
         advanced_mode: Boolean(formData.advanced_mode),
+        notes: formData.notes,
       };
 
       axios
@@ -74,7 +78,7 @@ const ConfigForm = ({ config }: { config: UserInfo["config"] }) => {
               />
             </td>
           </tr>
-          <tr>
+          <tr className="border-b border-gray-300">
             <td className="p-4 font-medium text-gray-700">Currency Decimal Places</td>
             <td className="p-4">
               <Controller
@@ -86,6 +90,38 @@ const ConfigForm = ({ config }: { config: UserInfo["config"] }) => {
                     {...field}
                     placeholder="Enter currency decimal places Ex. 2"
                     className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-primary-300"
+                  />
+                )}
+              />
+            </td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="p-4 font-medium text-gray-700">Advanced Mode</td>
+            <td className="p-4">
+              <Controller
+                name="advanced_mode"
+                control={control}
+                render={({ field }) => (
+                  <input
+                    type="checkbox"
+                    checked={field.value}
+                    {...field}
+                    className="w-5 h-5 border-gray-300 rounded focus:ring focus:ring-primary-300"
+                  />
+                )}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td className="p-4 font-medium text-gray-700">Notes</td>
+            <td className="p-4">
+              <Controller
+                name="notes"
+                control={control}
+                render={({ field }) => (
+                  <textarea
+                    {...field}
+                    className="w-full h-50 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-primary-300"
                   />
                 )}
               />
