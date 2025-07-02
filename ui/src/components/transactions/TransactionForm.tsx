@@ -12,6 +12,7 @@ import CreatableSelect from "react-select/creatable";
 import { Category, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
+import ReceiptDownloadButton from "@/components/receipts/ReceiptDownloadButton";
 import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
 import { ROUTE_PATHS } from "@/const";
 import useAutoTax from "@/hooks/useAutoTax";
@@ -235,6 +236,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               {receiptIdExists && (
                 <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll">
                   <ReceiptHighres id={receiptId} />
+                  <ReceiptDownloadButton receiptId={receiptId} />
                 </div>
               )}
               {sigUserInfo.value?.config.advanced_mode && (

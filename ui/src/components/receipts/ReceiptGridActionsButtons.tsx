@@ -2,20 +2,34 @@ import { Filter, Plus } from "lucide-preact";
 
 import { uploadReceipts } from "@/middleware/receipts";
 
+export const AddReceiptInputElement = ({
+  id,
+  onChange: handleChange,
+  multiple,
+}: {
+  id: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  multiple?: boolean;
+}) => (
+  <input
+    id={id}
+    type="file"
+    accept="image/*,application/pdf"
+    className="hidden"
+    multiple={multiple}
+    onChange={handleChange}
+  />
+);
+
 export const AddReceiptButton = () => (
   <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-    <input
+    <AddReceiptInputElement
       id="receipt-input"
-      type="file"
-      accept="image/*"
-      className="hidden"
       multiple
       onChange={(e) => {
         const files: File[] = e?.target?.files || [];
         if (files.length > 0) {
-          uploadReceipts([...files], (update) => {
-            // TODO
-          });
+          uploadReceipts([...files], () => {});
         }
       }}
     />

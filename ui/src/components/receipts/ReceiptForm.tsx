@@ -1,14 +1,16 @@
-import { SquareArrowOutUpRight } from "lucide-preact";
+import { SquareArrowOutUpRight, SquareUserRound } from "lucide-preact";
 import { useNavigate } from "react-router-dom";
 
 import { Receipt } from "@/types";
 
+import ReceiptDownloadButton from "@/components/receipts/ReceiptDownloadButton";
+import { sigUserInfo } from "@/store";
 import { toRelativeTime } from "@/utils/dates";
 import { getEditTransactionPath } from "@/utils/paths";
 import { toHumanFilesize } from "@/utils/primitive";
 
 const ReceiptDetailForm = ({
-  receipt: { created_at, content_type, content_length, transactions },
+  receipt: { id, created_at, content_type, content_length, transactions },
 }: {
   receipt: Receipt;
 }) => {
@@ -17,6 +19,12 @@ const ReceiptDetailForm = ({
   return (
     <table className="table h-fit w-auto md:w-max-[50%]">
       <tbody>
+        <tr>
+          <th>File</th>
+          <td>
+            <ReceiptDownloadButton receiptId={id} />
+          </td>
+        </tr>
         <tr>
           <th>Upload Timestamp</th>
           <td>{toRelativeTime(created_at)}</td>
@@ -35,8 +43,14 @@ const ReceiptDetailForm = ({
             <div>
               {transactions.length === 0 && <span>None</span>}
               {transactions.map((t) => (
-                <div key={t.id} onClick={() => navigate(getEditTransactionPath(t.id))}>
-                  TxID {t.id} <SquareArrowOutUpRight className="scale-50" />
+                <div
+                  className="flex flex-row hover:underline"
+                  key={t.id}
+                  onClick={() => navigate(getEditTransactionPath(t.id))}
+                >
+                  <span>TxID {t.id}</span>
+                  <SquareArrowOutUpRight className="scale-50" />
+                  {t.user_id === sigUserInfo.value?.user_id && <SquareUserRound className="scale-50" />}
                 </div>
               ))}
             </div>

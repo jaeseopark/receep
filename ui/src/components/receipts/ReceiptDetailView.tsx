@@ -1,5 +1,4 @@
-import { NotebookPen, Trash } from "lucide-preact";
-import { ReactNode } from "preact/compat";
+import { NotebookPen, Replace, Trash } from "lucide-preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -7,23 +6,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Receipt } from "@/types";
 
 import { axios } from "@/api";
+import ActionButtons, { ActionButton } from "@/components/ActionButtons";
 import ReceiptDetailForm from "@/components/receipts/ReceiptForm";
+import { AddReceiptInputElement } from "@/components/receipts/ReceiptGridActionsButtons";
 import { ReceiptHighres } from "@/components/receipts/ReceiptImg";
 import { ROUTE_PATHS } from "@/const";
 import { sigInitialLoadResult } from "@/gvars";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
-import { removeReceipt, removeTransaction, sigReceipts } from "@/store";
+import { removeReceipt, removeTransaction, sigReceipts, sigUserInfo, upsertReceipts } from "@/store";
 import { getNewTransactionPathWithReceiptId } from "@/utils/paths";
 import { isPositiveInteger } from "@/utils/primitive";
-
-type ActionButton = {
-  name: string;
-  containerClass?: string;
-  buttonClass?: string;
-  enabled: boolean;
-  icon: ReactNode;
-  onClick: () => void;
-};
 
 const ReceiptEditView = () => {
   const { id } = useParams();
@@ -99,38 +91,55 @@ const ReceiptEditView = () => {
     {
       name: "Add Transaction",
       buttonClass: "btn-primary",
-      enabled: receipt.transactions.length === 0,
+      show: true,
       onClick: () => navigate(getNewTransactionPathWithReceiptId(receipt.id)),
       icon: <NotebookPen />,
     },
     {
       name: "Delete Receipt",
       buttonClass: "bg-red-500 hover:bg-red-600 text-white",
-      enabled: true,
+      show: sigUserInfo.value?.user_id === receipt.user_id,
       onClick: showDeleteConfirmation,
       icon: <Trash />,
     },
+    {
+      name: "Replace Receipt",
+      buttonClass: "bg-gray-500 hover:bg-gray-600 text-white",
+      show: sigUserInfo.value?.user_id === receipt.user_id,
+      sibling: (
+        <AddReceiptInputElement
+          id="replace-receipt-input"
+          onChange={(e) => {
+            const [file] = Array.from((e?.target as HTMLInputElement).files!);
+            const formData = new FormData();
+            formData.append("file", file, file.name);
+
+            axios
+              .put(`/api/receipts/${receipt.id}`, formData, {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              })
+              .then((r) => r.data)
+              .then((newReceipt) => {
+                upsertReceipts({ items: [newReceipt] });
+                toast.success("Receipt replaced.");
+              });
+          }}
+        />
+      ),
+      onClick: () => document.getElementById("replace-receipt-input")?.click(),
+      icon: <Replace />,
+    },
   ];
 
-  // TODO: make the image maintain its aspect ratio
   return (
     <div className="receipt-edit-view">
       <div className="overflow-x-hidden object-cover md:flex">
         <ReceiptHighres receipt={receipt} />
         <ReceiptDetailForm receipt={receipt} />
       </div>
-      {buttons
-        .filter(({ enabled }) => enabled)
-        .map(({ name, icon, containerClass, buttonClass, onClick: handleClick }, i) => {
-          const rightOffset = 6 + 14 * i;
-          return (
-            <div key={name} className={`bottom-24 fixed right-${rightOffset} shadow-lg rounded-full ${containerClass}`}>
-              <button className={`btn btn-circle ${buttonClass}`} onClick={handleClick}>
-                {icon}
-              </button>
-            </div>
-          );
-        })}
+      <ActionButtons buttons={buttons} />
       {deleteConfirmationDialog}
     </div>
   );

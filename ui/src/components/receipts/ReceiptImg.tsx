@@ -8,11 +8,9 @@ import { Receipt } from "@/types";
 import { sigReceipts, upsertReceipts } from "@/store";
 
 import "@/components/receipts/ReceiptImg.scss";
+import { getHighresPath, getThumbnailPath } from "@/utils/receipts";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
-
-const getThumbnailPath = (receiptId: number) => `/${receiptId}-thumb.dr`;
-const getHighresPath = (receiptId: number) => `/${receiptId}.dr`;
 
 const rotate = (receipt_id: number) =>
   axios
