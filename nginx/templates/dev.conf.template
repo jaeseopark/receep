@@ -1,0 +1,43 @@
+upstream ui {
+    server ui;
+}
+
+upstream api {
+    server api;
+}
+
+server {
+    listen 80;
+
+    # Some pics and PDFs can be big.
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://ui;
+    }
+
+    location ~* \.dr$ {
+        auth_request /jwt/check;
+        root /receipts;
+    }
+
+    location /jwt/check {
+        internal;
+        proxy_pass http://api;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header Cookie $http_cookie;
+    }
+
+    location /api/ {
+        rewrite /api/(.*) /$1 break;
+        proxy_pass http://api;
+
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

@@ -1,0 +1,6 @@
+mnt/
+node_modules/
+*.pyc
+setup_ui.sh
+venv/
+.env
