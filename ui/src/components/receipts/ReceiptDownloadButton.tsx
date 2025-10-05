@@ -6,7 +6,7 @@ const ReceiptDownloadButton = ({ receiptId }: { receiptId: number }) => {
   };
 
   return (
-    <button className="btn btn-primary" onClick={handleDownload} title="Download">
+    <button className="btn btn-primary" type="button" onClick={handleDownload} title="Download">
       Download
     </button>
   );
