@@ -4,3 +4,4 @@ node_modules/
 setup_ui.sh
 venv/
 .env
+docker-compose.yml
