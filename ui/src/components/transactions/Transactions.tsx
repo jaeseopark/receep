@@ -30,6 +30,7 @@ const columns = [
       const timestamp = info.getValue();
       return <span>{toAbsoluteDate(timestamp)}</span>;
     },
+    enableColumnFilter: false,
   }),
   columnHelper.accessor("vendor_id", {
     header: () => <span>Vendor</span>,
@@ -56,8 +57,7 @@ const columns = [
       return <i>{formattedPrice}</i>;
     },
     header: () => <span>Amount</span>,
-    enableColumnFilter: true,
-    filterFn: "inNumberRange",
+    enableColumnFilter: false,
   }),
   columnHelper.accessor("receipt_id", {
     header: "Receipt",
@@ -71,6 +71,7 @@ const columns = [
         );
       }
     },
+    enableColumnFilter: false,
   }),
 ];
 
