@@ -1,11 +1,14 @@
 import {
+  ColumnFiltersState,
   SortingState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import fuzzysort from "fuzzysort";
 import { Plus } from "lucide-preact";
 import { useCallback, useRef, useState } from "preact/hooks";
 import { useNavigate } from "react-router-dom";
@@ -20,8 +23,6 @@ import { getEditTransactionPath } from "@/utils/paths";
 
 const columnHelper = createColumnHelper<Transaction>();
 
-// TODO: implement sorting
-
 const columns = [
   columnHelper.accessor("timestamp", {
     header: () => "Date",
@@ -29,12 +30,21 @@ const columns = [
       const timestamp = info.getValue();
       return <span>{toAbsoluteDate(timestamp)}</span>;
     },
+    enableColumnFilter: false,
   }),
   columnHelper.accessor("vendor_id", {
     header: () => <span>Vendor</span>,
     cell: (info) => {
       const vendor = sigVendors.value.find((v) => v.id === info.getValue());
       return <span>{vendor?.name}</span>;
+    },
+    enableColumnFilter: true,
+    filterFn: (row, columnId, filterValue) => {
+      const vendorId = row.getValue(columnId) as number;
+      const vendor = sigVendors.value.find((v) => v.id === vendorId);
+      const vendorName = vendor?.name || "";
+      const result = fuzzysort.single(filterValue, vendorName);
+      return result !== null;
     },
   }),
   columnHelper.accessor("amount", {
@@ -47,6 +57,7 @@ const columns = [
       return <i>{formattedPrice}</i>;
     },
     header: () => <span>Amount</span>,
+    enableColumnFilter: false,
   }),
   columnHelper.accessor("receipt_id", {
     header: "Receipt",
@@ -60,6 +71,7 @@ const columns = [
         );
       }
     },
+    enableColumnFilter: false,
   }),
 ];
 
@@ -67,16 +79,20 @@ const TransactionsTable = () => {
   const navigate = useNavigate();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]); // State to manage sorting
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]); // State to manage filters
 
   const table = useReactTable<Transaction>({
     data: sigTransactions.value,
     columns,
     state: {
       sorting, // Pass the sorting state to the table
+      columnFilters, // Pass the column filters state to the table
     },
     onSortingChange: setSorting, // Update sorting state when it changes
+    onColumnFiltersChange: setColumnFilters, // Update filter state when it changes
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(), // Enable sorted row model
+    getFilteredRowModel: getFilteredRowModel(), // Enable filtered row model
   });
 
   const handleScroll = useCallback(() => {
@@ -107,10 +123,23 @@ const TransactionsTable = () => {
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id} onClick={header.column.getToggleSortingHandler()} className="cursor-pointer">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                  {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
-                  {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                <th key={header.id} className="cursor-pointer">
+                  <div onClick={header.column.getToggleSortingHandler()}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
+                    {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                  </div>
+                  {header.column.getCanFilter() ? (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="text"
+                        value={(header.column.getFilterValue() ?? "") as string}
+                        onChange={(e) => header.column.setFilterValue((e.target as HTMLInputElement).value)}
+                        placeholder={`Filter...`}
+                        className="input input-bordered input-xs w-full mt-1"
+                      />
+                    </div>
+                  ) : null}
                 </th>
               ))}
             </tr>
