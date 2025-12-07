@@ -60,4 +60,5 @@ export type Category = {
   name: string;
   description: string;
   user_id: number;
+  with_autotax: boolean;
 };
