@@ -293,11 +293,11 @@ class Database:
             session.delete(transaction)
             session.commit()
 
-    def get_vendors_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
+    def get_vendors_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Vendor]:
         with get_session() as session:
             return session.query(Vendor).filter(Vendor.user_id == user_id).offset(offset).limit(limit).all()
 
-    def get_categories_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Receipt]:
+    def get_categories_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Category]:
         with get_session() as session:
             return session.query(Category).filter(Category.user_id == user_id).offset(offset).limit(limit).all()
 
@@ -354,7 +354,7 @@ class Database:
         with get_session() as session:
             session.add(c)
             session.commit()
-            # lazy load the aut-gen ID
+            # lazy load the auto-gen ID
             c.id
         return c
 
