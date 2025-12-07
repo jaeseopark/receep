@@ -17,6 +17,7 @@ class UpsertRequest(BaseModel):
     name: str
     description: str
     user_id: str
+    with_autotax: bool
 
 
 @router.get("/categories/paginated")
@@ -41,7 +42,8 @@ def create_category(
     category = db_instance.create_category(
         user_id=metadata.user_id,
         name=payload.name,
-        description=payload.description
+        description=payload.description,
+        with_autotax=payload.with_autotax
     )
 
     return category
@@ -57,7 +59,8 @@ def update_category(
         id=id,
         user_id=metadata.user_id,
         name=payload.name,
-        description=payload.description
+        description=payload.description,
+        with_autotax=payload.with_autotax
     )
 
     return category

@@ -344,11 +344,12 @@ class Database:
             # session.delete(v)
             # session.commit()
 
-    def create_category(self, user_id: int,  name: str, description: str) -> Category:
+    def create_category(self, user_id: int,  name: str, description: str, with_autotax) -> Category:
         c = Category(
             user_id=user_id,
             name=name,
-            description=description
+            description=description,
+            with_autotax=with_autotax
         )
 
         with get_session() as session:
@@ -358,7 +359,7 @@ class Database:
             c.id
         return c
 
-    def update_category(self, id: int, user_id: int, name: str, description: str) -> Category:
+    def update_category(self, id: int, user_id: int, name: str, description: str, with_autotax) -> Category:
         with get_session() as session:
             c = session.query(Category) \
                 .filter(Category.id == id, Category.user_id == user_id) \
@@ -366,6 +367,7 @@ class Database:
 
             c.name = name
             c.description = description
+            c.with_autotax = with_autotax
 
             session.commit()
 

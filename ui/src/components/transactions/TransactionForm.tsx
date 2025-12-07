@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { parse } from "date-fns";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
 import { KeyboardEvent } from "preact/compat";
-import { useCallback, useMemo } from "preact/hooks";
+import { useCallback, useEffect, useMemo } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -41,11 +41,29 @@ type FormData = Transaction & { enableAutoTax: boolean };
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
   const taxRateExistsInConfig = useMemo(() => (sigUserInfo.value?.config.tax_rate || 0) > 0, []);
-  const { register, handleSubmit, control, setValue } = useForm<FormData>({
+  const { register, handleSubmit, control, setValue, watch } = useForm<FormData>({
     defaultValues: { ...transaction, enableAutoTax: taxRateExistsInConfig },
   });
   const { applyAutoTax } = useAutoTax();
   const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
+
+  // Watch the first line item's category_id specifically
+  const lineItems = watch("line_items");
+  const firstLineItemCategoryId = watch("line_items.0.category_id");
+
+  // Update auto-tax based on categories whenever the first line item's category or categories change
+  useEffect(() => {
+    if (!isNewTransaction || !taxRateExistsInConfig) {
+      return;
+    }
+
+    let enableAutoTax = false;
+    if (lineItems.length === 1 && firstLineItemCategoryId) {
+      const category = sigCategories.value.find((cat) => cat.id === firstLineItemCategoryId);
+      enableAutoTax = Boolean(category?.with_autotax);
+    }
+    setValue("enableAutoTax", enableAutoTax);
+  }, [isNewTransaction, taxRateExistsInConfig, lineItems, firstLineItemCategoryId, sigCategories.value, setValue]);
 
   const categoryOptions = useMemo(
     () =>
@@ -135,7 +153,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           toast.success("Transaction saved.");
           navigate(ROUTE_PATHS.TRANSACTIONS);
         })
-        .catch((e) => {
+        .catch(() => {
           // TODO
         });
     },
@@ -168,7 +186,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       },
       {
         label: "Cancel",
-        onClick: () => {},
+        onClick: () => { },
       },
     ],
   });
@@ -191,17 +209,18 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         upsertVendors({ items: [returnedVenor] });
         setTimeout(() => setValue("vendor_id", returnedVenor.id), 100);
       })
-      .catch((e) => {
+      .catch(() => {
         // TODO
       });
   };
 
-  const createCategory = (fieldName, categoryName: string) => {
+  const createCategory = (fieldName: string, categoryName: string) => {
     const category: Category = {
       id: DEFAULT_FIELD_ID,
       user_id: DEFAULT_FIELD_ID,
       name: categoryName,
       description: "Auto-Generated from a transaction",
+      with_autotax: true,
     };
 
     axios
@@ -209,9 +228,11 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       .then((r) => r.data)
       .then((returnedCategory: Category) => {
         upsertCategories({ items: [returnedCategory] });
-        setTimeout(() => setValue(fieldName, returnedCategory.id), 100);
+        setTimeout(() => {
+          setValue(fieldName as any, returnedCategory.id);
+        }, 100);
       })
-      .catch((e) => {
+      .catch(() => {
         // TODO
       });
   };
@@ -382,7 +403,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             type="checkbox"
             {...register("enableAutoTax")}
             className="checkbox"
-            disabled={!taxRateExistsInConfig}
+            disabled={!taxRateExistsInConfig || lineItems.length !== 1}
           />
           <span>Enable Auto Tax</span>
         </label>
@@ -432,7 +453,9 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                     placeholder="Select a category..."
                     onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
                     // @ts-ignore
-                    onChange={({ value }) => onChange(value)}
+                    onChange={({ value }) => {
+                      onChange(value);
+                    }}
                   />
                 );
               }}

@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import (Column, DateTime, ForeignKey, Integer, Float, String, Table,
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, Float, String, Table,
                         Text, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -70,6 +70,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(64), nullable=False)
     description = Column(Text, nullable=True)
+    with_autotax = Column(Boolean, nullable=False, server_default='true')
 
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 

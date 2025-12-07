@@ -100,6 +100,16 @@ const CategoryForm = ({ category }: { category: Category }) => {
             placeholder="Category Description"
           />
         </div>
+        <div>
+          <label className="flex items-center space-x-2">
+            <input
+              {...register("with_autotax")}
+              type="checkbox"
+              className="checkbox"
+            />
+            <span className="text-sm font-medium">Enable Auto Tax</span>
+          </label>
+        </div>
         <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
           <button type="submit" className="btn btn-circle btn-primary">
             <Save />
