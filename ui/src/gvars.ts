@@ -9,37 +9,37 @@ export const sigInitialLoadResult = signal<"PENDING" | "SUCCEEDED" | "FAILED">("
 type PaginationState = {
   offset: number;
   limit: number;
-  isExausted: boolean;
+  isExhausted: boolean;
 };
 
 export const receiptPagination = signal<PaginationState>({
   offset: 0,
   limit: 500, // TODO: load enough receipts to fill the view (for handleScroll to start working. load 500 for now.)
-  isExausted: false,
+  isExhausted: false,
 });
 
 export const transactionPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
-  isExausted: false,
+  isExhausted: false,
 });
 
 const vendorPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
-  isExausted: false,
+  isExhausted: false,
 });
 
 const categoryPagination = signal<PaginationState>({
   offset: 0,
   limit: 50,
-  isExausted: false,
+  isExhausted: false,
 });
 
 const fetchPaginatedData =
   <T>(url: string, sigPagination: Signal<PaginationState>, upsert: ({ items }: { items: T[] }) => void) =>
   () => {
-    if (sigPagination.value.isExausted) {
+    if (sigPagination.value.isExhausted) {
       return Promise.resolve();
     }
 
@@ -50,7 +50,7 @@ const fetchPaginatedData =
       .then((r) => r.data)
       .then(({ next_offset, items }: { next_offset: number; items: T[] }) => {
         sigPagination.value.offset = next_offset;
-        sigPagination.value.isExausted = items.length === 0;
+        sigPagination.value.isExhausted = items.length === 0;
 
         upsert({ items });
       });
@@ -67,7 +67,7 @@ const fetchUntilExhausted = <T>(
     const fetchNext = () => {
       fetchFunction()
         .then(() => {
-          if (!sigPagination.value.isExausted) {
+          if (!sigPagination.value.isExhausted) {
             fetchNext();
           } else {
             resolve();
