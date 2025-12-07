@@ -56,6 +56,32 @@ const fetchPaginatedData =
       });
   };
 
+// TODO: should not need to fetch everything on initial load.
+// The UI should be able to handle partial data and fetch more as needed. Ex. vendor dropdown in the transaction form.
+const fetchUntilExhausted = <T>(
+  url: string, sigPagination: Signal<PaginationState>, upsert: ({ items }: { items: T[] }) => void
+) => () => {
+  return new Promise<void>((resolve, reject) => {
+    const fetchFunction = fetchPaginatedData(url, sigPagination, upsert);
+
+    const fetchNext = () => {
+      fetchFunction()
+        .then(() => {
+          if (!sigPagination.value.isExausted) {
+            fetchNext();
+          } else {
+            resolve();
+          }
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    };
+
+    fetchNext();
+  });
+};
+
 export const fetchReceipts = fetchPaginatedData("/api/receipts/paginated", receiptPagination, upsertReceipts);
 
 export const fetchTransactions = fetchPaginatedData(
@@ -64,9 +90,9 @@ export const fetchTransactions = fetchPaginatedData(
   upsertTransactions,
 );
 
-const fetchVendors = fetchPaginatedData("/api/vendors/paginated", vendorPagination, upsertVendors);
+const fetchVendors = fetchUntilExhausted("/api/vendors/paginated", vendorPagination, upsertVendors);
 
-const fetchCategories = fetchPaginatedData("/api/categories/paginated", categoryPagination, upsertCategories);
+const fetchCategories = fetchUntilExhausted("/api/categories/paginated", categoryPagination, upsertCategories);
 
 const fetchUserInfo = () =>
   axios

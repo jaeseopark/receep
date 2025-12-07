@@ -26,4 +26,8 @@ export enum ROUTE_PATHS {
   CATEGORIES = "/settings/categories",
   EDIT_CATEGORY = "/settings/categories/edit/:id",
   NEW_CATEGORY = "/settings/categories/edit/-1",
+
+  VENDORS = "/settings/vendors",
+  EDIT_VENDOR = "/settings/vendors/edit/:id",
+  NEW_VENDOR = "/settings/vendors/edit/-1",
 }

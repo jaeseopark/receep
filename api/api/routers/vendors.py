@@ -18,7 +18,8 @@ class UpsertRequest(BaseModel):
 
 
 class MergeRequest(BaseModel):
-    ids: List[int]
+    source_ids: List[int]
+    target_id: int
 
 
 @router.get("/vendors/paginated")
@@ -49,6 +50,34 @@ def create_vendor(
         user_id=vendor.user_id,
         name=vendor.name
     )
+
+
+@router.put("/vendors/{id}")
+def update_vendor(
+    id: int,
+    payload: UpsertRequest,
+    metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    vendor = db_instance.update_vendor(
+        id=id,
+        user_id=metadata.user_id,
+        name=payload.name
+    )
+
+    return vendor
+
+
+@router.delete("/vendors/{id}")
+def delete_vendor(
+    id: int,
+    metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    vendor = db_instance.delete_vendor(
+        id=id,
+        user_id=metadata.user_id,
+    )
+
+    return vendor
 
 
 @router.post("/vendors/merge")

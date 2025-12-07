@@ -1,4 +1,4 @@
-import { BookUser, ChartLine, Database, Dot, NotebookPen, Receipt, Settings as SettingsIcon } from "lucide-preact";
+import { BookUser, ChartLine, Database, Dot, NotebookPen, Receipt, Settings as SettingsIcon, Store } from "lucide-preact";
 import { ReactNode } from "preact/compat";
 
 import DataImportExport from "@/components/DataImportExport";
@@ -6,6 +6,8 @@ import Invite from "@/components/Invite";
 import Settings from "@/components/Settings";
 import CategoryDetailView from "@/components/categories/CategoryDetailView";
 import CategoryListView from "@/components/categories/CategoryListView";
+import VendorDetailView from "@/components/vendors/VendorDetailView";
+import VendorListView from "@/components/vendors/VendorListView";
 import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
 import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
@@ -56,6 +58,21 @@ const SETTING_ROUTES: RouteEntry[] = [
     name: "Edit Category",
     description: "Edit Category",
     component: CategoryDetailView,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.VENDORS,
+    name: "Manage Vendors",
+    description: "Manage vendors",
+    component: VendorListView,
+    icon: <Store />,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.EDIT_VENDOR,
+    name: "Edit Vendor",
+    description: "Edit Vendor",
+    component: VendorDetailView,
     type: "NOT_DOCKED",
   },
   {
