@@ -162,10 +162,10 @@ const TransactionsTable = () => {
     <div
       className="transactions-view overflow-x-auto h-full"
       ref={scrollContainerRef}
-      onScroll={!transactionPagination.value.isExausted ? handleScroll : undefined}
+      onScroll={!transactionPagination.value.isExhausted ? handleScroll : undefined}
     >
       {renderTable()}
-      {transactionPagination.value.isExausted && <div className="text-center p-4">No more transactions to load.</div>}
+      {transactionPagination.value.isExhausted && <div className="text-center p-4">No more transactions to load.</div>}
       <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
         <button className="btn btn-circle btn-primary" onClick={() => navigate(ROUTE_PATHS.NEW_TRANSACTION)}>
           <Plus />
