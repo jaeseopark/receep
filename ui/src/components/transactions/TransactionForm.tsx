@@ -63,7 +63,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       enableAutoTax = Boolean(category?.with_autotax);
     }
     setValue("enableAutoTax", enableAutoTax);
-  }, [isNewTransaction, taxRateExistsInConfig, firstLineItemCategoryId, sigCategories.value, setValue]);
+  }, [isNewTransaction, taxRateExistsInConfig, lineItems, firstLineItemCategoryId, sigCategories.value, setValue]);
 
   const categoryOptions = useMemo(
     () =>
