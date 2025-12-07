@@ -47,22 +47,21 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const { applyAutoTax } = useAutoTax();
   const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
 
-  // Watch line_items to trigger updates when they change
-  const watchedLineItems = watch("line_items");
+  // Watch the first line item's category_id specifically
+  const firstLineItemCategoryId = watch("line_items.0.category_id");
 
-  // Update auto-tax based on categories whenever line items or categories change
+  // Update auto-tax based on categories whenever the first line item's category or categories change
   useEffect(() => {
     if (!isNewTransaction || !taxRateExistsInConfig) {
       return;
     }
-    
-    const hasAutoTaxCategory = watchedLineItems.some((item) => {
-      const category = sigCategories.value.find((cat) => cat.id === item.category_id);
-      return Boolean(category?.with_autotax);
-    });
-    
-    setValue("enableAutoTax", hasAutoTaxCategory);
-  }, [isNewTransaction, taxRateExistsInConfig, watchedLineItems, sigCategories.value, setValue]);
+
+    if (firstLineItemCategoryId) {
+      const category = sigCategories.value.find((cat) => cat.id === firstLineItemCategoryId);
+      setValue("enableAutoTax", Boolean(category?.with_autotax));
+    }
+
+  }, [isNewTransaction, taxRateExistsInConfig, firstLineItemCategoryId, sigCategories.value, setValue]);
 
   const categoryOptions = useMemo(
     () =>
@@ -185,7 +184,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       },
       {
         label: "Cancel",
-        onClick: () => {},
+        onClick: () => { },
       },
     ],
   });
