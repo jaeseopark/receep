@@ -9,6 +9,7 @@ import { Vendor } from "@/types";
 import { axios } from "@/api";
 import { ROUTE_PATHS } from "@/const";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
+import useVendorMergeDialog from "@/hooks/useVendorMergeDialog";
 import { removeVendor, upsertVendors } from "@/store";
 
 const VendorForm = ({ vendor }: { vendor: Vendor }) => {
@@ -82,9 +83,12 @@ const VendorForm = ({ vendor }: { vendor: Vendor }) => {
         ],
     });
 
+    const { showDialog: showMergeDialog, dialog: mergeDialog } = useVendorMergeDialog({ vendor });
+
     return (
         <div>
             {deleteConfirmationDialog}
+            {mergeDialog}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium">Name</label>
@@ -116,10 +120,7 @@ const VendorForm = ({ vendor }: { vendor: Vendor }) => {
                         <button
                             type="button"
                             className="btn btn-circle bg-gray-500 hover:bg-gray-600 text-white"
-                            onClick={() => {
-                                // TODO: Handle merge action
-                                console.log("Merge vendors");
-                            }}
+                            onClick={showMergeDialog}
                         >
                             <GitMerge />
                         </button>
