@@ -58,7 +58,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
     }
 
     let enableAutoTax = false;
-    if (lineItems.length > 0 && firstLineItemCategoryId) {
+    if (lineItems.length === 1 && firstLineItemCategoryId) {
       const category = sigCategories.value.find((cat) => cat.id === firstLineItemCategoryId);
       enableAutoTax = Boolean(category?.with_autotax);
     }
