@@ -315,6 +315,35 @@ class Database:
 
         return v
 
+    def update_vendor(self, id: int, user_id: int, name: str) -> Vendor:
+        with get_session() as session:
+            v = session.query(Vendor) \
+                .filter(Vendor.id == id, Vendor.user_id == user_id) \
+                .first()
+
+            v.name = name
+
+            session.commit()
+
+            return session.query(Vendor) \
+                .filter(Vendor.id == id) \
+                .first()
+
+    def delete_vendor(self, id: int, user_id: int) -> None:
+        with get_session() as session:
+            # TODO: Implement delete vendor (need transaction association safe guard)
+            raise NotImplementedError
+        
+            # v = session.query(Vendor) \
+            #     .filter(Vendor.id == id, Vendor.user_id == user_id) \
+            #     .first()
+
+            # if not v:
+            #     raise NotFound
+
+            # session.delete(v)
+            # session.commit()
+
     def create_category(self, user_id: int,  name: str, description: str) -> Category:
         c = Category(
             user_id=user_id,

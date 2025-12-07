@@ -68,7 +68,7 @@ export const {
   remove: removeReceipt,
 } = useUpdatingSignal<Receipt>({ uniqueKey: "id" });
 
-export const { sig: sigVendors, upsert: upsertVendors } = useUpdatingSignal<Vendor>({ uniqueKey: "id" });
+export const { sig: sigVendors, upsert: upsertVendors, remove: removeVendor } = useUpdatingSignal<Vendor>({ uniqueKey: "id" });
 
 export const {
   sig: sigCategories,

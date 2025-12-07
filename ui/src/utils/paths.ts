@@ -12,6 +12,10 @@ export const getEditCategoryPath = (id: number) => {
   return ROUTE_PATHS.EDIT_CATEGORY.replace(":id", id.toString());
 };
 
+export const getEditVendorPath = (id: number) => {
+  return ROUTE_PATHS.EDIT_VENDOR.replace(":id", id.toString());
+};
+
 export const getNewTransactionPathWithReceiptId = (receiptId: number) => {
   return ROUTE_PATHS.NEW_TRANSACTION + `?receipt_id=${receiptId}`;
 };
