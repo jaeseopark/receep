@@ -48,6 +48,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
 
   // Watch the first line item's category_id specifically
+  const lineItems = watch("line_items");
   const firstLineItemCategoryId = watch("line_items.0.category_id");
 
   // Update auto-tax based on categories whenever the first line item's category or categories change
@@ -56,11 +57,12 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
       return;
     }
 
-    if (firstLineItemCategoryId) {
+    let enableAutoTax = false;
+    if (lineItems.length > 0 && firstLineItemCategoryId) {
       const category = sigCategories.value.find((cat) => cat.id === firstLineItemCategoryId);
-      setValue("enableAutoTax", Boolean(category?.with_autotax));
+      enableAutoTax = Boolean(category?.with_autotax);
     }
-
+    setValue("enableAutoTax", enableAutoTax);
   }, [isNewTransaction, taxRateExistsInConfig, firstLineItemCategoryId, sigCategories.value, setValue]);
 
   const categoryOptions = useMemo(
@@ -401,7 +403,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             type="checkbox"
             {...register("enableAutoTax")}
             className="checkbox"
-            disabled={!taxRateExistsInConfig}
+            disabled={!taxRateExistsInConfig || lineItems.length !== 1}
           />
           <span>Enable Auto Tax</span>
         </label>

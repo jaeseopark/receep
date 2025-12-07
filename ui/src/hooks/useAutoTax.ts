@@ -2,6 +2,7 @@ import { Category, Transaction } from "@/types";
 
 import { sigCategories, sigUserInfo } from "@/store";
 import { createLineItem } from "@/utils/forms";
+import { sigInitialLoadResult } from "@/gvars";
 
 const TAX_GUESS_REGEX = /tax|vat|gst|hst/i;
 
@@ -20,25 +21,27 @@ const guessTaxCategory = (categories: Category[]): Category => {
 
 const useAutoTax = () => {
   const applyAutoTax = (t: Transaction) => {
-    if (t.line_items.length === 1 && sigCategories.value.length > 1) {
-      const taxRate = sigUserInfo.value?.config.tax_rate || 0;
+    if (t.line_items.length !== 1 || sigInitialLoadResult.value !== "SUCCEEDED") {
+      // Only apply autotax if there's a single line item and initial load is done
+      return;
+    }
+    const taxRate = sigUserInfo.value?.config.tax_rate || 0;
 
-      if (taxRate) {
-        const [firstLineItem] = t.line_items;
-        const secondLineItem = createLineItem(t);
-        const newLineStr = (firstLineItem.amount / (1 + taxRate)).toFixed(2);
-        const newLineAmount = Number.parseFloat(newLineStr);
+    if (taxRate) {
+      const [firstLineItem] = t.line_items;
+      const secondLineItem = createLineItem(t);
+      const newLineStr = (firstLineItem.amount / (1 + taxRate)).toFixed(2);
+      const newLineAmount = Number.parseFloat(newLineStr);
 
-        secondLineItem.name = "Tax";
-        secondLineItem.category_id = guessTaxCategory(sigCategories.value).id;
-        secondLineItem.amount = Number.parseFloat((firstLineItem.amount - newLineAmount).toFixed(2));
-        secondLineItem.amount_input = secondLineItem.amount.toString();
+      secondLineItem.name = "Tax";
+      secondLineItem.category_id = guessTaxCategory(sigCategories.value).id;
+      secondLineItem.amount = Number.parseFloat((firstLineItem.amount - newLineAmount).toFixed(2));
+      secondLineItem.amount_input = secondLineItem.amount.toString();
 
-        firstLineItem.amount_input = newLineStr;
-        firstLineItem.amount = newLineAmount;
+      firstLineItem.amount_input = newLineStr;
+      firstLineItem.amount = newLineAmount;
 
-        t.line_items.push(secondLineItem);
-      }
+      t.line_items.push(secondLineItem);
     }
   };
 
