@@ -13,3 +13,4 @@ pyjwt
 bcrypt
 pdf2image
 pillow
+pypdf

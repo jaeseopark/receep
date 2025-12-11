@@ -49,6 +49,7 @@ class Receipt(Base):
     content_hash = Column(String(64), nullable=False, unique=True)
     rotation = Column(Integer, nullable=False)
     ocr_metadata = Column(JSONB, nullable=False)
+    merge_count = Column(Integer, nullable=False, server_default='0')
 
     transactions = relationship("Transaction", back_populates="receipt")
 
@@ -120,3 +121,14 @@ class Transaction(Base):
         "LineItem",
         cascade="all, delete-orphan",
     )
+
+
+class ReceiptHashHistory(Base):
+    __tablename__ = 'receipt_hash_history'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(64), nullable=False, unique=True)
+    original_receipt_id = Column(Integer, ForeignKey('receipts.id', ondelete='SET NULL'), nullable=True)
+    uploaded_at = Column(DateTime, default=func.now(), nullable=False)
+    deleted_at = Column(DateTime, nullable=True)
+    reason = Column(String(50), nullable=True)

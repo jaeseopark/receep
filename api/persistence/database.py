@@ -6,7 +6,7 @@ from functools import wraps
 from typing import List, Optional
 
 from persistence.exceptions import DuplicateReceipt, NotFound
-from persistence.schema import Base, Category, LineItem, Receipt, Role, Transaction, User, Vendor
+from persistence.schema import Base, Category, LineItem, Receipt, ReceiptHashHistory, Role, Transaction, User, Vendor
 from sqlalchemy import create_engine, desc, func, select, update
 from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import joinedload, sessionmaker
@@ -147,13 +147,24 @@ class Database:
 
     def create_receipt(self, user_id: int, content_type: str, content_length: int, content_hash: str) -> Receipt:
         with get_session() as session:
+            # Check hash history for duplicates
+            existing_hash = session.query(ReceiptHashHistory) \
+                .filter(ReceiptHashHistory.hash == content_hash) \
+                .first()
+            
+            if existing_hash:
+                # Hash exists in history, reject upload
+                logger.warning(f"Duplicate receipt hash detected: {content_hash}")
+                raise DuplicateReceipt
+            
             receipt = Receipt(
                 user_id=user_id,
                 content_type=content_type,
                 content_length=content_length,
                 content_hash=content_hash,
                 rotation=0,
-                ocr_metadata={}
+                ocr_metadata={},
+                merge_count=0
             )
             try:
                 session.add(receipt)
@@ -162,9 +173,17 @@ class Database:
                 receipt.id  # trigger lazy-loading of the id field.
                 # initialize a blank list before the session ends.
                 receipt.transactions = []
+                
+                # Add to hash history
+                hash_history = ReceiptHashHistory(
+                    hash=content_hash,
+                    original_receipt_id=receipt.id,
+                    uploaded_at=func.now()
+                )
+                session.add(hash_history)
+                session.commit()
             except IntegrityError:
                 # Most likely caused by the unique constraint on the hash field.
-                # TODO: make sure this is indeed the cause of IntegrityError.
                 raise DuplicateReceipt
 
         return receipt
@@ -194,6 +213,15 @@ class Database:
 
             for transaction in r.transactions:
                 session.delete(transaction)
+
+            # Add to hash history before deleting
+            hash_history_entry = session.query(ReceiptHashHistory) \
+                .filter(ReceiptHashHistory.hash == r.content_hash) \
+                .first()
+            
+            if hash_history_entry and not hash_history_entry.deleted_at:
+                hash_history_entry.deleted_at = func.now()
+                hash_history_entry.reason = 'deleted_by_user'
 
             session.delete(r)
             session.commit()
@@ -399,6 +427,103 @@ class Database:
                 .offset(offset) \
                 .limit(limit) \
                 .all()
+
+
+    def update_receipt_after_merge(self, receipt_id: int, user_id: int, new_hash: str, new_size: int) -> Receipt:
+        """
+        Update receipt metadata after merging with another receipt.
+        
+        Args:
+            receipt_id: ID of the receipt being updated
+            user_id: User ID for authorization
+            new_hash: New hash of the merged PDF
+            new_size: New file size of the merged PDF
+            
+        Returns:
+            Updated Receipt object
+        """
+        with get_session() as session:
+            receipt = session.query(Receipt) \
+                .filter(Receipt.id == receipt_id, Receipt.user_id == user_id) \
+                .first()
+            
+            if not receipt:
+                raise NotFound
+            
+            # Update receipt metadata
+            old_hash = receipt.content_hash
+            receipt.content_hash = new_hash
+            receipt.content_length = new_size
+            receipt.merge_count += 1
+            receipt.content_type = 'application/pdf'  # Merged receipts are always PDFs
+            
+            # Update hash history for old hash
+            old_hash_entry = session.query(ReceiptHashHistory) \
+                .filter(ReceiptHashHistory.hash == old_hash) \
+                .first()
+            
+            if old_hash_entry:
+                old_hash_entry.deleted_at = func.now()
+                old_hash_entry.reason = 'merged'
+            
+            # Add new hash to history
+            new_hash_entry = ReceiptHashHistory(
+                hash=new_hash,
+                original_receipt_id=receipt_id,
+                uploaded_at=func.now()
+            )
+            session.add(new_hash_entry)
+            
+            session.commit()
+            
+            return session.query(Receipt) \
+                .filter(Receipt.id == receipt_id) \
+                .options(joinedload(Receipt.transactions)) \
+                .first()
+    
+    def get_receipt_by_id(self, receipt_id: int, user_id: int) -> Optional[Receipt]:
+        """
+        Get a receipt by ID.
+        
+        Args:
+            receipt_id: ID of the receipt
+            user_id: User ID for authorization
+            
+        Returns:
+            Receipt object or None
+        """
+        with get_session() as session:
+            return session.query(Receipt) \
+                .filter(Receipt.id == receipt_id, Receipt.user_id == user_id) \
+                .options(joinedload(Receipt.transactions)) \
+                .first()
+    
+    def mark_receipt_as_merged(self, source_receipt_id: int, user_id: int) -> None:
+        """
+        Mark a source receipt as merged and update hash history.
+        
+        Args:
+            source_receipt_id: ID of the source receipt being merged
+            user_id: User ID for authorization
+        """
+        with get_session() as session:
+            receipt = session.query(Receipt) \
+                .filter(Receipt.id == source_receipt_id, Receipt.user_id == user_id) \
+                .first()
+            
+            if not receipt:
+                raise NotFound
+            
+            # Update hash history
+            hash_entry = session.query(ReceiptHashHistory) \
+                .filter(ReceiptHashHistory.hash == receipt.content_hash) \
+                .first()
+            
+            if hash_entry:
+                hash_entry.deleted_at = func.now()
+                hash_entry.reason = 'merged'
+            
+            session.commit()
 
 
 instance = Database()
