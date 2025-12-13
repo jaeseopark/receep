@@ -13,7 +13,8 @@ import ReceiptsView from "@/components/receipts/ReceiptGridView";
 import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
 import Reports from "@/components/reports/Reports";
 import TransactionDetailView from "@/components/transactions/TransactionDetailView";
-import TransactionsTable from "@/components/transactions/Transactions";
+import RecentTransactionsView from "@/components/transactions/RecentTransactionsView";
+import TransactionDrilldownView from "@/components/transactions/TransactionDrilldownView";
 import Config from "@/components/user/Config";
 import { ROUTE_PATHS } from "@/const";
 
@@ -113,7 +114,7 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     path: ROUTE_PATHS.TRANSACTIONS,
     name: "Transactions",
     description: "Manage transactions",
-    component: TransactionsTable,
+    component: RecentTransactionsView,
     icon: <NotebookPen />,
     type: "DOCKED",
   },
@@ -122,6 +123,13 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     name: "Edit Transaction",
     description: "Edit transaction",
     component: TransactionDetailView,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.TRANSACTION_DRILLDOWN,
+    name: "Transaction Drilldown",
+    description: "Transaction search results",
+    component: TransactionDrilldownView,
     type: "NOT_DOCKED",
   },
   {

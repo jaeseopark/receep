@@ -1,4 +1,4 @@
-import { Plus } from "lucide-preact";
+import { Plus, Search } from "lucide-preact";
 import { useNavigate } from "react-router-dom";
 
 import { ROUTE_PATHS } from "@/const";
@@ -14,10 +14,20 @@ const VendorListView = () => {
         <h1 className="p-4 pb-2 tracking-wide text-2xl font-bold">Vendors</h1>
         {sigVendors.value.map(({ id, name }) => (
           <li key={id} className="list-row flex items-center gap-4 p-4">
-            <div className="hover:underline" onClick={() => navigate(getEditVendorPath(id))}>
+            <div className="hover:underline cursor-pointer" onClick={() => navigate(getEditVendorPath(id))}>
               <div>{name}</div>
             </div>
             <div className="flex-grow" />
+            <button
+              className="btn btn-sm btn-outline btn-primary gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`${ROUTE_PATHS.TRANSACTION_DRILLDOWN}?vendor_id=${id}`);
+              }}
+            >
+              <Search size={16} />
+              See transactions
+            </button>
           </li>
         ))}
       </ul>

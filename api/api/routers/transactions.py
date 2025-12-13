@@ -36,12 +36,16 @@ class UpsertRequest(BaseModel):
 def get_transactions(
     offset: int = Query(0, ge=0),
     limit: int = Query(100, le=500),
+    vendor_id: Optional[int] = Query(None),
+    category_id: Optional[int] = Query(None),
     auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
     txns = db_instance.get_transactions(
         user_id=auth_metadata.user_id,
         offset=offset,
-        limit=limit
+        limit=limit,
+        vendor_id=vendor_id,
+        category_id=category_id
     )
 
     return dict(

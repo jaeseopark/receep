@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, Float, String, Table,
+from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer, Float, String, Table,
                         Text, UniqueConstraint, func)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
@@ -119,4 +119,8 @@ class Transaction(Base):
     line_items = relationship(
         "LineItem",
         cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        Index('ix_transactions_vendor_id', 'vendor_id'),
     )
