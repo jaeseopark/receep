@@ -12,6 +12,7 @@ export enum ROUTE_PATHS {
   TRANSACTIONS = "/transactions",
   EDIT_TRANSACTION = "/transactions/edit/:id",
   NEW_TRANSACTION = "/transactions/edit/-1",
+  TRANSACTION_DRILLDOWN = "/transactions/drilldown",
 
   // Reports:
   REPORTS = "/reports",
