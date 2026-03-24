@@ -1,5 +1,11 @@
 # receep
 
+## Documentation
+
+Start with the documentation index:
+
+- [docs/index.md](docs/index.md)
+
 ## Development
 
 ```shell
