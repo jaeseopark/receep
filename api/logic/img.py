@@ -2,7 +2,7 @@ import os
 from typing import Callable, Tuple
 
 from pdf2image import convert_from_path
-from PIL import Image
+from PIL import Image, ImageOps
 
 DEFAULT_THUMBNAIL_SIZE = (200, 200)  # Set the thumbnail size (width, height)
 
@@ -12,11 +12,23 @@ def _get_thumb_path(path):
     return f"{base}-thumb{ext}"
 
 
+def _normalize_jpeg_mode(img: Image.Image) -> Image.Image:
+    if img.mode in ("1", "L", "RGB", "CMYK", "YCbCr"):
+        return img
+    if img.mode == "LA":
+        return img.convert("L")
+    return img.convert("RGB")
+
+
 def _process_image(source_path, output_path, thumb_size):
-    with Image.open(source_path) as img:
-        exif = img.info['exif']
+    with Image.open(source_path) as source_img:
+        img = ImageOps.exif_transpose(source_img)
         img.thumbnail(thumb_size)
-        img.convert("RGB").save(output_path, "JPEG", quality=70, exif=exif)
+        save_kwargs = {"quality": 70}
+        exif = img.getexif()
+        if exif:
+            save_kwargs["exif"] = exif.tobytes()
+        _normalize_jpeg_mode(img).save(output_path, "JPEG", **save_kwargs)
 
 
 def _process_pdf(source_path, output_path: str, thumb_size: Tuple[int, int]):
@@ -40,6 +52,7 @@ def generate_thumbnail(content_type: str, source_path: str, thumb_size: Tuple[in
         * Source path: /receipts/1.dr
         * Thumbnail path: /receipts/1-thumb.dr
         Supported content types: image/*, application/pdf
+        Image thumbnails are saved as JPEG and preserve grayscale where possible.
     """
     output_path = _get_thumb_path(source_path)
     for match, func in PROCESSOR_MAPPING:

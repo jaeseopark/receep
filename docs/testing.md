@@ -2,11 +2,14 @@
 
 ## Current Coverage
 
-There are currently no automated test suites checked into this repository:
+Automated coverage is still minimal, but the repository now includes one backend unit test module:
 
-1. No backend unit/integration test files detected.
-2. No frontend test files detected.
-3. No CI workflow files detected under `.github/workflows/`.
+1. `api/tests/test_img.py` validates receipt thumbnail generation for grayscale JPEG uploads, alpha-bearing PNG uploads, and unsupported content-type rejection.
+2. `api/tests/test_receep.py` validates the receipt upload flow, including original-file persistence, thumbnail generation, and DB rollback when thumbnail generation fails.
+3. No frontend test files detected.
+4. No CI workflow files detected under `.github/workflows/`.
+
+Run the current backend tests from `api/` with `python -m unittest discover -s tests -v`.
 
 ## Manual Verification Checklist
 
@@ -18,10 +21,11 @@ There are currently no automated test suites checked into this repository:
 
 ### Receipts and Transactions
 
-1. Upload receipts with different content types and sizes.
+1. Upload receipts with different content types and sizes, including grayscale JPEG images without EXIF metadata.
 2. Rotate receipts and verify rotation persistence.
-3. Create, update, and delete transactions with multiple line items.
-4. Validate receipt-transaction linking and unlinking scenarios.
+3. Open uploaded receipts in both the receipt detail view and the transaction form receipt preview to confirm original images render correctly.
+4. Create, update, and delete transactions with multiple line items.
+5. Validate receipt-transaction linking and unlinking scenarios.
 
 ### Categories and Vendors
 

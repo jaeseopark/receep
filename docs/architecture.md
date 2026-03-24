@@ -32,8 +32,9 @@
 2. `logic.receep.Receep.upload` computes SHA-256 and byte length.
 3. Metadata row is created in DB with unique `content_hash`.
 4. File is persisted under `/data/receipts/<receipt_id>.dr`.
-5. Thumbnail generation is triggered by `logic.img.generate_thumbnail(...)`.
-6. If file persistence fails, receipt row is cleaned up.
+5. Thumbnail generation is triggered by `logic.img.generate_thumbnail(...)` and writes a JPEG thumbnail next to the original file.
+6. Image uploads retain the original file bytes on disk; grayscale image inputs are accepted and can produce grayscale JPEG thumbnails.
+7. If file persistence fails, receipt row is cleaned up.
 
 ## Reporting Flow
 
