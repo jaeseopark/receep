@@ -20,7 +20,7 @@
 ### Receipts
 
 1. `GET /receipts/paginated`.
-2. `POST /receipts`.
+2. `POST /receipts` stores the original upload under `/data/receipts/<receipt_id>.dr` and generates a sibling JPEG thumbnail for supported `image/*` and `application/pdf` files.
 3. `POST /receipts/{receipt_id}/rotate` (increments by +90 modulo 360).
 4. `DELETE /receipts/{receipt_id}`.
 
