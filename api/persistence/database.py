@@ -209,13 +209,23 @@ class Database:
                 .all()
             return receipts
 
-    def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
+    def get_transactions(self, user_id: int, offset=0, limit=100, vendor_id: int = None, category_id: int = None) -> List[Transaction]:
         with get_session() as session:
             stmt = select(Transaction) \
-                .where(Transaction.user_id == user_id) \
-                .order_by(desc(Transaction.id)) \
+                .where(Transaction.user_id == user_id)
+            
+            if vendor_id is not None:
+                stmt = stmt.where(Transaction.vendor_id == vendor_id)
+            
+            if category_id is not None:
+                # Join with line_items to filter by category
+                # Note: this will produce duplicates. need to handle that in the future. for now the UI is not using this path.
+                stmt = stmt.join(Transaction.line_items).where(LineItem.category_id == category_id)
+            
+            stmt = stmt.order_by(desc(Transaction.id)) \
                 .offset(offset) \
                 .limit(limit)
+            
             return session.scalars(stmt).all()
 
     def get_transaction(self, transaction_id: int) -> Transaction:
