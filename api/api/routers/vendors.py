@@ -18,7 +18,7 @@ class UpsertRequest(BaseModel):
 
 
 class MergeRequest(BaseModel):
-    source_ids: List[int]
+    source_id: int
     target_id: int
 
 
@@ -85,5 +85,9 @@ def merge_vendors(
     payload: MergeRequest,
     metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    # TODO
-    raise NotImplementedError
+    db_instance.merge_vendors(
+        user_id=metadata.user_id,
+        source_vendor_id=payload.source_id,
+        target_vendor_id=payload.target_id
+    )
+    return {"message": "Vendors merged successfully"}

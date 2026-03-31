@@ -399,6 +399,22 @@ class Database:
                 .offset(offset) \
                 .limit(limit) \
                 .all()
+    
+    def merge_vendors(self, user_id: int, source_vendor_id: int, target_vendor_id: int) -> None:
+        with get_session() as session:
+            # Update all transactions with source_vendor_id to target_vendor_id
+            # synchronize_session='fetch' ensures that any Transaction objects currently loaded in the session
+            # are updated in memory to reflect the new vendor_id after the bulk update
+            session.query(Transaction) \
+                .filter(Transaction.user_id == user_id, Transaction.vendor_id == source_vendor_id) \
+                .update({Transaction.vendor_id: target_vendor_id}, synchronize_session='fetch')
+
+            # Delete the source vendor
+            session.query(Vendor) \
+                .filter(Vendor.user_id == user_id, Vendor.id == source_vendor_id) \
+                .delete()
+
+            session.commit()
 
 
 instance = Database()
