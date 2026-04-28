@@ -22,6 +22,15 @@ class MergeRequest(BaseModel):
     target_id: int
 
 
+@router.get("/vendors/single/{id}")
+def get_vendor(
+    id: int,
+    _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    vendor = db_instance.get_vendor_by_id(id=id)
+    return get_api_safe_json(vendor)
+
+
 @router.get("/vendors/paginated")
 def get_vendors(
     offset: int = Query(0, ge=0),

@@ -20,6 +20,15 @@ class UpsertRequest(BaseModel):
     with_autotax: bool
 
 
+@router.get("/categories/single/{id}")
+def get_category(
+    id: int,
+    _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    category = db_instance.get_category_by_id(id=id)
+    return get_api_safe_json(category)
+
+
 @router.get("/categories/paginated")
 def get_categories(
     offset: int = Query(0, ge=0),

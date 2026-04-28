@@ -7,7 +7,7 @@ import { Transaction } from "@/types";
 
 import TransactionForm from "@/components/transactions/TransactionForm";
 import { sigInitialLoadResult } from "@/gvars";
-import { sigUserInfo, upsertTransactions } from "@/store";
+import { sigCategories, sigVendors, sigUserInfo, upsertCategories, upsertTransactions, upsertVendors } from "@/store";
 import { isPositiveInteger } from "@/utils/primitive";
 
 const TransactionEditView = () => {
@@ -55,6 +55,32 @@ const TransactionEditView = () => {
         .then((t) => {
           upsertTransactions({ items: [t] });
           setTransaction({ ...t });
+
+          const vendorFetches: Promise<void>[] = [];
+          if (t.vendor_id) {
+            const alreadyLoaded = sigVendors.value.some((v) => v.id === t.vendor_id);
+            if (!alreadyLoaded) {
+              vendorFetches.push(
+                axios
+                  .get(`/api/vendors/single/${t.vendor_id}`)
+                  .then((r) => upsertVendors({ items: [r.data] }))
+              );
+            }
+          }
+
+          const categoryIds: number[] = (t.line_items ?? [])
+            .map((li: { category_id: number }) => li.category_id)
+            .filter(Boolean);
+          const missingCategoryIds = [...new Set(categoryIds)].filter(
+            (cid) => !sigCategories.value.some((c) => c.id === cid)
+          );
+          const categoryFetches = missingCategoryIds.map((cid) =>
+            axios
+              .get(`/api/categories/single/${cid}`)
+              .then((r) => upsertCategories({ items: [r.data] }))
+          );
+
+          return Promise.all([...vendorFetches, ...categoryFetches]);
         })
         .catch((e) => {
           // TODO better error handling
