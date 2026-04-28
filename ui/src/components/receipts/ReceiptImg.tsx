@@ -1,6 +1,6 @@
 import axios from "axios";
 import { RotateCwSquare } from "lucide-preact";
-import { useCallback, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import { Document, Page, pdfjs } from "react-pdf";
 
 import { Receipt } from "@/types";
@@ -57,15 +57,24 @@ export const ReceiptThumbnail = ({ receipt }: { receipt: Receipt }) => (
   <ReceiptImg receipt={receipt} pathGetter={getThumbnailPath} contentTypeOverride="image/jpeg" />
 );
 
-export const ReceiptHighres = ({ receipt, id }: { receipt?: Receipt; id?: number }) => {
+export const ReceiptHighres = ({ receipt: receiptProp, id }: { receipt?: Receipt; id?: number }) => {
+  const [receipt, setReceipt] = useState<Receipt | undefined>(
+    receiptProp ?? sigReceipts.value.find((r) => r.id === id)
+  );
+
+  useEffect(() => {
+    if (receipt || !id) return;
+    axios
+      .get(`/api/receipts/single/${id}`)
+      .then((r) => r.data)
+      .then((fetched: Receipt) => {
+        upsertReceipts({ items: [fetched] });
+        setReceipt(fetched);
+      });
+  }, [id]);
+
   if (!receipt) {
-    const match = sigReceipts.value.find((r) => r.id === id);
-    if (!match) {
-      // TODO handle error
-    }
-    receipt = match as Receipt;
-  } else {
-    id = receipt.id;
+    return <div>Loading receipt...</div>;
   }
 
   const { content_type } = receipt;
@@ -74,7 +83,7 @@ export const ReceiptHighres = ({ receipt, id }: { receipt?: Receipt; id?: number
       <ReceiptImg receipt={receipt} pathGetter={getHighresPath} />
       {content_type.startsWith("image/") && (
         <div className="top-6 right-6 shadow-lg outline-none rounded-full -mb-[2em] absolute">
-          <button className="btn btn-circle btn-primary" type="button" onClick={() => rotate(id)} tabIndex={-1}>
+          <button className="btn btn-circle btn-primary" type="button" onClick={() => rotate(receipt.id)} tabIndex={-1}>
             <RotateCwSquare />
           </button>
         </div>

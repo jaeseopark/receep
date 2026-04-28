@@ -25,6 +25,12 @@ def get_stuff(
     )
 
 
+@router.get("/receipts/single/{receipt_id}")
+def get_single_receipt(receipt_id: int, _: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
+    receipt = db_instance.get_receipt(receipt_id=receipt_id)
+    return get_api_safe_json(receipt)
+
+
 @router.post("/receipts")
 async def upload_file(file: UploadFile, metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))):
     try:

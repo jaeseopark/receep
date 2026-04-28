@@ -70,18 +70,24 @@ const ReceiptEditView = () => {
         return;
       }
 
-      // TODO make sure Sigreceipt value is popualted first.
-      const [r] = sigReceipts.value.filter((r) => r.id === Number.parseInt(id!));
-      if (!r) {
-        toast.error(`The requested Receipt ID does not exist. id='${id}'`);
+      const cached = sigReceipts.value.find((r) => r.id === Number.parseInt(id!));
+      if (cached) {
+        setReceipt(cached);
         return;
       }
 
-      setReceipt(r);
+      axios
+        .get(`/api/receipts/single/${id}`)
+        .then((r) => r.data)
+        .then((r: Receipt) => {
+          upsertReceipts({ items: [r] });
+          setReceipt(r);
+        })
+        .catch(() => toast.error(`Receipt not found. id='${id}'`));
     };
 
     setTimeout(init, 100);
-  }, [sigReceipts.value]);
+  }, []);
 
   if (!receipt) {
     return <div>Loading...</div>;

@@ -68,6 +68,14 @@ def get_transaction(self, transaction_id: int) -> Optional[Transaction]:
         .first()
 
 
+@session_decorator
+def get_receipt(self, receipt_id: int) -> Optional[Receipt]:
+    return self.query(Receipt) \
+        .filter(Receipt.id == receipt_id) \
+        .options(joinedload(Receipt.transactions)) \
+        .first()
+
+
 def get_session():
     session = Session()
 
@@ -208,6 +216,13 @@ class Database:
                 .limit(limit) \
                 .all()
             return receipts
+
+    def get_receipt(self, receipt_id: int) -> Receipt:
+        with get_session() as session:
+            r = session.get_receipt(receipt_id=receipt_id)
+            if not r:
+                raise NotFound
+            return r
 
     def get_transactions(self, user_id: int, offset=0, limit=100) -> List[Transaction]:
         with get_session() as session:
