@@ -308,9 +308,17 @@ class Database:
             session.delete(transaction)
             session.commit()
 
+    def get_vendor_by_id(self, id: int) -> Vendor:
+        with get_session() as session:
+            return session.query(Vendor).filter(Vendor.id == id).first()
+
     def get_vendors_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Vendor]:
         with get_session() as session:
             return session.query(Vendor).filter(Vendor.user_id == user_id).offset(offset).limit(limit).all()
+
+    def get_category_by_id(self, id: int) -> Category:
+        with get_session() as session:
+            return session.query(Category).filter(Category.id == id).first()
 
     def get_categories_by_user_id(self, user_id: int, offset=0, limit=100) -> List[Category]:
         with get_session() as session:
