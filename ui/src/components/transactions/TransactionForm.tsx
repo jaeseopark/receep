@@ -318,6 +318,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             <DatePicker
               className="rounded-lg p-2"
               required
+              disabled={!isMyTransaction}
               dateFormat="yyyy-MM-dd"
               selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
               onChange={(date) => {
@@ -341,7 +342,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             />
           )}
         />
-        <div className="btn" onClick={() => setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
+        <div className={classNames("btn", { "btn-disabled": !isMyTransaction })} onClick={() => isMyTransaction && setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
           Today
         </div>
       </div>
@@ -374,6 +375,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               required
               isSearchable
               isClearable
+              isDisabled={!isMyTransaction}
               placeholder="Select a vendor..."
               onCreateOption={createVendor}
               // @ts-ignore
@@ -393,6 +395,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           type="button"
           className="btn btn-circle btn-primary btn-sm scale-75"
           onClick={() => appendLineItem(createLineItem(transaction))}
+          disabled={!isMyTransaction}
         >
           <Plus />
         </button>
@@ -419,7 +422,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             type="button"
             className="btn btn-circle btn-red btn-sm scale-75"
             onClick={() => removeLineItem(index)}
-            disabled={ary.length === 1 && index === 0}
+            disabled={!isMyTransaction || (ary.length === 1 && index === 0)}
           >
             <Minus />
           </button>
@@ -450,6 +453,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                     isSearchable
                     required
                     isClearable
+                    isDisabled={!isMyTransaction}
                     placeholder="Select a category..."
                     onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
                     // @ts-ignore
@@ -466,12 +470,14 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               {...register(`line_items.${index}.name`)}
               className="mt-1 block w-full p-2 border rounded"
               placeholder="(Optional) Description"
+              disabled={!isMyTransaction}
             />
             <input
               {...register(`line_items.${index}.amount_input`)}
               required
               className="mt-1 block w-full p-2 border rounded w-[30%]"
               placeholder="Amount"
+              disabled={!isMyTransaction}
               onChange={({ target: { value } }: any) => {
                 setValue(`line_items.${index}.amount_input`, value);
                 setValue(
@@ -490,6 +496,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               {...register(`line_items.${index}.notes`)}
               className="mt-1 block w-full p-2 border rounded"
               placeholder="(Optional) notes"
+              disabled={!isMyTransaction}
             ></textarea>
           </div>
         </div>
