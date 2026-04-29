@@ -97,17 +97,19 @@ const TransactionsByCategory = () => {
           const txIdTh = thElements[thElements.length - (props.rows.length - txIdRows.i)];
           const text = txIdTh.textContent?.trim();
           if (text) {
+            const txId = Number(text);
+            if (!Number.isInteger(txId) || txId <= 0) return;
             const container = document.createElement("span");
             txIdTh.textContent = "";
             txIdTh.appendChild(container);
             render(
               <a
-                href={`/transactions/edit/${text}`}
+                href={`/transactions/edit/${txId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-500 cursor-pointer hover:underline"
               >
-                {text}
+                {txId}
               </a>,
               container,
             );
@@ -134,7 +136,7 @@ const TransactionsByCategory = () => {
       const category = categories.find((c) => c.id === Number(categoryId));
       if (category) loadCategory(category);
     }
-  }, [categoryId, categories.length]);
+  }, [categoryId, categories]);
 
   useEffect(() => {
     setTimeout(
@@ -166,7 +168,7 @@ const TransactionsByCategory = () => {
   );
 
   const rows = lineItems.map((lineItem) => ({
-    vendor: vendorNameLookup[lineItem.vendor_id],
+    vendor: vendorNameLookup[lineItem.vendor_id] ?? "Unknown",
     ...lineItem,
   }));
 
