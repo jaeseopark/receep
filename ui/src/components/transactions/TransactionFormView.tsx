@@ -298,7 +298,7 @@ const TransactionFormView = ({
                 // @ts-ignore
                 onChange={({ value }) => onChange(value)}
               />
-              {vendorId !== null && (
+              {vendorId !== null && isMyTransaction && (
                 <a
                   className="btn btn-sm btn-outline"
                   href={getVendorReportPath(vendorId)}
