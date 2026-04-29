@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { Transaction } from "@/types";
 
 import { ROUTE_PATHS } from "@/const";
-import { fetchTransactions, resetAndFetchTransactions, searchTransactionsByVendor, transactionPagination } from "@/gvars";
+import { fetchTransactions, searchTransactionsByVendor, transactionPagination } from "@/gvars";
 import { sigTransactions, sigVendors } from "@/store";
 import { toAbsoluteDate } from "@/utils/dates";
 import { getEditTransactionPath } from "@/utils/paths";
@@ -118,7 +118,6 @@ const TransactionsTable = () => {
 
   useEffect(() => {
     if (!vendorNameFilter) {
-      resetAndFetchTransactions();
       return;
     }
 

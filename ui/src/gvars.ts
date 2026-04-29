@@ -106,12 +106,6 @@ export const searchTransactionsByVendor = (vendorName: string): Promise<void> =>
     });
 };
 
-export const resetAndFetchTransactions = (): Promise<void> => {
-  transactionPagination.value = initialPaginationState();
-  sigTransactions.value = [];
-  return fetchTransactions() ?? Promise.resolve();
-};
-
 const fetchVendors = fetchUntilExhausted("/api/vendors/paginated", vendorPagination, upsertVendors);
 
 const fetchCategories = fetchUntilExhausted("/api/categories/paginated", categoryPagination, upsertCategories);
