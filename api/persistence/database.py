@@ -234,6 +234,9 @@ class Database:
             return session.scalars(stmt).all()
 
     def search_transactions_by_vendor(self, user_id: int, vendor_name: str) -> List[Transaction]:
+        # TODO: replace this ILIKE-based search with a better approach as data grows:
+        #   A) Short term: use Postgres built-in full-text search (tsvector/tsquery).
+        #   B) Long term: integrate a proper search engine (e.g. Elasticsearch) for 100k+ rows.
         vendor_pattern = f"%{vendor_name}%"
         with get_session() as session:
             stmt = select(Transaction) \
