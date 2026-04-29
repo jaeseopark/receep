@@ -1,33 +1,24 @@
-import { Plus } from "lucide-preact";
-import { useNavigate } from "react-router-dom";
+import { createColumnHelper } from "@tanstack/react-table";
 
-import { ROUTE_PATHS } from "@/const";
-import { sigVendors } from "@/store";
-import { getEditVendorPath } from "@/utils/paths";
+import { Vendor } from "@/types";
 
-const VendorListView = () => {
-  const navigate = useNavigate();
+import AssetListView from "@/components/common/AssetListView";
 
-  return (
-    <div className="m-4 flex justify-center h-full overflow-x-scroll">
-      <ul className="list bg-base-100 rounded-box shadow-md w-full max-w-[450px] h-fit-content">
-        <h1 className="p-4 pb-2 tracking-wide text-2xl font-bold">Vendors</h1>
-        {sigVendors.value.map(({ id, name }) => (
-          <li key={id} className="list-row flex items-center gap-4 p-4">
-            <div className="hover:underline" onClick={() => navigate(getEditVendorPath(id))}>
-              <div>{name}</div>
-            </div>
-            <div className="flex-grow" />
-          </li>
-        ))}
-      </ul>
-      <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-        <button className="btn btn-circle btn-primary" onClick={() => navigate(ROUTE_PATHS.NEW_VENDOR)}>
-          <Plus />
-        </button>
-      </div>
-    </div>
-  );
+type VendorListViewProps = {
+  vendors: Vendor[];
+  onAdd: () => void;
+};
+
+const columnHelper = createColumnHelper<Vendor>();
+
+const columns = [
+  columnHelper.accessor("name", {
+    header: "Name",
+  }),
+];
+
+const VendorListView = ({ vendors, onAdd }: VendorListViewProps) => {
+  return <AssetListView data={vendors} columns={columns} onAdd={onAdd} />;
 };
 
 export default VendorListView;

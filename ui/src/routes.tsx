@@ -5,9 +5,9 @@ import DataImportExport from "@/components/DataImportExport";
 import Invite from "@/components/Invite";
 import Settings from "@/components/Settings";
 import CategoryDetailView from "@/components/categories/CategoryDetailView";
-import CategoryListView from "@/components/categories/CategoryListView";
+import CategoryListViewContainer from "@/components/categories/CategoryListViewContainer";
 import VendorDetailView from "@/components/vendors/VendorDetailView";
-import VendorListView from "@/components/vendors/VendorListView";
+import VendorListViewContainer from "@/components/vendors/VendorListViewContainer";
 import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
 import AnnualExpenseReport from "@/components/reports/AnnualExpenseReport";
@@ -79,7 +79,7 @@ const SETTING_ROUTES: RouteEntry[] = [
     path: ROUTE_PATHS.CATEGORIES,
     name: "Manage Categories",
     description: "Manage line item categories",
-    component: CategoryListView,
+    component: CategoryListViewContainer,
     icon: <Dot />, // TODO: use a better icon
     type: "NOT_DOCKED",
   },
@@ -94,7 +94,7 @@ const SETTING_ROUTES: RouteEntry[] = [
     path: ROUTE_PATHS.VENDORS,
     name: "Manage Vendors",
     description: "Manage vendors",
-    component: VendorListView,
+    component: VendorListViewContainer,
     icon: <Store />,
     type: "NOT_DOCKED",
   },
