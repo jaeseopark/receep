@@ -143,6 +143,7 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     path: ROUTE_PATHS.REPORTS,
     name: "Reports",
     description: "Data visualization and drilldown reporting",
+    // Filter out parameterized routes (e.g. :vendorId) — they are not valid nav links
     component: () => <Reports reportRoutes={REPORT_ROUTES.filter((r) => !r.path.includes(":"))} />,
     icon: <ChartLine />,
     type: "DOCKED",
