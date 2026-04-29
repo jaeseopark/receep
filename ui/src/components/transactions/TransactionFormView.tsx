@@ -168,7 +168,7 @@ const TransactionFormView = ({
           return (
             <>
               {receiptIdExists && (
-                <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll">
+                <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll" tabIndex={-1}>
                   <ReceiptHighres id={receiptId} />
                   {linkedReceipt && <ReceiptDownloadButton receipt={linkedReceipt} transaction={transaction} />}
                 </div>

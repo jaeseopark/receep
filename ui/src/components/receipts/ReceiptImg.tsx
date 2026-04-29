@@ -35,15 +35,15 @@ const ReceiptImg = ({
   }, []);
 
   if (contentType.startsWith("image/")) {
-    return <img className="w-full h-auto" style={{ transform: `rotate(${rotation}deg)` }} src={getPath(id)} alt={id} />;
+    return <img className="w-full h-auto" style={{ transform: `rotate(${rotation}deg)` }} src={getPath(id)} alt={id} tabIndex={-1} />;
   }
 
   if (contentType === "application/pdf") {
     return (
-      <div className="pdf-container overflow-y-auto h-full">
+      <div className="pdf-container overflow-y-auto h-full" tabIndex={-1}>
         <Document file={getPath(id)} onLoadSuccess={onDocumentLoadSuccess}>
           {Array.from({ length: numPages || 0 }, (_, index) => (
-            <Page key={index} renderTextLayer={false} pageNumber={index + 1} />
+            <Page key={index} renderTextLayer={false} pageNumber={index + 1} canvasProps={{ tabIndex: -1 }} />
           ))}
         </Document>
       </div>
