@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { parse } from "date-fns";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
 import { KeyboardEvent } from "preact/compat";
-import { useCallback, useEffect, useMemo } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -14,6 +14,7 @@ import { Category, Transaction, Vendor } from "@/types";
 import { axios } from "@/api";
 import ReceiptDownloadButton from "@/components/receipts/ReceiptDownloadButton";
 import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
+import CloneTransactionModal from "@/components/transactions/CloneTransactionModal";
 import { ROUTE_PATHS } from "@/const";
 import useAutoTax from "@/hooks/useAutoTax";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
@@ -30,6 +31,7 @@ import {
 } from "@/store";
 import { TZ_OFFSET_HRS } from "@/utils/dates";
 import { createLineItem } from "@/utils/forms";
+import { getEditTransactionPath } from "@/utils/paths";
 import { evaluateAmountInput } from "@/utils/primitive";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -97,6 +99,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   });
 
   const isMyTransaction = useMemo(() => sigUserInfo.value?.user_id === transaction.user_id, [sigUserInfo.value]);
+  const [showCloneModal, setShowCloneModal] = useState(false);
 
   const upsertTransaction = useCallback(
     (formData: FormData) => {
@@ -509,19 +512,36 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   return (
     <>
       {deleteConfirmationDialog}
+      {showCloneModal && (
+        <CloneTransactionModal
+          transaction={transaction}
+          onClose={() => setShowCloneModal(false)}
+          onSuccess={(newId) => {
+            toast.success("Transaction cloned.");
+            navigate(getEditTransactionPath(newId));
+          }}
+        />
+      )}
       <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
         <div className="field-columns mt-[1em] max-w-[48rem] lg:max-w-[64rem] flex flex-col md:flex-row gap-4">
           <div className="md:max-w-[24rem] lg:max-w-[40rem]">{renderReceipt()}</div>
           <div className="md:max-w-[24rem] md:flex-shrink-0 flex flex-col gap-4">
-            {!isMyTransaction && (
-              <div className="text-center text-sm text-gray-500 mb-2">
-                Edit is disabled because this transaction belongs to someone else.
-              </div>
-            )}
             {renderDateField()}
             {renderVendorField()}
             {renderLineItemHeader()}
             {renderLineItems()}
+            {!isMyTransaction && (
+              <div className="text-center text-sm text-gray-500 mb-2">
+                <div>Edit is disabled because this transaction belongs to someone else.</div>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline mt-2"
+                  onClick={() => setShowCloneModal(true)}
+                >
+                  Clone as mine
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
