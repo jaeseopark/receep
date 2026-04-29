@@ -1,5 +1,5 @@
 import { Hash } from "lucide-preact";
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 interface UseGoToOptions {
   onNavigate: (id: number) => void;
@@ -9,6 +9,20 @@ export const useGoTo = ({ onNavigate }: UseGoToOptions) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [id, setId] = useState("");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+Shift+G on macOS, Ctrl+Shift+G on Windows/Linux
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+      if (modifier && e.shiftKey && e.key === "g") {
+        e.preventDefault();
+        openDialog();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const openDialog = () => {
     setId("");
