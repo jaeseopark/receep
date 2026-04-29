@@ -32,7 +32,7 @@ import {
 } from "@/store";
 import { TZ_OFFSET_HRS } from "@/utils/dates";
 import { createLineItem } from "@/utils/forms";
-import { getEditTransactionPath } from "@/utils/paths";
+import { getEditTransactionPath, getVendorReportPath } from "@/utils/paths";
 import { evaluateAmountInput } from "@/utils/primitive";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -360,7 +360,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   };
 
   const renderVendorField = () => (
-    <label className="block">
+    <div className="flex flex-col gap-1">
       <Controller
         name="vendor_id"
         control={control}
@@ -378,24 +378,38 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             }
           }
 
+          const vendorId = selectedOption && selectedOption.value !== -1 ? selectedOption.value : null;
+
           return (
-            <CreatableSelect
-              options={vendorOptions}
-              value={selectedOption}
-              required
-              isSearchable
-              isClearable
-              isDisabled={!isMyTransaction}
-              placeholder="Select a vendor..."
-              filterOption={fuzzyFilterOption}
-              onCreateOption={createVendor}
-              // @ts-ignore
-              onChange={({ value }) => onChange(value)}
-            />
+            <>
+              <CreatableSelect
+                options={vendorOptions}
+                value={selectedOption}
+                required
+                isSearchable
+                isClearable
+                isDisabled={!isMyTransaction}
+                placeholder="Select a vendor..."
+                filterOption={fuzzyFilterOption}
+                onCreateOption={createVendor}
+                // @ts-ignore
+                onChange={({ value }) => onChange(value)}
+              />
+              {vendorId !== null && (
+                <a
+                  className="btn btn-sm btn-outline"
+                  href={getVendorReportPath(vendorId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View vendor report
+                </a>
+              )}
+            </>
           );
         }}
       />
-    </label>
+    </div>
   );
 
   const renderLineItemHeader = () => (
