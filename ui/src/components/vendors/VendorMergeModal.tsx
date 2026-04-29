@@ -71,6 +71,7 @@ const VendorMergeModal = ({ sourceVendor }: { sourceVendor: Vendor }) => {
                         filterOption={fuzzyFilterOption}
                         menuPortalTarget={document.body}
                         menuPosition="fixed"
+                        styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
                     />
                 </div>
                 <div className="flex gap-4">
