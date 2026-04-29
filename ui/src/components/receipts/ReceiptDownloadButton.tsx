@@ -1,14 +1,11 @@
-import { getHighresPath } from "@/utils/receipts";
+import { Receipt, Transaction } from "@/types";
+import { getDownloadFilename, getHighresPath } from "@/utils/receipts";
 
-const ReceiptDownloadButton = ({ receiptId }: { receiptId: number }) => {
-  const handleDownload = () => {
-    window.location.href = getHighresPath(receiptId);
-  };
-
+const ReceiptDownloadButton = ({ receipt, transaction }: { receipt: Receipt; transaction?: Transaction }) => {
   return (
-    <button className="btn btn-primary" type="button" onClick={handleDownload} title="Download">
+    <a className="btn btn-primary" href={getHighresPath(receipt.id)} download={getDownloadFilename(receipt, transaction)}>
       Download
-    </button>
+    </a>
   );
 };
 
