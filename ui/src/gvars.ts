@@ -2,7 +2,7 @@ import { Signal, signal } from "@preact/signals";
 import toast from "react-hot-toast";
 
 import { axios } from "@/api";
-import { sigUserInfo, upsertCategories, upsertReceipts, upsertTransactions, upsertVendors } from "@/store";
+import { sigCategories, sigReceipts, sigTransactions, sigVendors, sigUserInfo, upsertCategories, upsertReceipts, upsertTransactions, upsertVendors } from "@/store";
 
 export const sigInitialLoadResult = signal<"PENDING" | "SUCCEEDED" | "FAILED">("PENDING");
 
@@ -114,6 +114,22 @@ const fetchUserInfo = () =>
       console.error(e);
       // TODO: handle error
     });
+
+const initialPaginationState = (): PaginationState => ({ offset: 0, limit: 50, isExhausted: false });
+
+export const refreshAllData = () => {
+  sigInitialLoadResult.value = "PENDING";
+  receiptPagination.value = { ...initialPaginationState(), limit: 500 };
+  transactionPagination.value = initialPaginationState();
+  vendorPagination.value = initialPaginationState();
+  categoryPagination.value = initialPaginationState();
+  sigReceipts.value = [];
+  sigTransactions.value = [];
+  sigVendors.value = [];
+  sigCategories.value = [];
+  sigUserInfo.value = undefined;
+  return fetchInitialData();
+};
 
 export const fetchInitialData = () => {
   Promise.allSettled([fetchReceipts(), fetchTransactions(), fetchUserInfo(), fetchVendors(), fetchCategories()])
