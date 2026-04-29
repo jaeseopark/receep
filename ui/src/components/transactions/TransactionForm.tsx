@@ -3,7 +3,7 @@ import { parse } from "date-fns";
 import fuzzysort from "fuzzysort";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
 import { KeyboardEvent } from "preact/compat";
-import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -106,7 +106,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
   const isMyTransaction = useMemo(() => sigUserInfo.value?.user_id === transaction.user_id, [sigUserInfo.value]);
   const [showCloneModal, setShowCloneModal] = useState(false);
-  const vendorSelectRef = useRef<{ focus: () => void } | null>(null);
 
   const upsertTransaction = useCallback(
     (formData: FormData) => {
@@ -266,7 +265,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           return (
             <>
               {receiptIdExists && (
-                <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll">
+                <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll" tabIndex={-1}>
                   <ReceiptHighres id={receiptId} />
                   {linkedReceipt && <ReceiptDownloadButton receipt={linkedReceipt} transaction={transaction} />}
                 </div>
@@ -350,12 +349,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                   // TODO
                 }
               }}
-              onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Tab" && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
-                  e.preventDefault();
-                  vendorSelectRef.current?.focus();
-                }
-              }}
             />
           )}
         />
@@ -387,7 +380,6 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
 
           return (
             <CreatableSelect
-              ref={vendorSelectRef}
               options={vendorOptions}
               value={selectedOption}
               required
