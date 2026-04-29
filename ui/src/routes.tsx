@@ -10,7 +10,7 @@ import VendorDetailView from "@/components/vendors/VendorDetailView";
 import VendorListView from "@/components/vendors/VendorListView";
 import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
-import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
+import AnnualExpenseReport from "@/components/reports/AnnualExpenseReport";
 import Reports from "@/components/reports/Reports";
 import TransactionsByVendor from "@/components/reports/TransactionsByVendor";
 import TransactionDetailView from "@/components/transactions/TransactionDetailView";
@@ -30,9 +30,9 @@ type RouteEntry = {
 const REPORT_ROUTES: RouteEntry[] = [
   {
     path: ROUTE_PATHS.EXPENSE_REPORT,
-    name: "Expenses By Category",
+    name: "Annual Expense Report",
     description: "Categorized expense summary",
-    component: ExpensesByCategory,
+    component: AnnualExpenseReport,
     type: "NOT_DOCKED",
   },
   {

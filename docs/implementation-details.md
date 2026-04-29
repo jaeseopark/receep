@@ -50,7 +50,7 @@
 
 ### Reports
 
-1. `GET /reports/expenses-by-category/paginated` with `start`, `end`, `tz`, `offset`, `limit`.
+1. `GET /reports/annual-expense-report/paginated` with `start`, `end`, `tz`, `offset`, `limit`.
 
 ### Data Admin
 

@@ -40,8 +40,8 @@ def paginated_line_items_response(line_items: list, offset: int, tz: float) -> d
     )
 
 
-@router.get("/reports/expenses-by-category/paginated")
-def get_expenses_by_category(
+@router.get("/reports/annual-expense-report/paginated")
+def get_annual_expense_report(
     start: float = Query(),
     end: float = Query(),
     offset: int = Query(0, ge=0),
