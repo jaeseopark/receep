@@ -21,7 +21,7 @@ const columns = [
   }),
   columnHelper.accessor("with_autotax", {
     header: "Auto-Tax",
-    cell: (info) => <input type="checkbox" className="checkbox checkbox-sm" checked={info.getValue()} disabled />,
+    cell: (info) => <input type="checkbox" className="checkbox checkbox-sm" checked={info.getValue()} disabled aria-label="Auto-tax enabled" />,
     enableSorting: false,
   }),
 ];

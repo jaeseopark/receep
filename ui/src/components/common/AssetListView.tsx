@@ -6,10 +6,11 @@ type AssetListViewProps<T extends object> = {
   data: T[];
   columns: ColumnDef<T, any>[];
   onAdd: () => void;
+  defaultSortColumn?: string;
 };
 
-const AssetListView = <T extends object>({ data, columns, onAdd }: AssetListViewProps<T>) => {
-  const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
+const AssetListView = <T extends object>({ data, columns, onAdd, defaultSortColumn = "name" }: AssetListViewProps<T>) => {
+  const [sorting, setSorting] = useState<SortingState>([{ id: defaultSortColumn, desc: false }]);
 
   const table = useReactTable<T>({
     data,
@@ -26,13 +27,28 @@ const AssetListView = <T extends object>({ data, columns, onAdd }: AssetListView
         <thead className="sticky top-0 bg-base-100 z-10">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="cursor-pointer" onClick={header.column.getToggleSortingHandler()}>
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                  {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
-                  {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
-                </th>
-              ))}
+              {headerGroup.headers.map((header) => {
+                  const toggleSort = header.column.getToggleSortingHandler();
+                  return (
+                    <th
+                      key={header.id}
+                      className="cursor-pointer"
+                      onClick={toggleSort}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          toggleSort?.(e as unknown as MouseEvent);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
+                      {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
+                    </th>
+                  );
+                })}
             </tr>
           ))}
         </thead>
