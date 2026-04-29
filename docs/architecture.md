@@ -38,7 +38,7 @@
 
 ## Reporting Flow
 
-1. UI requests `GET /reports/expenses-by-category/paginated` with date range.
+1. UI requests `GET /reports/annual-expense-report/paginated` with date range.
 2. Backend joins line items with transactions for the user.
 3. Response projects values into report-friendly fields (amount, category, vendor, date parts).
 

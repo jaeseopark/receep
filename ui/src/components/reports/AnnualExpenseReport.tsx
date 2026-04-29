@@ -45,7 +45,7 @@ const REPORT_PRESETS: {
 const fetchReportData = async (start: number, end: number): Promise<ExpenseLineItem[]> => {
   const fetchNext = (offset: number): Promise<PaginatedReportResponse> =>
     axios
-      .get("/api/reports/expenses-by-category/paginated", {
+      .get("/api/reports/annual-expense-report/paginated", {
         params: {
           start: start / 1000,
           end: end / 1000,
@@ -91,7 +91,7 @@ const DateRangePicker = ({ onSubmit }: { onSubmit: (start: number, end: number) 
   );
 };
 
-const ExpensesByCategory = () => {
+const AnnualExpenseReport = () => {
   const [tableProps, setTableProps] = useState(REPORT_PRESETS.Default.props);
   const [lineItems, setLineItems] = useState<ExpenseLineItem[]>();
 
@@ -178,7 +178,7 @@ const ExpensesByCategory = () => {
   return (
     <div className="m-4">
       <div>
-        <span className="text-lg">Expenses by category</span>
+        <span className="text-lg">Annual Expense Report</span>
         <button className="btn scale-50" onClick={() => setLineItems(undefined)}>
           <RefreshCw />
         </button>
@@ -206,4 +206,4 @@ const ExpensesByCategory = () => {
   );
 };
 
-export default ExpensesByCategory;
+export default AnnualExpenseReport;
