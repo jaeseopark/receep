@@ -81,7 +81,7 @@ const TransactionForm = ({ transaction, returnTo }: { transaction: Transaction; 
         })
         .then(() => {
           toast.success("Transaction saved.");
-          navigate(returnTo ?? ROUTE_PATHS.TRANSACTIONS);
+          returnTo ? navigate(returnTo) : navigate(-1);
         })
         .catch(() => {
           // TODO
