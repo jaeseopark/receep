@@ -27,7 +27,7 @@ const columns = [
 ];
 
 const CategoryListView = ({ categories, onAdd }: CategoryListViewProps) => {
-  return <AssetListView data={categories} columns={columns} onAdd={onAdd} />;
+  return <AssetListView data={categories} columns={columns} onAdd={onAdd} filterableColumns={["name", "description"]} strongHeaderStyle alternateBackgroundColor />;
 };
 
 export default CategoryListView;

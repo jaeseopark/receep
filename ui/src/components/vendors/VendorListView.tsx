@@ -18,7 +18,7 @@ const columns = [
 ];
 
 const VendorListView = ({ vendors, onAdd }: VendorListViewProps) => {
-  return <AssetListView data={vendors} columns={columns} onAdd={onAdd} />;
+  return <AssetListView data={vendors} columns={columns} onAdd={onAdd} filterableColumns={["name"]} strongHeaderStyle alternateBackgroundColor />;
 };
 
 export default VendorListView;
