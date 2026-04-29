@@ -37,7 +37,7 @@ export type TransactionFormViewProps = {
   receipts: Receipt[];
   userInfo: UserInfo;
   /** Called with the raw form data when the user submits. The caller is responsible for any API calls. */
-  onSave: (formData: FormData) => void;
+  onSave: (formData: FormData) => Promise<void> | void;
   /** Called when the user confirms deletion. The caller is responsible for any API calls. */
   onDelete: () => void;
   /** Called after a successful clone so the caller can navigate to the new transaction. */
@@ -117,6 +117,7 @@ const TransactionFormView = ({
 
   const isMyTransaction = useMemo(() => userInfo.user_id === transaction.user_id, [userInfo, transaction.user_id]);
   const [showCloneModal, setShowCloneModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   /* ----------------
    * End of hooks
@@ -451,7 +452,16 @@ const TransactionFormView = ({
           }}
         />
       )}
-      <form className="flex justify-center" onSubmit={handleSubmit(onSave)}>
+      <form
+        className="flex justify-center"
+        onSubmit={handleSubmit((formData) => {
+          const result = onSave(formData);
+          if (result instanceof Promise) {
+            setIsSaving(true);
+            return result.finally(() => setIsSaving(false));
+          }
+        })}
+      >
         <div className="field-columns mt-[1em] max-w-[48rem] lg:max-w-[64rem] flex flex-col md:flex-row gap-4">
           <div className="md:max-w-[24rem] lg:max-w-[40rem]">{renderReceipt()}</div>
           <div className="md:max-w-[24rem] md:flex-shrink-0 flex flex-col gap-4">
@@ -475,8 +485,8 @@ const TransactionFormView = ({
         </div>
 
         <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-          <button type="submit" className="btn btn-circle btn-primary" disabled={!isMyTransaction}>
-            <Save />
+          <button type="submit" className="btn btn-circle btn-primary" disabled={!isMyTransaction || isSaving}>
+            {isSaving ? <span className="loading loading-spinner" /> : <Save />}
           </button>
         </div>
       </form>

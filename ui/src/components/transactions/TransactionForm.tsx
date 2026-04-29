@@ -61,7 +61,7 @@ const TransactionForm = ({ transaction, returnTo }: { transaction: Transaction; 
         });
       }
 
-      apiPromise
+      return apiPromise
         .then((r) => r.data)
         .then((savedTransaction: Transaction) => {
           upsertTransactions({ items: [savedTransaction], toFront: true });
