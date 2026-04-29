@@ -118,6 +118,7 @@ const TransactionFormView = ({
   const isMyTransaction = useMemo(() => userInfo.user_id === transaction.user_id, [userInfo, transaction.user_id]);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const isDisabled = !isMyTransaction || isSaving;
 
   /* ----------------
    * End of hooks
@@ -230,9 +231,9 @@ const TransactionFormView = ({
           control={control}
           render={({ field: { value, onChange } }) => (
             <DatePicker
-              className={classNames("rounded-lg p-2", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
+              className={classNames("rounded-lg p-2", { "bg-gray-100 text-gray-400 cursor-not-allowed": isDisabled })}
               required
-              disabled={!isMyTransaction}
+              disabled={isDisabled}
               dateFormat="yyyy-MM-dd"
               selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
               onChange={(date) => {
@@ -256,7 +257,7 @@ const TransactionFormView = ({
             />
           )}
         />
-        <div className={classNames("btn", { "btn-disabled": !isMyTransaction })} onClick={() => isMyTransaction && setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
+        <div className={classNames("btn", { "btn-disabled": isDisabled })} onClick={() => !isDisabled && setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
           Today
         </div>
       </div>
@@ -292,7 +293,7 @@ const TransactionFormView = ({
                 required
                 isSearchable
                 isClearable
-                isDisabled={!isMyTransaction}
+                isDisabled={isDisabled}
                 placeholder="Select a vendor..."
                 filterOption={fuzzyFilterOption}
                 onCreateOption={createVendor}
@@ -324,7 +325,7 @@ const TransactionFormView = ({
           type="button"
           className="btn btn-circle btn-primary btn-sm scale-75"
           onClick={() => appendLineItem(createLineItem(transaction))}
-          disabled={!isMyTransaction}
+          disabled={isDisabled}
         >
           <Plus />
         </button>
@@ -351,7 +352,7 @@ const TransactionFormView = ({
             type="button"
             className="btn btn-circle btn-red btn-sm scale-75"
             onClick={() => removeLineItem(index)}
-            disabled={!isMyTransaction || (ary.length === 1 && index === 0)}
+            disabled={isDisabled || (ary.length === 1 && index === 0)}
           >
             <Minus />
           </button>
@@ -382,7 +383,7 @@ const TransactionFormView = ({
                     isSearchable
                     required
                     isClearable
-                    isDisabled={!isMyTransaction}
+                    isDisabled={isDisabled}
                     placeholder="Select a category..."
                     filterOption={fuzzyFilterOption}
                     onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
@@ -398,16 +399,16 @@ const TransactionFormView = ({
           <div className="line-item-fields-row-1 flex gap-2">
             <input
               {...register(`line_items.${index}.name`)}
-              className={classNames("mt-1 block w-full p-2 border rounded", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
+              className={classNames("mt-1 block w-full p-2 border rounded", { "bg-gray-100 text-gray-400 cursor-not-allowed": isDisabled })}
               placeholder="(Optional) Description"
-              disabled={!isMyTransaction}
+              disabled={isDisabled}
             />
             <input
               {...register(`line_items.${index}.amount_input`)}
               required
-              className={classNames("mt-1 block w-full p-2 border rounded w-[30%]", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
+              className={classNames("mt-1 block w-full p-2 border rounded w-[30%]", { "bg-gray-100 text-gray-400 cursor-not-allowed": isDisabled })}
               placeholder="Amount"
-              disabled={!isMyTransaction}
+              disabled={isDisabled}
               onChange={({ target: { value } }: any) => {
                 setValue(`line_items.${index}.amount_input`, value);
                 setValue(
@@ -426,7 +427,7 @@ const TransactionFormView = ({
               {...register(`line_items.${index}.notes`)}
               className="mt-1 block w-full p-2 border rounded"
               placeholder="(Optional) notes"
-              disabled={!isMyTransaction}
+              disabled={isDisabled}
             ></textarea>
           </div>
         </div>
@@ -486,7 +487,7 @@ const TransactionFormView = ({
         </div>
 
         <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-          <button type="submit" className="btn btn-circle btn-primary" disabled={!isMyTransaction || isSaving}>
+          <button type="submit" data-testid="save-button" className="btn btn-circle btn-primary" disabled={isDisabled}>
             {isSaving ? <span className="loading loading-spinner" /> : <Save />}
           </button>
         </div>
@@ -497,7 +498,7 @@ const TransactionFormView = ({
             type="button"
             className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
             onClick={handleDelete}
-            disabled={!isMyTransaction}
+            disabled={isDisabled}
           >
             <Trash />
           </button>

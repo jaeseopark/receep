@@ -1,3 +1,4 @@
+import { userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/preact";
 
 import { Category, Transaction, UserInfo, Vendor } from "@/types";
@@ -103,5 +104,10 @@ export const SavingState: Story = {
       id: 42,
     },
     onSave: pendingSave,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const saveButton = await canvas.findByTestId("save-button");
+    await userEvent.click(saveButton);
   },
 };
