@@ -509,15 +509,15 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   return (
     <>
       {deleteConfirmationDialog}
-      {!isMyTransaction && (
-        <div className="text-center text-sm text-gray-500 mb-2">
-          Edit is disabled because this transaction belongs to someone else.
-        </div>
-      )}
       <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
         <div className="field-columns mt-[1em] max-w-[48rem] lg:max-w-[64rem] flex flex-col md:flex-row gap-4">
           <div className="md:max-w-[24rem] lg:max-w-[40rem]">{renderReceipt()}</div>
           <div className="md:max-w-[24rem] md:flex-shrink-0 flex flex-col gap-4">
+            {!isMyTransaction && (
+              <div className="text-center text-sm text-gray-500 mb-2">
+                Edit is disabled because this transaction belongs to someone else.
+              </div>
+            )}
             {renderDateField()}
             {renderVendorField()}
             {renderLineItemHeader()}
