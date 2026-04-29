@@ -455,6 +455,7 @@ const TransactionFormView = ({
       <form
         className="flex justify-center"
         onSubmit={handleSubmit((formData) => {
+          if (isSaving) return;
           const result = onSave(formData);
           if (result instanceof Promise) {
             setIsSaving(true);
