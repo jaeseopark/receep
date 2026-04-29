@@ -1,4 +1,4 @@
-import { GitMerge, Save, Trash } from "lucide-react";
+import { ChartLine, GitMerge, Save, Trash } from "lucide-react";
 import { useCallback, useMemo } from "preact/hooks";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -10,6 +10,7 @@ import { axios } from "@/api";
 import { ROUTE_PATHS } from "@/const";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
 import { removeCategory, upsertCategories } from "@/store";
+import { getCategoryReportPath } from "@/utils/paths";
 
 const CategoryForm = ({ category }: { category: Category }) => {
   const navigate = useNavigate();
@@ -137,6 +138,15 @@ const CategoryForm = ({ category }: { category: Category }) => {
               }}
             >
               <GitMerge />
+            </button>
+          </div>
+          <div className="bottom-24 fixed right-48 shadow-lg rounded-full">
+            <button
+              type="button"
+              className="btn btn-circle bg-blue-500 hover:bg-blue-600 text-white"
+              onClick={() => navigate(getCategoryReportPath(category.id))}
+            >
+              <ChartLine />
             </button>
           </div>
         </>

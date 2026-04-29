@@ -478,5 +478,18 @@ class Database:
                 .limit(limit) \
                 .all()
 
+    def get_line_items_by_category(self, user_id: int, category_id: int, offset=0, limit=500) -> List[LineItem]:
+        with get_session() as session:
+            return session.query(LineItem) \
+                .join(Transaction, LineItem.transaction_id == Transaction.id) \
+                .filter(
+                    Transaction.user_id == user_id,
+                    LineItem.category_id == category_id
+                ) \
+                .options(joinedload(LineItem.transaction)) \
+                .offset(offset) \
+                .limit(limit) \
+                .all()
+
 
 instance = Database()

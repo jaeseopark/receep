@@ -18,6 +18,8 @@ export enum ROUTE_PATHS {
   EXPENSE_REPORT = "/reports/annual-expense-report",
   VENDOR_REPORT = "/reports/transactions-by-vendor",
   VENDOR_REPORT_FOR_VENDOR = "/reports/transactions-by-vendor/:vendorId",
+  CATEGORY_REPORT = "/reports/transactions-by-category",
+  CATEGORY_REPORT_FOR_CATEGORY = "/reports/transactions-by-category/:categoryId",
 
   // Settings:
   SETTINGS = "/settings",

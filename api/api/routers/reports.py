@@ -76,3 +76,21 @@ def get_line_items_by_vendor(
     )
 
     return paginated_line_items_response(line_items, offset, tz)
+
+
+@router.get("/reports/line-items-by-category/paginated")
+def get_line_items_by_category(
+    category_id: int = Query(),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(500, le=500),
+    tz: float = Query(0),  # in hours. Ex. UTC-7 is -7.
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    line_items = db_instance.get_line_items_by_category(
+        user_id=auth_metadata.user_id,
+        category_id=category_id,
+        offset=offset,
+        limit=limit,
+    )
+
+    return paginated_line_items_response(line_items, offset, tz)
