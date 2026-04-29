@@ -82,9 +82,8 @@ const TransactionsTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]); // State to manage sorting
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]); // State to manage filters
 
-  const { GoToPopover, GoToToggleButton } = useGoTo({
+  const { GoToModal, GoToToggleButton } = useGoTo({
     onNavigate: (id) => navigate(getEditTransactionPath(id)),
-    popoverPositionClass: "bottom-36 right-14",
   });
 
   const table = useReactTable<Transaction>({
@@ -172,7 +171,7 @@ const TransactionsTable = () => {
     >
       {renderTable()}
       {transactionPagination.value.isExhausted && <div className="text-center p-4">No more transactions to load.</div>}
-      {GoToPopover}
+      {GoToModal}
       <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
         {GoToToggleButton}
       </div>

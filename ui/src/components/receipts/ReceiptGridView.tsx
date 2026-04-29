@@ -21,9 +21,8 @@ const SORT_DESCENDING = (a: Receipt, b: Receipt) => b.created_at - a.created_at;
 const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
   const navigate = useNavigate();
 
-  const { GoToPopover, GoToToggleButton } = useGoTo({
+  const { GoToModal, GoToToggleButton } = useGoTo({
     onNavigate: (id) => navigate(getEditReceiptPath(id)),
-    popoverPositionClass: "bottom-36 right-28",
   });
   const onDrop = useCallback((acceptedFiles: File[]) => {
     uploadReceipts(acceptedFiles, (update) => {
@@ -95,7 +94,7 @@ const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
           <AddReceiptButton />
           <FilterButton />
           <ReceiptFilterModal />
-          {GoToPopover}
+          {GoToModal}
           <div className="bottom-24 fixed right-34 shadow-lg rounded-full">
             {GoToToggleButton}
           </div>
