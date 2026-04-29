@@ -173,7 +173,11 @@ class Database:
             except IntegrityError:
                 # Most likely caused by the unique constraint on the hash field.
                 # TODO: make sure this is indeed the cause of IntegrityError.
-                raise DuplicateReceipt
+                session.rollback()
+                existing = session.query(Receipt).filter(Receipt.content_hash == content_hash).first()
+                if not existing:
+                    logger.warning(f"DuplicateReceipt raised but no existing receipt found for {content_hash=}")
+                raise DuplicateReceipt(existing.id if existing else None)
 
         return receipt
 

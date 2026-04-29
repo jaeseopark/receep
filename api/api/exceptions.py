@@ -47,14 +47,17 @@ def duplicate_username_handler(*args, **kwargs):
 
 
 @handler(DuplicateReceipt)
-def duplicate_receipt_handler(*args, **kwargs):
+def duplicate_receipt_handler(_, e: DuplicateReceipt):
+    content = dict(
+        code="DUP_RECEIPT",
+        resource="receipt",
+        message="The receipt is already in the system."
+    )
+    if e.receipt_id is not None:
+        content["receipt_id"] = e.receipt_id
     return JSONResponse(
         status_code=409,
-        content=dict(
-            code="DUP_RECEIPT",
-            resource="receipt",
-            message="The receipt is already in the system."
-        )
+        content=content
     )
 
 
