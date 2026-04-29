@@ -14,7 +14,7 @@ type AssetListViewProps<T extends object> = {
 };
 
 const AssetListView = <T extends object>({ data, columns, onAdd, onClick, filterableColumns, defaultSortColumn, strongHeaderStyle, alternateBackgroundColor }: AssetListViewProps<T>) => {
-  const [sorting, setSorting] = useState<SortingState>(defaultSortColumn ? [{ id: defaultSortColumn as string, desc: false }] : []);
+  const [sorting, setSorting] = useState<SortingState>(defaultSortColumn ? [{ id: String(defaultSortColumn), desc: false }] : []);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable<T>({
@@ -44,7 +44,7 @@ const AssetListView = <T extends object>({ data, columns, onAdd, onClick, filter
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        toggleSort?.(e as unknown as MouseEvent);
+                        toggleSort?.(e);
                       }
                     }}
                     role="button"
@@ -55,13 +55,13 @@ const AssetListView = <T extends object>({ data, columns, onAdd, onClick, filter
                       {header.column.getIsSorted() === "asc" ? " 🔼" : ""}
                       {header.column.getIsSorted() === "desc" ? " 🔽" : ""}
                     </div>
-                    {filterableColumns?.includes(header.id as keyof T) && (
+                    {filterableColumns?.some(col => col === header.id) && (
                       <input
                         type="text"
                         className="input input-bordered input-xs w-full mt-1 font-normal normal-case tracking-normal"
                         placeholder="Filter..."
-                        value={(header.column.getFilterValue() as string) ?? ""}
-                        onInput={(e) => header.column.setFilterValue((e.target as HTMLInputElement).value || undefined)}
+                        value={String(header.column.getFilterValue() ?? "")}
+                        onInput={(e) => header.column.setFilterValue(e.currentTarget.value || undefined)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     )}
