@@ -2,7 +2,34 @@ mnt/
 node_modules/
 *.pyc
 setup_ui.sh
+.venv/
 venv/
 .env
 docker-compose*.yml
-ui/package-lock.json
+package-lock.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# UI build outputs
+ui/dist
+ui/dist-ssr
+ui/storybook-static
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
