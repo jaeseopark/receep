@@ -367,6 +367,24 @@ class Database:
             # session.delete(v)
             # session.commit()
 
+    def merge_vendors(self, user_id: int, source_ids: List[int], target_id: int) -> None:
+        with get_session() as session:
+            target = session.query(Vendor).filter(Vendor.id == target_id, Vendor.user_id == user_id).first()
+            if not target:
+                raise NotFound
+
+            session.query(Transaction).filter(
+                Transaction.user_id == user_id,
+                Transaction.vendor_id.in_(source_ids)
+            ).update({Transaction.vendor_id: target_id}, synchronize_session=False)
+
+            session.query(Vendor).filter(
+                Vendor.id.in_(source_ids),
+                Vendor.user_id == user_id
+            ).delete(synchronize_session=False)
+
+            session.commit()
+
     def create_category(self, user_id: int,  name: str, description: str, with_autotax) -> Category:
         c = Category(
             user_id=user_id,

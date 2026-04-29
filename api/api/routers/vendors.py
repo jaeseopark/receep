@@ -94,5 +94,9 @@ def merge_vendors(
     payload: MergeRequest,
     metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    # TODO
-    raise NotImplementedError
+    db_instance.merge_vendors(
+        user_id=metadata.user_id,
+        source_ids=payload.source_ids,
+        target_id=payload.target_id,
+    )
+    return {"ok": True}
