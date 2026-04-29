@@ -351,7 +351,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                 }
               }}
               onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Tab" && !e.shiftKey) {
+                if (e.key === "Tab" && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey) {
                   e.preventDefault();
                   vendorSelectRef.current?.focus();
                 }
