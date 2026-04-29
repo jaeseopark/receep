@@ -1,5 +1,6 @@
-import { useCallback, useState } from "preact/hooks";
+import { useCallback, useMemo, useState } from "preact/hooks";
 import toast from "react-hot-toast";
+import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 
 import { axios } from "@/api";
@@ -14,6 +15,11 @@ const VendorMergeModal = ({ sourceVendor }: { sourceVendor: Vendor }) => {
     const [targetId, setTargetId] = useState<number | null>(null);
 
     const otherVendors = sigVendors.value.filter((v) => v.id !== sourceVendor.id);
+
+    const vendorOptions = useMemo(
+        () => otherVendors.map(({ id, name }) => ({ value: id, label: name })).sort((a, b) => a.label.localeCompare(b.label)),
+        [otherVendors],
+    );
 
     const onConfirm = useCallback(() => {
         if (!targetId) return;
@@ -50,18 +56,13 @@ const VendorMergeModal = ({ sourceVendor }: { sourceVendor: Vendor }) => {
                 </p>
                 <div className="py-4">
                     <label className="block text-sm font-medium mb-1">Target Vendor</label>
-                    <select
-                        className="select select-bordered w-full"
-                        value={targetId ?? ""}
-                        onChange={(e) => setTargetId(Number((e.target as HTMLSelectElement).value) || null)}
-                    >
-                        <option value="">Select a vendor...</option>
-                        {otherVendors.map((v) => (
-                            <option key={v.id} value={v.id}>
-                                {v.name}
-                            </option>
-                        ))}
-                    </select>
+                    <Select
+                        options={vendorOptions}
+                        value={vendorOptions.find((o) => o.value === targetId) ?? null}
+                        isSearchable
+                        placeholder="Select a vendor..."
+                        onChange={(opt) => setTargetId(opt?.value ?? null)}
+                    />
                 </div>
                 <div className="flex gap-4">
                     <button className="btn btn-primary" disabled={!targetId} onClick={onConfirm}>
