@@ -1,6 +1,7 @@
 import classNames from "classnames";
 import { useCallback, useRef } from "preact/hooks";
 import { useDropzone } from "react-dropzone";
+import { useNavigate } from "react-router-dom";
 
 import { Receipt } from "@/types";
 
@@ -8,14 +9,21 @@ import ReceiptFilterModal, { applySelectedFilters } from "@/components/receipts/
 import { AddReceiptButton, FilterButton } from "@/components/receipts/ReceiptGridActionsButtons";
 import ReceiptCard from "@/components/receipts/ReceiptGridCard";
 import { fetchReceipts, receiptPagination, sigInitialLoadResult } from "@/gvars";
+import { useGoTo } from "@/hooks/useGoTo";
 import { uploadReceipts } from "@/middleware/receipts";
 import { sigReceipts } from "@/store";
+import { getEditReceiptPath } from "@/utils/paths";
 
 import "@/components/receipts/ReceiptGridView.scss";
 
 const SORT_DESCENDING = (a: Receipt, b: Receipt) => b.created_at - a.created_at;
 
 const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
+  const navigate = useNavigate();
+
+  const { GoToModal, GoToToggleButton } = useGoTo({
+    onNavigate: (id) => navigate(getEditReceiptPath(id)),
+  });
   const onDrop = useCallback((acceptedFiles: File[]) => {
     uploadReceipts(acceptedFiles, (update) => {
       // TODO
@@ -86,6 +94,10 @@ const Receipts = ({ onClickOverride }: { onClickOverride?: () => void }) => {
           <AddReceiptButton />
           <FilterButton />
           <ReceiptFilterModal />
+          {GoToModal}
+          <div className="bottom-24 fixed right-34 shadow-lg rounded-full">
+            {GoToToggleButton}
+          </div>
         </>
       )}
     </div>

@@ -73,6 +73,18 @@ Primary entities in `api/persistence/schema.py`:
 3. Initial data loading logic is in `ui/src/gvars.ts`.
 4. Auth gate and top-level routing are in `ui/src/app.tsx`.
 
+## Go-To-ID Feature
+
+Both the Receipts grid view and the Transactions table expose a "go to ID" button (hash icon) that lets the user navigate directly to any record by numeric ID. The shared implementation lives in `ui/src/hooks/useGoTo.tsx`.
+
+Behaviour requirements:
+
+1. **Shared implementation** — the `useGoTo` hook is reused across the Receipts and Transactions views; each call site provides an `onNavigate` callback.
+2. **Dismiss on click-away or Escape** — the modal is a native `<dialog>` (`showModal()`), so both backdrop click and the Escape key are handled by the browser without custom event listeners.
+3. **Input reset on re-open** — the ID field is cleared each time the modal opens.
+4. **Positive integers only** — the field accepts `type="number" min="1"`. The keys `.`, `e`, and `E` (decimal point and scientific-notation prefix) are blocked via `onKeyDown`.
+5. **No stepper buttons** — the browser's built-in spin buttons are hidden with Tailwind arbitrary variants (`[appearance:textfield]`, `[&::-webkit-outer-spin-button]:appearance-none`, `[&::-webkit-inner-spin-button]:appearance-none`). Mouse-wheel increment/decrement is also disabled by blurring the input on `wheel` events.
+
 ## Receipt Download Behaviour
 
 The `ReceiptDownloadButton` component renders an `<a download="...">` link pointing to the raw `/{id}.dr` file. Before triggering the browser download, the button computes a human-readable filename of the form:
