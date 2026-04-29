@@ -103,10 +103,12 @@ const TransactionEditView = () => {
 
   const title = transaction.id === -1 ? "New Transaction" : "Edit Transaction";
 
+  const returnTo = params.get("return_to") ?? undefined;
+
   return (
     <div className="space-y-4 p-4 md:h-(--content-max-height)">
       <h2 className="text-xl font-bold justify-center">{title}</h2>
-      <TransactionForm transaction={transaction} />
+      <TransactionForm transaction={transaction} returnTo={returnTo} />
     </div>
   );
 };

@@ -32,7 +32,7 @@ type FormData = Transaction & { enableAutoTax: boolean };
  * state (signals), the API layer, and the router. Prefer using
  * TransactionFormView directly when you need an isolated / testable component.
  */
-const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
+const TransactionForm = ({ transaction, returnTo }: { transaction: Transaction; returnTo?: string }) => {
   const navigate = useNavigate();
   const { applyAutoTax } = useAutoTax();
   const userInfo = sigUserInfo.value!;
@@ -81,13 +81,13 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         })
         .then(() => {
           toast.success("Transaction saved.");
-          navigate(ROUTE_PATHS.TRANSACTIONS);
+          returnTo ? navigate(returnTo) : navigate(-1);
         })
         .catch(() => {
           // TODO
         });
     },
-    [userInfo, transaction, applyAutoTax, navigate],
+    [userInfo, transaction, applyAutoTax, navigate, returnTo],
   );
 
   const handleDelete = useCallback(() => {
