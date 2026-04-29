@@ -81,12 +81,7 @@ const TransactionForm = ({ transaction, returnTo }: { transaction: Transaction; 
         })
         .then(() => {
           toast.success("Transaction saved.");
-          const isNewTransaction = transaction.id === -1;
-          if (isNewTransaction && returnTo === "receipts") {
-            navigate(ROUTE_PATHS.RECEIPTS);
-          } else {
-            navigate(ROUTE_PATHS.TRANSACTIONS);
-          }
+          navigate(returnTo ?? ROUTE_PATHS.TRANSACTIONS);
         })
         .catch(() => {
           // TODO

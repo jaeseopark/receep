@@ -17,7 +17,7 @@ export const getEditVendorPath = (id: number) => {
 };
 
 export const getNewTransactionPathWithReceiptId = (receiptId: number) => {
-  return ROUTE_PATHS.NEW_TRANSACTION + `?receipt_id=${receiptId}&return_to=receipts`;
+  return ROUTE_PATHS.NEW_TRANSACTION + `?receipt_id=${receiptId}&return_to=${ROUTE_PATHS.RECEIPTS}`;
 };
 
 export const getVendorReportPath = (vendorId: number) => {
