@@ -237,6 +237,19 @@ class Database:
                 .limit(limit)
             return session.scalars(stmt).all()
 
+    def search_transactions_by_vendor(self, user_id: int, vendor_name: str) -> List[Transaction]:
+        # TODO: replace this ILIKE-based search with a better approach as data grows:
+        #   A) Short term: use Postgres built-in full-text search (tsvector/tsquery).
+        #   B) Long term: integrate a proper search engine (e.g. Elasticsearch) for 100k+ rows.
+        vendor_pattern = f"%{vendor_name}%"
+        with get_session() as session:
+            stmt = select(Transaction) \
+                .join(Vendor, Transaction.vendor_id == Vendor.id) \
+                .where(Transaction.user_id == user_id) \
+                .where(Vendor.name.ilike(vendor_pattern)) \
+                .order_by(desc(Transaction.id))
+            return session.scalars(stmt).all()
+
     def get_transaction(self, transaction_id: int) -> Transaction:
         with get_session() as session:
             t = session.get_transaction(transaction_id=transaction_id)

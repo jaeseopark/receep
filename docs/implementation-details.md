@@ -27,10 +27,11 @@
 ### Transactions
 
 1. `GET /transactions/paginated`.
-2. `GET /transactions/single/{id}`.
-3. `POST /transactions`.
-4. `PUT /transactions/{transaction_id}`.
-5. `DELETE /transactions/{transaction_id}`.
+2. `GET /transactions/search?vendor_name=...` returns all transactions whose vendor name contains the query string (case-insensitive).
+3. `GET /transactions/single/{id}`.
+4. `POST /transactions`.
+5. `PUT /transactions/{transaction_id}`.
+6. `DELETE /transactions/{transaction_id}`.
 
 ### Categories
 
