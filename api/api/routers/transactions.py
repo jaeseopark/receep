@@ -50,6 +50,19 @@ def get_transactions(
     )
 
 
+@router.get("/transactions/search")
+def search_transactions(
+    vendor_name: str = Query(..., min_length=1),
+    auth_metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
+):
+    txns = db_instance.search_transactions_by_vendor(
+        user_id=auth_metadata.user_id,
+        vendor_name=vendor_name
+    )
+
+    return dict(items=get_api_safe_json(txns))
+
+
 @router.get("/transactions/single/{id}")
 def get_single_transaction(
     id: int,

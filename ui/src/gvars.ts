@@ -2,6 +2,7 @@ import { Signal, signal } from "@preact/signals";
 import toast from "react-hot-toast";
 
 import { axios } from "@/api";
+import { Transaction } from "@/types";
 import { sigCategories, sigReceipts, sigTransactions, sigVendors, sigUserInfo, upsertCategories, upsertReceipts, upsertTransactions, upsertVendors } from "@/store";
 
 export const sigInitialLoadResult = signal<"PENDING" | "SUCCEEDED" | "FAILED">("PENDING");
@@ -89,6 +90,27 @@ export const fetchTransactions = fetchPaginatedData(
   transactionPagination,
   upsertTransactions,
 );
+
+export const searchTransactionsByVendor = (vendorName: string): Promise<void> => {
+  return axios
+    .get("/api/transactions/search", {
+      params: { vendor_name: vendorName },
+    })
+    .then((r) => r.data)
+    .then(({ items }: { items: Transaction[] }) => {
+      upsertTransactions({ items });
+    })
+    .catch((e) => {
+      console.error(e);
+      toast.error("Failed to search transactions.");
+    });
+};
+
+export const resetAndFetchTransactions = (): Promise<void> => {
+  transactionPagination.value = initialPaginationState();
+  sigTransactions.value = [];
+  return fetchTransactions() ?? Promise.resolve();
+};
 
 const fetchVendors = fetchUntilExhausted("/api/vendors/paginated", vendorPagination, upsertVendors);
 

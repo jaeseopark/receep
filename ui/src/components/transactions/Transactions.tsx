@@ -10,17 +10,19 @@ import {
 } from "@tanstack/react-table";
 import fuzzysort from "fuzzysort";
 import { Plus } from "lucide-preact";
-import { useCallback, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { useNavigate } from "react-router-dom";
 
 import { Transaction } from "@/types";
 
 import { ROUTE_PATHS } from "@/const";
-import { fetchTransactions, transactionPagination } from "@/gvars";
+import { fetchTransactions, resetAndFetchTransactions, searchTransactionsByVendor, transactionPagination } from "@/gvars";
 import { sigTransactions, sigVendors } from "@/store";
 import { toAbsoluteDate } from "@/utils/dates";
 import { getEditTransactionPath } from "@/utils/paths";
 import { useGoTo } from "@/hooks/useGoTo";
+
+const VENDOR_SEARCH_DEBOUNCE_MS = 300;
 
 const columnHelper = createColumnHelper<Transaction>();
 
@@ -111,6 +113,21 @@ const TransactionsTable = () => {
       fetchTransactions();
     }
   }, []);
+
+  const vendorNameFilter = (columnFilters.find((f) => f.id === "vendor_id")?.value as string) ?? "";
+
+  useEffect(() => {
+    if (!vendorNameFilter) {
+      resetAndFetchTransactions();
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      searchTransactionsByVendor(vendorNameFilter);
+    }, VENDOR_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [vendorNameFilter]);
 
   /* ---------------------------------------
    * End of hooks
