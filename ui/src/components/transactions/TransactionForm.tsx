@@ -316,8 +316,9 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           control={control}
           render={({ field: { value, onChange } }) => (
             <DatePicker
-              className="rounded-lg p-2"
+              className={classNames("rounded-lg p-2", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
               required
+              disabled={!isMyTransaction}
               dateFormat="yyyy-MM-dd"
               selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
               onChange={(date) => {
@@ -341,7 +342,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             />
           )}
         />
-        <div className="btn" onClick={() => setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
+        <div className={classNames("btn", { "btn-disabled": !isMyTransaction })} onClick={() => isMyTransaction && setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
           Today
         </div>
       </div>
@@ -374,6 +375,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               required
               isSearchable
               isClearable
+              isDisabled={!isMyTransaction}
               placeholder="Select a vendor..."
               onCreateOption={createVendor}
               // @ts-ignore
@@ -393,6 +395,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           type="button"
           className="btn btn-circle btn-primary btn-sm scale-75"
           onClick={() => appendLineItem(createLineItem(transaction))}
+          disabled={!isMyTransaction}
         >
           <Plus />
         </button>
@@ -419,7 +422,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
             type="button"
             className="btn btn-circle btn-red btn-sm scale-75"
             onClick={() => removeLineItem(index)}
-            disabled={ary.length === 1 && index === 0}
+            disabled={!isMyTransaction || (ary.length === 1 && index === 0)}
           >
             <Minus />
           </button>
@@ -450,6 +453,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                     isSearchable
                     required
                     isClearable
+                    isDisabled={!isMyTransaction}
                     placeholder="Select a category..."
                     onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
                     // @ts-ignore
@@ -464,14 +468,16 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           <div className="line-item-fields-row-1 flex gap-2">
             <input
               {...register(`line_items.${index}.name`)}
-              className="mt-1 block w-full p-2 border rounded"
+              className={classNames("mt-1 block w-full p-2 border rounded", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
               placeholder="(Optional) Description"
+              disabled={!isMyTransaction}
             />
             <input
               {...register(`line_items.${index}.amount_input`)}
               required
-              className="mt-1 block w-full p-2 border rounded w-[30%]"
+              className={classNames("mt-1 block w-full p-2 border rounded w-[30%]", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
               placeholder="Amount"
+              disabled={!isMyTransaction}
               onChange={({ target: { value } }: any) => {
                 setValue(`line_items.${index}.amount_input`, value);
                 setValue(
@@ -490,6 +496,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               {...register(`line_items.${index}.notes`)}
               className="mt-1 block w-full p-2 border rounded"
               placeholder="(Optional) notes"
+              disabled={!isMyTransaction}
             ></textarea>
           </div>
         </div>
@@ -506,6 +513,11 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         <div className="field-columns mt-[1em] max-w-[48rem] lg:max-w-[64rem] flex flex-col md:flex-row gap-4">
           <div className="md:max-w-[24rem] lg:max-w-[40rem]">{renderReceipt()}</div>
           <div className="md:max-w-[24rem] md:flex-shrink-0 flex flex-col gap-4">
+            {!isMyTransaction && (
+              <div className="text-center text-sm text-gray-500 mb-2">
+                Edit is disabled because this transaction belongs to someone else.
+              </div>
+            )}
             {renderDateField()}
             {renderVendorField()}
             {renderLineItemHeader()}
