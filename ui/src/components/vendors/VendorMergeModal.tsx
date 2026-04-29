@@ -62,6 +62,8 @@ const VendorMergeModal = ({ sourceVendor }: { sourceVendor: Vendor }) => {
                         isSearchable
                         placeholder="Select a vendor..."
                         onChange={(opt) => setTargetId(opt?.value ?? null)}
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
                     />
                 </div>
                 <div className="flex gap-4">
