@@ -73,6 +73,21 @@ Primary entities in `api/persistence/schema.py`:
 3. Initial data loading logic is in `ui/src/gvars.ts`.
 4. Auth gate and top-level routing are in `ui/src/app.tsx`.
 
+## Receipt Download Behaviour
+
+The `ReceiptDownloadButton` component renders an `<a download="...">` link pointing to the raw `/{id}.dr` file. Before triggering the browser download, the button computes a human-readable filename of the form:
+
+```
+receep-attachment-YYYY-MM-DD-tx{transaction_id}.{ext}
+```
+
+where:
+- `YYYY-MM-DD` is derived from the linked transaction's `timestamp` (epoch seconds).
+- `{transaction_id}` is the transaction's `id`.
+- `{ext}` is derived from the receipt's `content_type` via `getExtFromContentType` in `ui/src/utils/receipts.ts`.
+
+If the receipt has no linked transaction, the filename falls back to `receep-attachment.{ext}`. The `download` attribute on the `<a>` tag ensures the browser saves the file with the computed name regardless of the `.dr` URL.
+
 ## Known Gaps and Caveats
 
 1. `GET /receipts/paginated` does not currently filter by requesting user in the persistence query.

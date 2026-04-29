@@ -255,12 +255,13 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
         control={control}
         render={({ field: { value: receiptId } }) => {
           const receiptIdExists = typeof receiptId !== "undefined" && receiptId !== null;
+          const linkedReceipt = receiptIdExists ? sigReceipts.value.find((r) => r.id === receiptId) : undefined;
           return (
             <>
               {receiptIdExists && (
                 <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll">
                   <ReceiptHighres id={receiptId} />
-                  <ReceiptDownloadButton receiptId={receiptId} />
+                  {linkedReceipt && <ReceiptDownloadButton receipt={linkedReceipt} transaction={transaction} />}
                 </div>
               )}
               {sigUserInfo.value?.config.advanced_mode && (

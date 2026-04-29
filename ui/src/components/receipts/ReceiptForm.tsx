@@ -9,11 +9,8 @@ import { toRelativeTime } from "@/utils/dates";
 import { getEditTransactionPath } from "@/utils/paths";
 import { toHumanFilesize } from "@/utils/primitive";
 
-const ReceiptDetailForm = ({
-  receipt: { id, created_at, content_type, content_length, transactions },
-}: {
-  receipt: Receipt;
-}) => {
+const ReceiptDetailForm = ({ receipt }: { receipt: Receipt }) => {
+  const { id, created_at, content_type, content_length, transactions } = receipt;
   const navigate = useNavigate();
 
   return (
@@ -22,7 +19,7 @@ const ReceiptDetailForm = ({
         <tr>
           <th>File</th>
           <td>
-            <ReceiptDownloadButton receiptId={id} />
+            <ReceiptDownloadButton receipt={receipt} />
           </td>
         </tr>
         <tr>
