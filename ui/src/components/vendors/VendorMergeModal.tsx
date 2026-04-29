@@ -1,3 +1,4 @@
+import fuzzysort from "fuzzysort";
 import { useCallback, useMemo, useState } from "preact/hooks";
 import toast from "react-hot-toast";
 import Select from "react-select";
@@ -9,6 +10,11 @@ import { removeVendor, sigTransactions, sigVendors, upsertTransactions } from "@
 import { Vendor } from "@/types";
 
 const DIALOG_ID = "vendor-merge-modal";
+
+const fuzzyFilterOption = (option: { label: string }, inputValue: string) => {
+    if (!inputValue) return true;
+    return fuzzysort.go(inputValue, [option.label], { limit: 1 }).length > 0;
+};
 
 const VendorMergeModal = ({ sourceVendor }: { sourceVendor: Vendor }) => {
     const navigate = useNavigate();
@@ -62,6 +68,7 @@ const VendorMergeModal = ({ sourceVendor }: { sourceVendor: Vendor }) => {
                         isSearchable
                         placeholder="Select a vendor..."
                         onChange={(opt) => setTargetId(opt?.value ?? null)}
+                        filterOption={fuzzyFilterOption}
                         menuPortalTarget={document.body}
                         menuPosition="fixed"
                     />
