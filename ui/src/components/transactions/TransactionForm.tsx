@@ -1,21 +1,9 @@
-import classNames from "classnames";
-import { parse } from "date-fns";
-import fuzzysort from "fuzzysort";
-import { Minus, Plus, Save, Trash } from "lucide-preact";
-import { KeyboardEvent } from "preact/compat";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
-import DatePicker from "react-datepicker";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import CreatableSelect from "react-select/creatable";
 
 import { Category, Transaction, Vendor } from "@/types";
 
 import { axios } from "@/api";
-import ReceiptDownloadButton from "@/components/receipts/ReceiptDownloadButton";
-import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
-import CloneTransactionModal from "@/components/transactions/CloneTransactionModal";
 import { ROUTE_PATHS } from "@/const";
 import useAutoTax from "@/hooks/useAutoTax";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
@@ -30,132 +18,65 @@ import {
   upsertTransactions,
   upsertVendors,
 } from "@/store";
-import { TZ_OFFSET_HRS } from "@/utils/dates";
-import { createLineItem } from "@/utils/forms";
 import { getEditTransactionPath } from "@/utils/paths";
-import { evaluateAmountInput } from "@/utils/primitive";
 
-import "react-datepicker/dist/react-datepicker.css";
+import TransactionFormView from "@/components/transactions/TransactionFormView";
+import { useCallback } from "preact/hooks";
 
 const DEFAULT_FIELD_ID = 0;
 
-const fuzzyFilterOption = (option: { label: string }, inputValue: string) => {
-  if (!inputValue) return true;
-  return fuzzysort.go(inputValue, [option.label], { limit: 1 }).length > 0;
-};
-
 type FormData = Transaction & { enableAutoTax: boolean };
 
+/**
+ * Wrapper component that wires TransactionFormView to the global application
+ * state (signals), the API layer, and the router. Prefer using
+ * TransactionFormView directly when you need an isolated / testable component.
+ */
 const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
   const navigate = useNavigate();
-  const taxRateExistsInConfig = useMemo(() => (sigUserInfo.value?.config.tax_rate || 0) > 0, []);
-  const { register, handleSubmit, control, setValue, watch } = useForm<FormData>({
-    defaultValues: { ...transaction, enableAutoTax: taxRateExistsInConfig },
-  });
   const { applyAutoTax } = useAutoTax();
-  const isNewTransaction = useMemo(() => transaction.id === -1, [transaction.id]);
+  const userInfo = sigUserInfo.value!;
 
-  // Watch the first line item's category_id specifically
-  const lineItems = watch("line_items");
-  const firstLineItemCategoryId = watch("line_items.0.category_id");
-
-  // Update auto-tax based on categories whenever the first line item's category or categories change
-  useEffect(() => {
-    if (!isNewTransaction || !taxRateExistsInConfig) {
-      return;
-    }
-
-    let enableAutoTax = false;
-    if (lineItems.length === 1 && firstLineItemCategoryId) {
-      const category = sigCategories.value.find((cat) => cat.id === firstLineItemCategoryId);
-      enableAutoTax = Boolean(category?.with_autotax);
-    }
-    setValue("enableAutoTax", enableAutoTax);
-  }, [isNewTransaction, taxRateExistsInConfig, lineItems, firstLineItemCategoryId, sigCategories.value, setValue]);
-
-  const categoryOptions = useMemo(
-    () =>
-      sigCategories.value
-        .map(({ name, id }) => ({
-          label: name,
-          value: id,
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [sigCategories.value],
-  );
-
-  const vendorOptions = useMemo(
-    () =>
-      sigVendors.value
-        .map(({ name, id }) => ({
-          label: name,
-          value: id,
-        }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [sigVendors.value],
-  );
-
-  const {
-    fields: lineItemFields,
-    append: appendLineItem,
-    remove: removeLineItem,
-  } = useFieldArray({
-    control,
-    name: "line_items",
-  });
-
-  const isMyTransaction = useMemo(() => sigUserInfo.value?.user_id === transaction.user_id, [sigUserInfo.value]);
-  const [showCloneModal, setShowCloneModal] = useState(false);
-
-  const upsertTransaction = useCallback(
+  const handleSave = useCallback(
     (formData: FormData) => {
+      const isMyTransaction = userInfo.user_id === transaction.user_id;
       if (!isMyTransaction) {
         return;
       }
 
+      const isNewTransaction = transaction.id === -1;
       const { enableAutoTax, ...t } = formData;
       let apiPromise;
 
       if (isNewTransaction) {
-        // ID is -1, meaning this is a brand new transaction.
-
         if (enableAutoTax) {
           applyAutoTax(formData);
         }
-
         apiPromise = axios.post("/api/transactions", formData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
       } else {
         apiPromise = axios.put(`/api/transactions/${t.id}`, formData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         });
       }
 
       apiPromise
         .then((r) => r.data)
-        .then((t: Transaction) => {
-          upsertTransactions({ items: [t], toFront: true });
-          if (t.receipt_id) {
-            const receipt = sigReceipts.value.find(({ id }) => id === t.receipt_id);
-
+        .then((savedTransaction: Transaction) => {
+          upsertTransactions({ items: [savedTransaction], toFront: true });
+          if (savedTransaction.receipt_id) {
+            const receipt = sigReceipts.value.find(({ id }) => id === savedTransaction.receipt_id);
             if (!receipt) {
               return;
             }
-
-            const existingTransactionReference = receipt?.transactions.find(({ id }) => id === t.id);
-
-            if (!existingTransactionReference) {
-              receipt.transactions.push(t);
+            const existingRef = receipt.transactions.find(({ id }) => id === savedTransaction.id);
+            if (!existingRef) {
+              receipt.transactions.push(savedTransaction);
             }
-
             upsertReceipts({ items: [receipt] });
           } else {
-            // TODO: clear transaction refenrece from the receipt object
+            // TODO: clear transaction reference from the receipt object
           }
         })
         .then(() => {
@@ -166,22 +87,20 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
           // TODO
         });
     },
-    [isMyTransaction, isNewTransaction],
+    [userInfo, transaction, applyAutoTax, navigate],
   );
 
-  const deleteTransaction = useCallback(() => {
+  const handleDelete = useCallback(() => {
     axios
       .delete(`/api/transactions/${transaction.id}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       })
       .then(() => {
         removeTransaction(transaction.id);
         toast.success("Transaction deleted.");
         navigate(ROUTE_PATHS.TRANSACTIONS);
       });
-  }, []);
+  }, [transaction.id, navigate]);
 
   const { show: showDeleteConfirmation, dialog: deleteConfirmationDialog } = useSimpleConfirmationDialog({
     dialogId: "delete-transaction",
@@ -190,388 +109,76 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
     choices: [
       {
         label: "Delete",
-        onClick: deleteTransaction,
+        onClick: handleDelete,
         isPrimary: true,
       },
       {
         label: "Cancel",
-        onClick: () => { },
+        onClick: () => {},
       },
     ],
   });
 
-  /* ----------------
-   * End of hooks
-   * ---------------- */
-
-  const createVendor = (name: string) => {
-    const newVendor: Vendor = {
-      id: DEFAULT_FIELD_ID,
-      user_id: DEFAULT_FIELD_ID,
-      name,
-    };
-
-    axios
-      .post("/api/vendors", newVendor, {})
-      .then((r) => r.data)
-      .then((returnedVenor) => {
-        upsertVendors({ items: [returnedVenor] });
-        setTimeout(() => setValue("vendor_id", returnedVenor.id), 100);
-      })
-      .catch(() => {
-        // TODO
-      });
-  };
-
-  const createCategory = (fieldName: string, categoryName: string) => {
-    const category: Category = {
-      id: DEFAULT_FIELD_ID,
-      user_id: DEFAULT_FIELD_ID,
-      name: categoryName,
-      description: "Auto-Generated from a transaction",
-      with_autotax: true,
-    };
-
-    axios
-      .post("/api/categories", category)
-      .then((r) => r.data)
-      .then((returnedCategory: Category) => {
-        upsertCategories({ items: [returnedCategory] });
-        setTimeout(() => {
-          setValue(fieldName as any, returnedCategory.id);
-        }, 100);
-      })
-      .catch(() => {
-        // TODO
-      });
-  };
-
-  /* ----------------
-   * End of event handlers
-   * ---------------- */
-
-  const renderReceipt = () => {
-    const openModal = () => (document.getElementById("receipt-modal") as HTMLDialogElement).showModal();
-
-    const closeModal = () => document.getElementById("receipt-modal-close")?.click();
-
-    return (
-      <Controller
-        name="receipt_id"
-        control={control}
-        render={({ field: { value: receiptId } }) => {
-          const receiptIdExists = typeof receiptId !== "undefined" && receiptId !== null;
-          const linkedReceipt = receiptIdExists ? sigReceipts.value.find((r) => r.id === receiptId) : undefined;
-          return (
-            <>
-              {receiptIdExists && (
-                <div className="max-h-(--content-max-height) overflow-x-hidden overflow-y-scroll" tabIndex={-1}>
-                  <ReceiptHighres id={receiptId} />
-                  {linkedReceipt && <ReceiptDownloadButton receipt={linkedReceipt} transaction={transaction} />}
-                </div>
-              )}
-              {sigUserInfo.value?.config.advanced_mode && (
-                <div className="btn" onClick={openModal}>
-                  {receiptIdExists ? "Change/Remove receipt" : "Select receipt"}
-                </div>
-              )}
-              <dialog id="receipt-modal" className="modal">
-                <div className="modal-box">
-                  <h3 className="font-bold text-lg">Select a receipt</h3>
-                  {receiptIdExists && (
-                    <li className="list-row">
-                      <div
-                        className="btn"
-                        onClick={() => {
-                          setValue("receipt_id", null as any);
-                          closeModal();
-                        }}
-                      >
-                        <Trash />
-                      </div>
-                    </li>
-                  )}
-                  <ul className="list bg-base-100 rounded-box shadow-md">
-                    {sigReceipts.value.map((r) => (
-                      <li
-                        key={r.id}
-                        className="list-row"
-                        onClick={() => {
-                          setValue("receipt_id", r.id);
-                          closeModal();
-                        }}
-                      >
-                        <ReceiptThumbnail receipt={r} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <form method="dialog" className="modal-backdrop">
-                  <button id="receipt-modal-close">close</button>
-                </form>
-              </dialog>
-            </>
-          );
-        }}
-      />
-    );
-  };
-
-  const renderDateField = () => {
-    return (
-      <div className="flex gap-4 items-center">
-        <span className="mr-2">Date:</span>
-        <Controller
-          name="timestamp"
-          control={control}
-          render={({ field: { value, onChange } }) => (
-            <DatePicker
-              className={classNames("rounded-lg p-2", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
-              required
-              disabled={!isMyTransaction}
-              dateFormat="yyyy-MM-dd"
-              selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
-              onChange={(date) => {
-                if (date) {
-                  const newValue = date?.getTime() / 1000 + TZ_OFFSET_HRS * 3600;
-                  onChange(newValue);
-                } else {
-                  // TODO error handling
-                }
-              }}
-              onChangeRaw={(date: KeyboardEvent<HTMLInputElement>) => {
-                try {
-                  const newValue = parse(date.currentTarget.value, "yyyy-MM-dd", new Date());
-                  if (newValue instanceof Date) {
-                    onChange(newValue.getTime() / 1000 + TZ_OFFSET_HRS * 3600);
-                  }
-                } catch (error) {
-                  // TODO
-                }
-              }}
-            />
-          )}
-        />
-        <div className={classNames("btn", { "btn-disabled": !isMyTransaction })} onClick={() => isMyTransaction && setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
-          Today
-        </div>
-      </div>
-    );
-  };
-
-  const renderVendorField = () => (
-    <label className="block">
-      <Controller
-        name="vendor_id"
-        control={control}
-        render={({ field: { value, onChange } }) => {
-          let selectedOption;
-          if (typeof value !== "undefined") {
-            const match = vendorOptions.find(({ value: optionValue }) => optionValue === value);
-            if (match) {
-              selectedOption = match;
-            } else {
-              selectedOption = {
-                label: "Select",
-                value: -1,
-              };
-            }
-          }
-
-          return (
-            <CreatableSelect
-              options={vendorOptions}
-              value={selectedOption}
-              required
-              isSearchable
-              isClearable
-              isDisabled={!isMyTransaction}
-              placeholder="Select a vendor..."
-              filterOption={fuzzyFilterOption}
-              onCreateOption={createVendor}
-              // @ts-ignore
-              onChange={({ value }) => onChange(value)}
-            />
-          );
-        }}
-      />
-    </label>
+  const handleCreateVendor = useCallback(
+    (name: string): Promise<number> => {
+      const newVendor: Vendor = {
+        id: DEFAULT_FIELD_ID,
+        user_id: DEFAULT_FIELD_ID,
+        name,
+      };
+      return axios
+        .post("/api/vendors", newVendor, {})
+        .then((r) => r.data)
+        .then((returnedVendor) => {
+          upsertVendors({ items: [returnedVendor] });
+          return returnedVendor.id as number;
+        });
+    },
+    [],
   );
 
-  const renderLineItemHeader = () => (
-    <div className="flex flex-row items-center gap-2">
-      <h3 className="text-lg font-semibold">
-        Line Items
-        <button
-          type="button"
-          className="btn btn-circle btn-primary btn-sm scale-75"
-          onClick={() => appendLineItem(createLineItem(transaction))}
-          disabled={!isMyTransaction}
-        >
-          <Plus />
-        </button>
-      </h3>
-      <div className={classNames("auto-tax-container", { hidden: !isNewTransaction })}>
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            {...register("enableAutoTax")}
-            className="checkbox"
-            disabled={!taxRateExistsInConfig || lineItems.length !== 1}
-          />
-          <span>Enable Auto Tax</span>
-        </label>
-      </div>
-    </div>
+  const handleCreateCategory = useCallback(
+    (categoryName: string): Promise<number> => {
+      const category: Category = {
+        id: DEFAULT_FIELD_ID,
+        user_id: DEFAULT_FIELD_ID,
+        name: categoryName,
+        description: "Auto-Generated from a transaction",
+        with_autotax: true,
+      };
+      return axios
+        .post("/api/categories", category)
+        .then((r) => r.data)
+        .then((returnedCategory: Category) => {
+          upsertCategories({ items: [returnedCategory] });
+          return returnedCategory.id;
+        });
+    },
+    [],
   );
 
-  const renderLineItems = () => {
-    const children = lineItemFields.map((item, index, ary) => (
-      <div key={item.id} className="flex">
-        <div>
-          <button
-            type="button"
-            className="btn btn-circle btn-red btn-sm scale-75"
-            onClick={() => removeLineItem(index)}
-            disabled={!isMyTransaction || (ary.length === 1 && index === 0)}
-          >
-            <Minus />
-          </button>
-        </div>
-        <div className="line-item-fields">
-          <label className="block">
-            <Controller
-              name={`line_items.${index}.category_id`}
-              control={control}
-              render={({ field: { name: fieldName, value, onChange } }) => {
-                let selectedOption;
-                if (typeof value !== "undefined") {
-                  const match = categoryOptions.find(({ value: optionValue }) => optionValue === value);
-                  if (match) {
-                    selectedOption = match;
-                  } else {
-                    selectedOption = {
-                      label: "Select",
-                      value: -1,
-                    };
-                  }
-                }
-
-                return (
-                  <CreatableSelect
-                    options={categoryOptions}
-                    value={selectedOption}
-                    isSearchable
-                    required
-                    isClearable
-                    isDisabled={!isMyTransaction}
-                    placeholder="Select a category..."
-                    filterOption={fuzzyFilterOption}
-                    onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
-                    // @ts-ignore
-                    onChange={({ value }) => {
-                      onChange(value);
-                    }}
-                  />
-                );
-              }}
-            />
-          </label>
-          <div className="line-item-fields-row-1 flex gap-2">
-            <input
-              {...register(`line_items.${index}.name`)}
-              className={classNames("mt-1 block w-full p-2 border rounded", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
-              placeholder="(Optional) Description"
-              disabled={!isMyTransaction}
-            />
-            <input
-              {...register(`line_items.${index}.amount_input`)}
-              required
-              className={classNames("mt-1 block w-full p-2 border rounded w-[30%]", { "bg-gray-100 text-gray-400 cursor-not-allowed": !isMyTransaction })}
-              placeholder="Amount"
-              disabled={!isMyTransaction}
-              onChange={({ target: { value } }: any) => {
-                setValue(`line_items.${index}.amount_input`, value);
-                setValue(
-                  `line_items.${index}.amount`,
-                  evaluateAmountInput(value, sigUserInfo.value!.config.currency_decimal_places),
-                );
-              }}
-            />
-          </div>
-          <div
-            className={classNames("line-item-fields-row-2", {
-              hidden: !sigUserInfo.value?.config.advanced_mode,
-            })}
-          >
-            <textarea
-              {...register(`line_items.${index}.notes`)}
-              className="mt-1 block w-full p-2 border rounded"
-              placeholder="(Optional) notes"
-              disabled={!isMyTransaction}
-            ></textarea>
-          </div>
-        </div>
-      </div>
-    ));
-
-    return <div className="flex flex-col gap-4">{children}</div>;
-  };
+  const handleCloneSuccess = useCallback(
+    (newId: number) => {
+      navigate(getEditTransactionPath(newId));
+    },
+    [navigate],
+  );
 
   return (
     <>
       {deleteConfirmationDialog}
-      {showCloneModal && (
-        <CloneTransactionModal
-          transaction={transaction}
-          onClose={() => setShowCloneModal(false)}
-          onSuccess={(newId) => {
-            toast.success("Transaction cloned.");
-            navigate(getEditTransactionPath(newId));
-          }}
-        />
-      )}
-      <form className="flex justify-center" onSubmit={handleSubmit(upsertTransaction)}>
-        <div className="field-columns mt-[1em] max-w-[48rem] lg:max-w-[64rem] flex flex-col md:flex-row gap-4">
-          <div className="md:max-w-[24rem] lg:max-w-[40rem]">{renderReceipt()}</div>
-          <div className="md:max-w-[24rem] md:flex-shrink-0 flex flex-col gap-4">
-            {renderDateField()}
-            {renderVendorField()}
-            {renderLineItemHeader()}
-            {renderLineItems()}
-            {!isMyTransaction && (
-              <div className="text-center text-sm text-gray-500 mb-2">
-                <div>Edit is disabled because this transaction belongs to someone else.</div>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline mt-2"
-                  onClick={() => setShowCloneModal(true)}
-                >
-                  Clone as mine
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
-          <button type="submit" className="btn btn-circle btn-primary" disabled={!isMyTransaction}>
-            <Save />
-          </button>
-        </div>
-      </form>
-      {!isNewTransaction && (
-        <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
-          <button
-            type="button"
-            className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
-            onClick={showDeleteConfirmation}
-            disabled={!isMyTransaction}
-          >
-            <Trash />
-          </button>
-        </div>
-      )}
+      <TransactionFormView
+        transaction={transaction}
+        vendors={sigVendors.value}
+        categories={sigCategories.value}
+        receipts={sigReceipts.value}
+        userInfo={userInfo}
+        onSave={handleSave}
+        onDelete={showDeleteConfirmation}
+        onCloneSuccess={handleCloneSuccess}
+        onCreateVendor={handleCreateVendor}
+        onCreateCategory={handleCreateCategory}
+      />
     </>
   );
 };
