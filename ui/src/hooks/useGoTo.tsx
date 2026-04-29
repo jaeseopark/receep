@@ -7,11 +7,13 @@ interface UseGoToOptions {
 
 export const useGoTo = ({ onNavigate }: UseGoToOptions) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [id, setId] = useState("");
 
   const openDialog = () => {
     setId("");
     dialogRef.current?.showModal();
+    setTimeout(() => inputRef.current?.focus(), 0);
   };
 
   const handleNavigate = () => {
@@ -25,10 +27,8 @@ export const useGoTo = ({ onNavigate }: UseGoToOptions) => {
   const GoToModal = (
     <dialog ref={dialogRef} className="modal">
       <div className="modal-box flex items-center gap-2 w-auto min-w-0 p-4">
-        {/* autoFocus inside a native <dialog> is re-applied on every showModal() call */}
-        {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
         <input
-          autoFocus
+          ref={inputRef}
           type="number"
           min="1"
           value={id}
