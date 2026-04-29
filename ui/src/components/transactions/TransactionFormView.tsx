@@ -1,9 +1,8 @@
 import classNames from "classnames";
-import { parse } from "date-fns";
+import { parse, isValid } from "date-fns";
 import fuzzysort from "fuzzysort";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
-import { KeyboardEvent } from "preact/compat";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import DatePicker from "react-datepicker";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -14,7 +13,7 @@ import { Category, Receipt, Transaction, UserInfo, Vendor } from "@/types";
 import ReceiptDownloadButton from "@/components/receipts/ReceiptDownloadButton";
 import { ReceiptHighres, ReceiptThumbnail } from "@/components/receipts/ReceiptImg";
 import CloneTransactionModal from "@/components/transactions/CloneTransactionModal";
-import { TZ_OFFSET_HRS } from "@/utils/dates";
+import { TZ_OFFSET_HRS, normalizeDate } from "@/utils/dates";
 import { createLineItem } from "@/utils/forms";
 import { getVendorReportPath } from "@/utils/paths";
 import { evaluateAmountInput } from "@/utils/primitive";
@@ -118,6 +117,8 @@ const TransactionFormView = ({
   const isMyTransaction = useMemo(() => userInfo.user_id === transaction.user_id, [userInfo, transaction.user_id]);
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [rawDateInput, setRawDateInput] = useState("");
+  const vendorSelectRef = useRef<any>(null);
   const isDisabled = !isMyTransaction || isSaving;
 
   /* ----------------
@@ -229,37 +230,48 @@ const TransactionFormView = ({
         <Controller
           name="timestamp"
           control={control}
-          render={({ field: { value, onChange } }) => (
+          render={({ field: { value, onChange: updateFormValue } }) => (
             <DatePicker
               className={classNames("rounded-lg p-2", { "bg-gray-100 text-gray-400 cursor-not-allowed": isDisabled })}
               required
               disabled={isDisabled}
               dateFormat="yyyy-MM-dd"
               selected={new Date((value - TZ_OFFSET_HRS * 3600) * 1000)}
+              onKeyDown={(event: React.KeyboardEvent<HTMLElement>) => {
+                if (event.code === "Enter") {
+                  event.preventDefault();
+                  vendorSelectRef.current?.focus();
+                }
+              }}
               onChange={(date) => {
                 if (date) {
                   const newValue = date?.getTime() / 1000 + TZ_OFFSET_HRS * 3600;
-                  onChange(newValue);
+                  updateFormValue(newValue);
                 } else {
                   // TODO error handling
                 }
               }}
-              onChangeRaw={(date: KeyboardEvent<HTMLInputElement>) => {
-                try {
-                  const newValue = parse(date.currentTarget.value, "yyyy-MM-dd", new Date());
-                  if (newValue instanceof Date) {
-                    onChange(newValue.getTime() / 1000 + TZ_OFFSET_HRS * 3600);
+              onChangeRaw={(event) => {
+                if (!event) return;
+                setRawDateInput((event.currentTarget as HTMLInputElement).value);
+              }}
+              onBlur={() => {
+                // If already a valid canonical date, nothing to do.
+                const parsed = parse(rawDateInput, "yyyy-MM-dd", new Date());
+                if (isValid(parsed)) return;
+                // Try fuzzy normalization.
+                const normalized = normalizeDate(rawDateInput);
+                if (normalized) {
+                  const fallback = parse(normalized, "yyyy-MM-dd", new Date());
+                  if (isValid(fallback)) {
+                    updateFormValue(fallback.getTime() / 1000 + TZ_OFFSET_HRS * 3600);
                   }
-                } catch (error) {
-                  // TODO
                 }
+                // If normalization fails, leave the value as-is for the form validator.
               }}
             />
           )}
         />
-        <div className={classNames("btn", { "btn-disabled": isDisabled })} onClick={() => !isDisabled && setValue("timestamp", Date.now() / 1000 + TZ_OFFSET_HRS * 3600)}>
-          Today
-        </div>
       </div>
     );
   };
@@ -288,6 +300,7 @@ const TransactionFormView = ({
           return (
             <>
               <CreatableSelect
+                ref={vendorSelectRef}
                 options={vendorOptions}
                 value={selectedOption}
                 required

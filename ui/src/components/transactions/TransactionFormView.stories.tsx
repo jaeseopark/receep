@@ -1,4 +1,4 @@
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/preact";
 
 import { Category, Transaction, UserInfo, Vendor } from "@/types";
@@ -93,6 +93,50 @@ export const OtherUsersTransaction: Story = {
       id: 99,
       user_id: 2,
     },
+  },
+};
+
+/** Resolves the DatePicker's text input by locating it next to the "Date:" label. */
+async function getDateInput(canvasElement: HTMLElement) {
+  const label = within(canvasElement).getByText("Date:");
+  const container = label.closest("div")!;
+  return within(container).getByRole("textbox");
+}
+
+const SANITIZABLE_DATE = "20250312";
+const EXPECTED_DATE = "2025-03-12";
+
+/** Date normalization: clicking away corrects a sanitizable date string. */
+export const DateNormalizationClickAway: Story = {
+  play: async ({ canvasElement }) => {
+    const dateInput = await getDateInput(canvasElement);
+    await userEvent.clear(dateInput);
+    await userEvent.type(dateInput, SANITIZABLE_DATE);
+    // Click the "Date:" label span to move focus away without re-opening the picker.
+    await userEvent.click(within(canvasElement).getByText("Date:"));
+    await expect(dateInput).toHaveValue(EXPECTED_DATE);
+  },
+};
+
+/** Date normalization: tabbing away corrects a sanitizable date string. */
+export const DateNormalizationTab: Story = {
+  play: async ({ canvasElement }) => {
+    const dateInput = await getDateInput(canvasElement);
+    await userEvent.clear(dateInput);
+    await userEvent.type(dateInput, SANITIZABLE_DATE);
+    await userEvent.tab();
+    await expect(dateInput).toHaveValue(EXPECTED_DATE);
+  },
+};
+
+/** Date normalization: pressing Enter corrects a sanitizable date string and moves focus to vendor. */
+export const DateNormalizationEnter: Story = {
+  play: async ({ canvasElement }) => {
+    const dateInput = await getDateInput(canvasElement);
+    await userEvent.clear(dateInput);
+    await userEvent.type(dateInput, SANITIZABLE_DATE);
+    await userEvent.keyboard("{Enter}");
+    await expect(dateInput).toHaveValue(EXPECTED_DATE);
   },
 };
 
