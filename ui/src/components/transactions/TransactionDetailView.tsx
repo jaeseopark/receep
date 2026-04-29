@@ -17,6 +17,8 @@ const TransactionEditView = () => {
   const [error, setError] = useState<string>();
 
   useEffect(() => {
+    setTransaction(undefined);
+    setError(undefined);
     const init = () => {
       if (sigInitialLoadResult.value === "PENDING") {
         setTimeout(init, 100);
@@ -89,7 +91,7 @@ const TransactionEditView = () => {
     };
 
     setTimeout(init, 100);
-  }, []);
+  }, [id]);
 
   if (error) {
     return <div>{error}</div>;
