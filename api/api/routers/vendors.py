@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from persistence.database import instance as db_instance
 
 from api.access.authenticator import AuthMetadata
@@ -76,17 +76,19 @@ def update_vendor(
     return vendor
 
 
-@router.delete("/vendors/{id}")
+@router.delete("/vendors/{id}", status_code=204)
 def delete_vendor(
     id: int,
     metadata: AuthMetadata = Depends(get_auth_metadata(assert_jwt=True))
 ):
-    vendor = db_instance.delete_vendor(
-        id=id,
-        user_id=metadata.user_id,
-    )
-
-    return vendor
+    try:
+        db_instance.delete_vendor(
+            id=id,
+            user_id=metadata.user_id,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return Response(status_code=204)
 
 
 @router.post("/vendors/merge")

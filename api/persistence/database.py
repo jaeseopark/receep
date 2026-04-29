@@ -354,18 +354,25 @@ class Database:
 
     def delete_vendor(self, id: int, user_id: int) -> None:
         with get_session() as session:
-            # TODO: Implement delete vendor (need transaction association safe guard)
-            raise NotImplementedError
-        
-            # v = session.query(Vendor) \
-            #     .filter(Vendor.id == id, Vendor.user_id == user_id) \
-            #     .first()
+            v = session.query(Vendor) \
+                .filter(Vendor.id == id, Vendor.user_id == user_id) \
+                .first()
 
-            # if not v:
-            #     raise NotFound
+            if not v:
+                raise NotFound
 
-            # session.delete(v)
-            # session.commit()
+            associated_ids = [
+                t.id for t in session.query(Transaction.id)
+                .filter(Transaction.vendor_id == id)
+                .limit(10)
+                .all()
+            ]
+
+            if associated_ids:
+                raise ValueError(f"Vendor {id} has associated transactions and cannot be deleted. First 10 Transaction IDs: {associated_ids}")
+
+            session.delete(v)
+            session.commit()
 
     def merge_vendors(self, user_id: int, source_ids: List[int], target_id: int) -> None:
         with get_session() as session:
