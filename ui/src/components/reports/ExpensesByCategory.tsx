@@ -195,12 +195,12 @@ const ExpensesByCategory = () => {
         </button>
       ))}
       <PivotTableUI
+        {...tableProps}
         data={rows}
         onChange={(newProps: PivotTableProps) => {
           setTableProps(newProps);
           linkifyTransactions(newProps);
         }}
-        {...tableProps}
       />
     </div>
   );
