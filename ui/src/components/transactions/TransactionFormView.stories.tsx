@@ -1,3 +1,4 @@
+import { userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/preact";
 
 import { Category, Transaction, UserInfo, Vendor } from "@/types";
@@ -48,6 +49,7 @@ const SAMPLE_TRANSACTION: Transaction = {
 
 const noop = () => {};
 const noopAsync = () => Promise.resolve(0);
+const pendingSave = () => new Promise<void>(() => {}); // never resolves, to simulate an in-flight save
 
 const meta: Meta<typeof TransactionFormView> = {
   title: "Transactions/TransactionFormView",
@@ -91,5 +93,21 @@ export const OtherUsersTransaction: Story = {
       id: 99,
       user_id: 2,
     },
+  },
+};
+
+/** Save button in loading state (simulates an in-flight API call). */
+export const SavingState: Story = {
+  args: {
+    transaction: {
+      ...SAMPLE_TRANSACTION,
+      id: 42,
+    },
+    onSave: pendingSave,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const saveButton = await canvas.findByTestId("save-button");
+    await userEvent.click(saveButton);
   },
 };
