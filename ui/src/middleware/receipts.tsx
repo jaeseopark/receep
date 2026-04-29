@@ -3,7 +3,7 @@ import { toast } from "react-hot-toast";
 import { Receipt } from "@/types";
 
 import { axios } from "@/api";
-import { removeReceipt, replaceReceipt, upsertReceipts } from "@/store";
+import { removeReceipt, replaceReceipt, sigUserInfo, upsertReceipts } from "@/store";
 import { getEditReceiptPath } from "@/utils/paths";
 import { hash } from "@/utils/primitive";
 
@@ -22,7 +22,7 @@ export const uploadReceipts = (
   upsertReceipts({
     items: files.map((file) => ({
       id: hash(file.name),
-      user_id: 0,
+      user_id: sigUserInfo.value?.user_id ?? 0,
       content_type: "",
       content_length: 0,
       content_hash: "",
