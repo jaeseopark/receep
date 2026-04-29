@@ -173,7 +173,11 @@ class Database:
             except IntegrityError:
                 # Most likely caused by the unique constraint on the hash field.
                 # TODO: make sure this is indeed the cause of IntegrityError.
-                raise DuplicateReceipt
+                session.rollback()
+                existing = session.query(Receipt).filter(Receipt.content_hash == content_hash).first()
+                if not existing:
+                    logger.warning(f"DuplicateReceipt raised but no existing receipt found for {content_hash=}")
+                raise DuplicateReceipt(existing.id if existing else None)
 
         return receipt
 
@@ -231,6 +235,19 @@ class Database:
                 .order_by(desc(Transaction.id)) \
                 .offset(offset) \
                 .limit(limit)
+            return session.scalars(stmt).all()
+
+    def search_transactions_by_vendor(self, user_id: int, vendor_name: str) -> List[Transaction]:
+        # TODO: replace this ILIKE-based search with a better approach as data grows:
+        #   A) Short term: use Postgres built-in full-text search (tsvector/tsquery).
+        #   B) Long term: integrate a proper search engine (e.g. Elasticsearch) for 100k+ rows.
+        vendor_pattern = f"%{vendor_name}%"
+        with get_session() as session:
+            stmt = select(Transaction) \
+                .join(Vendor, Transaction.vendor_id == Vendor.id) \
+                .where(Transaction.user_id == user_id) \
+                .where(Vendor.name.ilike(vendor_pattern)) \
+                .order_by(desc(Transaction.id))
             return session.scalars(stmt).all()
 
     def get_transaction(self, transaction_id: int) -> Transaction:
@@ -443,6 +460,19 @@ class Database:
                     Transaction.user_id == user_id,
                     Transaction.timestamp >= start,
                     Transaction.timestamp <= end) \
+                .options(joinedload(LineItem.transaction)) \
+                .offset(offset) \
+                .limit(limit) \
+                .all()
+
+    def get_line_items_by_vendor(self, user_id: int, vendor_id: int, offset=0, limit=500) -> List[LineItem]:
+        with get_session() as session:
+            return session.query(LineItem) \
+                .join(Transaction, LineItem.transaction_id == Transaction.id) \
+                .filter(
+                    Transaction.user_id == user_id,
+                    Transaction.vendor_id == vendor_id
+                ) \
                 .options(joinedload(LineItem.transaction)) \
                 .offset(offset) \
                 .limit(limit) \

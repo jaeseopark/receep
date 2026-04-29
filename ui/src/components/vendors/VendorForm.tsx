@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { Save, Trash } from "lucide-react";
+import { ChartLine, Save, Trash } from "lucide-react";
 import { useCallback, useMemo, useState } from "preact/hooks";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ import { axios } from "@/api";
 import { ROUTE_PATHS } from "@/const";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
 import { removeVendor, sigTransactions, sigVendors, upsertTransactions, upsertVendors } from "@/store";
+import { getVendorReportPath } from "@/utils/paths";
 
 const fuzzyFilterOption = (option: { label: string }, inputValue: string) => {
     if (!inputValue) return true;
@@ -190,15 +191,26 @@ const VendorForm = ({ vendor }: { vendor: Vendor }) => {
                 </div>
             </form>
             {!isNewVendor && (
-                <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
-                    <button
-                        type="button"
-                        className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
-                        onClick={showDeleteConfirmation}
-                    >
-                        <Trash />
-                    </button>
-                </div>
+                <>
+                    <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
+                        <button
+                            type="button"
+                            className="btn btn-circle bg-red-500 hover:bg-red-600 text-white"
+                            onClick={showDeleteConfirmation}
+                        >
+                            <Trash />
+                        </button>
+                    </div>
+                    <div className="bottom-24 fixed right-34 shadow-lg rounded-full">
+                        <button
+                            type="button"
+                            className="btn btn-circle bg-blue-500 hover:bg-blue-600 text-white"
+                            onClick={() => navigate(getVendorReportPath(vendor.id))}
+                        >
+                            <ChartLine />
+                        </button>
+                    </div>
+                </>
             )}
         </div>
     );

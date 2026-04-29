@@ -19,3 +19,7 @@ export const getEditVendorPath = (id: number) => {
 export const getNewTransactionPathWithReceiptId = (receiptId: number) => {
   return ROUTE_PATHS.NEW_TRANSACTION + `?receipt_id=${receiptId}`;
 };
+
+export const getVendorReportPath = (vendorId: number) => {
+  return ROUTE_PATHS.VENDOR_REPORT_FOR_VENDOR.replace(":vendorId", vendorId.toString());
+};

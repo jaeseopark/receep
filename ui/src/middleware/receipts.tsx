@@ -4,6 +4,7 @@ import { Receipt } from "@/types";
 
 import { axios } from "@/api";
 import { removeReceipt, replaceReceipt, upsertReceipts } from "@/store";
+import { getEditReceiptPath } from "@/utils/paths";
 import { hash } from "@/utils/primitive";
 
 type UploadProgrses = {
@@ -76,7 +77,19 @@ export const uploadReceipts = (
         })
         .catch((e) => {
           if (e?.response?.data?.code === "DUP_RECEIPT") {
-            toast.error("The receipt already exists.");
+            const receiptId: number | undefined = e?.response?.data?.receipt_id;
+            if (receiptId != null) {
+              toast.error(
+                <span>
+                  The receipt already exists.{" "}
+                  <a href={getEditReceiptPath(receiptId)} style={{ textDecoration: "underline" }}>
+                    View receipt #{receiptId}
+                  </a>
+                </span>,
+              );
+            } else {
+              toast.error("The receipt already exists.");
+            }
           }
           removeReceipt(hash(file.name));
         });
