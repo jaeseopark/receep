@@ -1,4 +1,4 @@
-import { GitMerge, Save, Trash } from "lucide-react";
+import { GitMerge, Save, Trash, ChartLine } from "lucide-react";
 import { useCallback, useMemo } from "preact/hooks";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -10,6 +10,7 @@ import { axios } from "@/api";
 import { ROUTE_PATHS } from "@/const";
 import useSimpleConfirmationDialog from "@/hooks/useSimpleConfirmationDialog";
 import { removeVendor, upsertVendors } from "@/store";
+import { getVendorReportPath } from "@/utils/paths";
 import VendorMergeModal, { showVendorMergeModal } from "./VendorMergeModal";
 
 const VendorForm = ({ vendor }: { vendor: Vendor }) => {
@@ -123,6 +124,15 @@ const VendorForm = ({ vendor }: { vendor: Vendor }) => {
                             }}
                         >
                             <GitMerge />
+                        </button>
+                    </div>
+                    <div className="bottom-24 fixed right-48 shadow-lg rounded-full">
+                        <button
+                            type="button"
+                            className="btn btn-circle bg-blue-500 hover:bg-blue-600 text-white"
+                            onClick={() => navigate(getVendorReportPath(vendor.id))}
+                        >
+                            <ChartLine />
                         </button>
                     </div>
                 </>
