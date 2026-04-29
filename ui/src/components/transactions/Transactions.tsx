@@ -20,6 +20,7 @@ import { fetchTransactions, transactionPagination } from "@/gvars";
 import { sigTransactions, sigVendors } from "@/store";
 import { toAbsoluteDate } from "@/utils/dates";
 import { getEditTransactionPath } from "@/utils/paths";
+import { useGoTo } from "@/hooks/useGoTo";
 
 const columnHelper = createColumnHelper<Transaction>();
 
@@ -80,6 +81,11 @@ const TransactionsTable = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]); // State to manage sorting
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]); // State to manage filters
+
+  const { GoToPopover, GoToToggleButton } = useGoTo({
+    onNavigate: (id) => navigate(getEditTransactionPath(id)),
+    popoverPositionClass: "bottom-36 right-14",
+  });
 
   const table = useReactTable<Transaction>({
     data: sigTransactions.value,
@@ -166,6 +172,10 @@ const TransactionsTable = () => {
     >
       {renderTable()}
       {transactionPagination.value.isExhausted && <div className="text-center p-4">No more transactions to load.</div>}
+      {GoToPopover}
+      <div className="bottom-24 fixed right-20 shadow-lg rounded-full">
+        {GoToToggleButton}
+      </div>
       <div className="bottom-24 fixed right-6 shadow-lg rounded-full">
         <button className="btn btn-circle btn-primary" onClick={() => navigate(ROUTE_PATHS.NEW_TRANSACTION)}>
           <Plus />
