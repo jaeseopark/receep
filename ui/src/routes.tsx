@@ -12,6 +12,7 @@ import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
 import ExpensesByCategory from "@/components/reports/ExpensesByCategory";
 import Reports from "@/components/reports/Reports";
+import TransactionsByVendor from "@/components/reports/TransactionsByVendor";
 import TransactionDetailView from "@/components/transactions/TransactionDetailView";
 import TransactionsTable from "@/components/transactions/Transactions";
 import Config from "@/components/user/Config";
@@ -32,6 +33,20 @@ const REPORT_ROUTES: RouteEntry[] = [
     name: "Expenses By Category",
     description: "Categorized expense summary",
     component: ExpensesByCategory,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.VENDOR_REPORT,
+    name: "Vendor Report",
+    description: "All transactions for a specific vendor",
+    component: TransactionsByVendor,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.VENDOR_REPORT_FOR_VENDOR,
+    name: "Vendor Report",
+    description: "All transactions for a specific vendor",
+    component: TransactionsByVendor,
     type: "NOT_DOCKED",
   },
 ];
@@ -128,7 +143,7 @@ export const AUTHENTICATED_ROUTES: RouteEntry[] = [
     path: ROUTE_PATHS.REPORTS,
     name: "Reports",
     description: "Data visualization and drilldown reporting",
-    component: () => <Reports reportRoutes={REPORT_ROUTES} />,
+    component: () => <Reports reportRoutes={REPORT_ROUTES.filter((r) => !r.path.includes(":"))} />,
     icon: <ChartLine />,
     type: "DOCKED",
   },
