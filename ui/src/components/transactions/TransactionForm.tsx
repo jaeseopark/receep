@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import { parse } from "date-fns";
+import fuzzysort from "fuzzysort";
 import { Minus, Plus, Save, Trash } from "lucide-preact";
 import { KeyboardEvent } from "preact/compat";
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
@@ -37,6 +38,11 @@ import { evaluateAmountInput } from "@/utils/primitive";
 import "react-datepicker/dist/react-datepicker.css";
 
 const DEFAULT_FIELD_ID = 0;
+
+const fuzzyFilterOption = (option: { label: string }, inputValue: string) => {
+  if (!inputValue) return true;
+  return fuzzysort.go(inputValue, [option.label], { limit: 1 }).length > 0;
+};
 
 type FormData = Transaction & { enableAutoTax: boolean };
 
@@ -381,6 +387,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
               isClearable
               isDisabled={!isMyTransaction}
               placeholder="Select a vendor..."
+              filterOption={fuzzyFilterOption}
               onCreateOption={createVendor}
               // @ts-ignore
               onChange={({ value }) => onChange(value)}
@@ -459,6 +466,7 @@ const TransactionForm = ({ transaction }: { transaction: Transaction }) => {
                     isClearable
                     isDisabled={!isMyTransaction}
                     placeholder="Select a category..."
+                    filterOption={fuzzyFilterOption}
                     onCreateOption={(categoryName) => createCategory(fieldName, categoryName)}
                     // @ts-ignore
                     onChange={({ value }) => {
