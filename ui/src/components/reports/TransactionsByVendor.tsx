@@ -35,7 +35,7 @@ const REPORT_PRESETS: { [key: string]: { props: PivotTableProps } } = {
   Default: {
     props: {
       cols: ["category"],
-      rows: ["year", "tx_id"],
+      rows: ["year", "month", "tx_id"],
       vals: ["amount"],
     },
   },
