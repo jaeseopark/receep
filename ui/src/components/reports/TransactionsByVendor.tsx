@@ -34,15 +34,8 @@ type PaginatedReportResponse = {
 const REPORT_PRESETS: { [key: string]: { props: PivotTableProps } } = {
   Default: {
     props: {
-      cols: ["month"],
-      rows: ["category"],
-      vals: ["amount"],
-    },
-  },
-  "By Date": {
-    props: {
-      cols: ["month"],
-      rows: ["day", "tx_id"],
+      cols: ["category"],
+      rows: ["year", "tx_id"],
       vals: ["amount"],
     },
   },
