@@ -12,6 +12,7 @@ import ReceiptEditView from "@/components/receipts/ReceiptDetailView";
 import ReceiptsView from "@/components/receipts/ReceiptGridView";
 import AnnualExpenseReport from "@/components/reports/AnnualExpenseReport";
 import Reports from "@/components/reports/Reports";
+import TransactionsByCategory from "@/components/reports/TransactionsByCategory";
 import TransactionsByVendor from "@/components/reports/TransactionsByVendor";
 import TransactionDetailView from "@/components/transactions/TransactionDetailView";
 import TransactionsTable from "@/components/transactions/Transactions";
@@ -47,6 +48,20 @@ const REPORT_ROUTES: RouteEntry[] = [
     name: "Vendor Report",
     description: "All transactions for a specific vendor",
     component: TransactionsByVendor,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.CATEGORY_REPORT,
+    name: "Category Report",
+    description: "All transactions for a specific category",
+    component: TransactionsByCategory,
+    type: "NOT_DOCKED",
+  },
+  {
+    path: ROUTE_PATHS.CATEGORY_REPORT_FOR_CATEGORY,
+    name: "Category Report",
+    description: "All transactions for a specific category",
+    component: TransactionsByCategory,
     type: "NOT_DOCKED",
   },
 ];

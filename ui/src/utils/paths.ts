@@ -23,3 +23,7 @@ export const getNewTransactionPathWithReceiptId = (receiptId: number) => {
 export const getVendorReportPath = (vendorId: number) => {
   return ROUTE_PATHS.VENDOR_REPORT_FOR_VENDOR.replace(":vendorId", vendorId.toString());
 };
+
+export const getCategoryReportPath = (categoryId: number) => {
+  return ROUTE_PATHS.CATEGORY_REPORT_FOR_CATEGORY.replace(":categoryId", categoryId.toString());
+};
