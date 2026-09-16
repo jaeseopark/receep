@@ -10,6 +10,7 @@ import { sigCategories, sigVendors } from "@/store";
 import { Vendor } from "@/types";
 import { TZ_OFFSET_HRS } from "@/utils/dates";
 import { getVendorReportPath } from "@/utils/paths";
+import VendorPicker from "@/components/reports/VendorPicker";
 
 import "react-pivottable/pivottable.css";
 
@@ -60,19 +61,6 @@ const fetchLineItems = async (vendorId: number): Promise<VendorLineItem[]> => {
 
   return allItems;
 };
-
-const VendorPicker = ({ vendors, onSelect }: { vendors: Vendor[]; onSelect: (v: Vendor) => void }) => (
-  <ul className="list bg-base-100 rounded-box shadow-md m-4">
-    <li className="p-4 pb-2 text-lg opacity-60 tracking-wide">Select a vendor:</li>
-    {vendors.map((vendor) => (
-      <li className="list-row" key={vendor.id}>
-        <span className="hover:underline cursor-pointer" onClick={() => onSelect(vendor)}>
-          {vendor.name}
-        </span>
-      </li>
-    ))}
-  </ul>
-);
 
 const TransactionsByVendor = () => {
   const { vendorId } = useParams<{ vendorId: string }>();
