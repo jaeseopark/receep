@@ -31,7 +31,7 @@
     "react-router-dom": "^7.1.5",
     "react-select": "^5.10.0",
     "reconnecting-websocket": "^4.4.0",
-    "uuid": "^11.0.5"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
