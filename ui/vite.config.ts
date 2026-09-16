@@ -15,5 +15,13 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 80,
     allowedHosts: ["ui"],
+    proxy: process.env.VITE_PROXY_TARGET
+      ? {
+          "/api": {
+            target: process.env.VITE_PROXY_TARGET,
+            changeOrigin: true,
+          },
+        }
+      : undefined,
   },
 });
